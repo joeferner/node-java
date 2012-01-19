@@ -1,6 +1,8 @@
 
 #include "java.h"
 #include <string.h>
+#include <algorithm>
+#include "javaObject.h"
 
 /*static*/ v8::Persistent<v8::FunctionTemplate> Java::s_ct;
 
@@ -26,28 +28,23 @@
 }
 
 Java::Java() {
-  this->m_env = createJVM();
+  this->m_jvm = NULL;
+  this->m_env = NULL;
+  createJVM(&this->m_jvm, &this->m_env);
 }
 
 Java::~Java() {
 
 }
 
-/*static*/ JNIEnv* Java::createJVM() {
-  JavaVM* jvm;
-  JNIEnv* env;
+/*static*/ void Java::createJVM(JavaVM** jvm, JNIEnv** env) {
+  JavaVM* jvmTemp;
   JavaVMInitArgs args;
-  JavaVMOption options[0];
 
-  /* There is a new JNI_VERSION_1_4, but it doesn't add anything for the purposes of our example. */
-  args.version = JNI_VERSION_1_2;
-  args.nOptions = 0;
-  args.options = options;
-  args.ignoreUnrecognized = JNI_FALSE;
-
-  JNI_CreateJavaVM(&jvm, (void **)&env, &args);
-
-  return env;
+  args.version = JNI_VERSION_1_4;
+  JNI_GetDefaultJavaVMInitArgs(&args);
+  JNI_CreateJavaVM(&jvmTemp, (void **)env, &args);
+  *jvm = jvmTemp;
 }
 
 /*static*/ v8::Handle<v8::Value> Java::newInstance(const v8::Arguments& args) {
@@ -79,36 +76,72 @@ Java::~Java() {
 
 /*static*/ void Java::EIO_NewInstance(eio_req* req) {
   NewInstanceBaton* baton = static_cast<NewInstanceBaton*>(req->data);
+  JNIEnv *env = baton->m_java->attachCurrentThread();
+  baton->run(env);
+  baton->m_java->detachCurrentThread();
 }
 
 /*static*/ int Java::EIO_AfterNewInstance(eio_req* req) {
   NewInstanceBaton* baton = static_cast<NewInstanceBaton*>(req->data);
   ev_unref(EV_DEFAULT_UC);
-
   baton->doCallback();
-
   delete baton;
   return 0;
 }
 
+JNIEnv* Java::attachCurrentThread() {
+  JNIEnv* env;
+  JavaVMAttachArgs attachArgs;
+  attachArgs.version = JNI_VERSION_1_4;
+  attachArgs.name = NULL;
+  attachArgs.group = NULL;
+  m_jvm->AttachCurrentThread((void**)&env, &attachArgs);
+  return env;
+}
+
+void Java::detachCurrentThread() {
+  m_jvm->DetachCurrentThread();
+}
+
 NewInstanceBaton::NewInstanceBaton(Java* java, const char *className, v8::Handle<v8::Value> &callback) {
-  this->m_java = java;
-  this->m_className = strdup(className);
-  this->m_callback = v8::Persistent<v8::Value>::New(callback);
-  this->m_java->Ref();
+  m_java = java;
+  m_className = className;
+  std::replace(m_className.begin(), m_className.end(), '.', '/');
+  m_callback = v8::Persistent<v8::Value>::New(callback);
+  m_java->Ref();
 }
 
 NewInstanceBaton::~NewInstanceBaton() {
-  this->m_callback.Dispose();
-  this->m_java->Unref();
+  m_callback.Dispose();
+  m_java->Unref();
+}
+
+void NewInstanceBaton::run(JNIEnv *env) {
+  jclass clazz = env->FindClass(m_className.c_str());
+  if(env->ExceptionCheck()) {
+    env->ExceptionDescribe(); // TODO: handle error
+    return;
+  }
+
+  jmethodID method = env->GetMethodID(clazz, "<init>", "()V"); // TODO: add arguments
+  if(env->ExceptionCheck()) {
+    env->ExceptionDescribe(); // TODO: handle error
+    return;
+  }
+
+  m_result = env->NewObject(clazz, method);
+  if(env->ExceptionCheck()) {
+    env->ExceptionDescribe(); // TODO: handle error
+    return;
+  }
 }
 
 void NewInstanceBaton::doCallback() {
   v8::Handle<v8::Value> argv[2];
   argv[0] = v8::Undefined();
-  argv[1] = v8::Undefined();
+  argv[1] = JavaObject::New(m_java, m_result);
 
-  if(this->m_callback->IsFunction()) {
+  if(m_callback->IsFunction()) {
     v8::Function::Cast(*this->m_callback)->Call(v8::Context::GetCurrent()->Global(), 2, argv);
   }
 }

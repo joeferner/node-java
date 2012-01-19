@@ -36,5 +36,6 @@ def build(bld):
   obj.target = "nodejavabridge_bindings"
   obj.source = " ".join([
     "src/nodeJavaBridge.cpp",
-    "src/java.cpp"])
+    "src/java.cpp",
+    "src/javaObject.cpp"])
   obj.includes = "src/"
