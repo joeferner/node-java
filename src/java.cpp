@@ -76,9 +76,9 @@ Java::~Java() {
 
 /*static*/ void Java::EIO_NewInstance(eio_req* req) {
   NewInstanceBaton* baton = static_cast<NewInstanceBaton*>(req->data);
-  JNIEnv *env = baton->m_java->attachCurrentThread();
+  JNIEnv *env = javaAttachCurrentThread(baton->m_java->getJvm());
   baton->run(env);
-  baton->m_java->detachCurrentThread();
+  javaDetachCurrentThread(baton->m_java->getJvm());
 }
 
 /*static*/ int Java::EIO_AfterNewInstance(eio_req* req) {
@@ -87,20 +87,6 @@ Java::~Java() {
   baton->doCallback();
   delete baton;
   return 0;
-}
-
-JNIEnv* Java::attachCurrentThread() {
-  JNIEnv* env;
-  JavaVMAttachArgs attachArgs;
-  attachArgs.version = JNI_VERSION_1_4;
-  attachArgs.name = NULL;
-  attachArgs.group = NULL;
-  m_jvm->AttachCurrentThread((void**)&env, &attachArgs);
-  return env;
-}
-
-void Java::detachCurrentThread() {
-  m_jvm->DetachCurrentThread();
 }
 
 NewInstanceBaton::NewInstanceBaton(Java* java, const char *className, v8::Handle<v8::Value> &callback) {
@@ -137,11 +123,11 @@ void NewInstanceBaton::run(JNIEnv *env) {
 }
 
 void NewInstanceBaton::doCallback() {
-  v8::Handle<v8::Value> argv[2];
-  argv[0] = v8::Undefined();
-  argv[1] = JavaObject::New(m_java, m_result);
-
   if(m_callback->IsFunction()) {
+    v8::Handle<v8::Value> argv[2];
+    argv[0] = v8::Undefined();
+    argv[1] = JavaObject::New(m_java, m_result);
+
     v8::Function::Cast(*this->m_callback)->Call(v8::Context::GetCurrent()->Global(), 2, argv);
   }
 }

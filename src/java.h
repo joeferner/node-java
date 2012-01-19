@@ -17,10 +17,6 @@ public:
 
   friend class NewInstanceBaton;
 
-protected:
-  JNIEnv* attachCurrentThread();
-  void detachCurrentThread();
-
 private:
   Java();
   ~Java();
