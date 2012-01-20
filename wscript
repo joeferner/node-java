@@ -21,7 +21,7 @@ def configure(conf):
   if jdk_include_dir:
       conf.env.append_unique('CXXFLAGS', [ '-I' + jdk_include_dir ])
 
-  jdk_additional_include_dir = environ.get("JDK_INCLUDE_DIR", "/usr/local/share/jdk1.6.0_30/include/linux/")
+  jdk_additional_include_dir = environ.get("JDK_AUX_INCLUDE_DIR", "/usr/local/share/jdk1.6.0_30/include/linux/")
   if jdk_additional_include_dir:
       conf.env.append_unique('CXXFLAGS', [ '-I' + jdk_additional_include_dir ])
 

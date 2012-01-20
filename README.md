@@ -4,7 +4,12 @@ Bridge API to connect with existing Java APIs.
 
 ## Installation
 
-    $ npm install java
+```bash
+$ export JDK_INCLUDE_DIR=/usr/local/share/jdk1.6.0_30/include/
+$ export JDK_AUX_INCLUDE_DIR=/usr/local/share/jdk1.6.0_30/include/linux/
+$ export JDK_LIB_DIR=/usr/local/share/jdk1.6.0_30/jre/lib/i386/client/
+$ npm install java
+```
 
 ## Usage
 
