@@ -1,4 +1,4 @@
-# nodeshark
+# java
 
 Bridge API to connect with existing Java APIs.
 
