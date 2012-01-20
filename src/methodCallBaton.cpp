@@ -109,6 +109,8 @@ void NewInstanceBaton::execute(JNIEnv *env) {
   jclass constructorClazz = env->FindClass("java/lang/reflect/Constructor");
   jmethodID constructor_newInstance = env->GetMethodID(constructorClazz, "newInstance", "([Ljava/lang/Object;)Ljava/lang/Object;");
 
+  //printf("invoke: %s\n", javaObjectToString(env, m_method).c_str());
+
   jobject result = env->CallObjectMethod(m_method, constructor_newInstance, m_args);
   m_resultType = TYPE_OBJECT;
   m_result = env->NewGlobalRef(result);
@@ -123,6 +125,14 @@ void StaticMethodCallBaton::execute(JNIEnv *env) {
   jmethodID method_getReturnType = env->GetMethodID(methodClazz, "getReturnType", "()Ljava/lang/Class;");
 
   jclass returnType = (jclass)env->CallObjectMethod(m_method, method_getReturnType);
+
+  /*
+  printf("calling %s\n", javaObjectToString(env, m_method).c_str());
+  printf("arguments\n");
+  for(int i=0; i<env->GetArrayLength(m_args); i++) {
+    printf("  %s\n", javaObjectToString(env, env->GetObjectArrayElement((jobjectArray)m_args, i)).c_str());
+  }
+  */
 
   m_resultType = javaGetType(env, returnType);
   jobject result = env->CallObjectMethod(m_method, method_invoke, NULL, m_args);

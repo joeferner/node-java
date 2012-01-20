@@ -21,6 +21,7 @@
   NODE_SET_PROTOTYPE_METHOD(s_ct, "callStaticMethodSync", callStaticMethodSync);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newArray", newArray);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newByte", newByte);
+  NODE_SET_PROTOTYPE_METHOD(s_ct, "getStaticFieldValue", getStaticFieldValue);
 
   target->Set(v8::String::NewSymbol("Java"), s_ct->GetFunction());
 }
@@ -137,6 +138,17 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   }
   std::list<jobject> constructors = javaReflectionGetConstructors(env, clazz);
   jobject method = javaFindBestMatchingConstructor(env, constructors, methodArgTypes);
+  if(method == NULL) {
+    std::ostringstream errStr;
+    errStr << "Could not find constructor";
+    v8::Handle<v8::Value> error = javaExceptionToV8(env, errStr.str());
+
+    v8::Handle<v8::Value> argv[2];
+    argv[0] = error;
+    argv[1] = v8::Undefined();
+    v8::Function::Cast(*callback)->Call(v8::Context::GetCurrent()->Global(), 2, argv);
+    return v8::Undefined();
+  }
 
   // run
   NewInstanceBaton* baton = new NewInstanceBaton(self, clazz, method, methodArgs, callback);
@@ -155,6 +167,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   JNIEnv* env = self->getJavaEnv();
 
   int argsEnd = args.Length();
+  int argsStart = 0;
 
   // argument - className
   if(args.Length() < 1 || !args[0]->IsString()) {
@@ -163,9 +176,10 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   v8::Local<v8::String> classNameObj = v8::Local<v8::String>::Cast(args[0]);
   v8::String::AsciiValue classNameVal(classNameObj);
   std::string className = *classNameVal;
+  argsStart++;
 
 	std::list<int> methodArgTypes;
-  jarray methodArgs = v8ToJava(env, args, 1, argsEnd, &methodArgTypes);
+  jarray methodArgs = v8ToJava(env, args, argsStart, argsEnd, &methodArgTypes);
 
   jclass clazz = javaFindClass(env, className);
   if(clazz == NULL) {
@@ -175,6 +189,11 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   }
   std::list<jobject> constructors = javaReflectionGetConstructors(env, clazz);
   jobject method = javaFindBestMatchingConstructor(env, constructors, methodArgTypes);
+  if(method == NULL) {
+    std::ostringstream errStr;
+    errStr << "Could not find constructor";
+    return ThrowException(javaExceptionToV8(env, errStr.str()));
+  }
 
   // run
   v8::Handle<v8::Value> callback = v8::Object::New();
@@ -412,3 +431,53 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
 
   return scope.Close(JavaObject::New(self, newObj));
 }
+
+/*static*/ v8::Handle<v8::Value> Java::getStaticFieldValue(const v8::Arguments& args) {
+  v8::HandleScope scope;
+  Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
+  v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
+  if(!ensureJvmResults->IsUndefined()) {
+    return ensureJvmResults;
+  }
+  JNIEnv* env = self->getJavaEnv();
+
+  // argument - className
+  if(args.Length() < 1 || !args[0]->IsString()) {
+    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 0 must be a string")));
+  }
+  v8::Local<v8::String> classNameObj = v8::Local<v8::String>::Cast(args[0]);
+  v8::String::AsciiValue classNameVal(classNameObj);
+  std::string className = *classNameVal;
+
+  // argument - field name
+  if(args.Length() < 2 || !args[1]->IsString()) {
+    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 1 must be a string")));
+  }
+  v8::Local<v8::String> fieldNameObj = v8::Local<v8::String>::Cast(args[1]);
+  v8::String::AsciiValue fieldNameVal(fieldNameObj);
+  std::string fieldName = *fieldNameVal;
+
+  // find the class
+  jclass clazz = javaFindClass(env, className);
+  if(clazz == NULL) {
+    std::ostringstream errStr;
+    errStr << "Could not create class " << className.c_str();
+    return ThrowException(javaExceptionToV8(env, errStr.str()));
+  }
+
+  // get the field
+  jobject field = javaFindField(env, clazz, fieldName);
+  if(field == NULL) {
+    std::ostringstream errStr;
+    errStr << "Could not find field " << fieldName.c_str() << " on class " << className.c_str();
+    return ThrowException(javaExceptionToV8(env, errStr.str()));
+  }
+
+  // get field value
+  jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
+  jmethodID field_get = env->GetMethodID(fieldClazz, "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
+  jobject val = env->CallObjectMethod(field, field_get, NULL);
+
+  return scope.Close(JavaObject::New(self, val));
+}
+
