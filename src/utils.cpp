@@ -129,9 +129,12 @@ jclass javaFindClass(JNIEnv* env, std::string className) {
 
 jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg, int *methodArgType) {
   if(arg->IsString()) {
+    *methodArgType = TYPE_STRING;
     v8::String::AsciiValue val(arg->ToString());
     return env->NewStringUTF(*val);
   } else {
+    // TODO: handle other arg types
+    *methodArgType = TYPE_OBJECT;
     return NULL;
   }
 }
