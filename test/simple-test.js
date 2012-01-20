@@ -21,7 +21,7 @@ exports['Simple'] = nodeunit.testCase({
       }
     });
   },
-  /*
+  
   "create an instance of a class and call methods (getName) (sync)": function(test) {
     var list = java.newInstanceSync("java.util.ArrayList");
     var clazz = list.getClassSync();
@@ -29,7 +29,7 @@ exports['Simple'] = nodeunit.testCase({
     test.equal(result, "java.util.ArrayList");
     test.done();
   },
-  */
+  
   "create an instance of a class and call methods (size) (async)": function(test) {
     java.newInstance("java.util.ArrayList", function(err, list) {
       if(err) { console.log(err); return; }

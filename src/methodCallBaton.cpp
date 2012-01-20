@@ -3,7 +3,7 @@
 #include "java.h"
 #include "javaObject.h"
 
-MethodCallBaton::MethodCallBaton(Java* java, jobject method, std::list<jobject> args, v8::Handle<v8::Value> &callback) {
+MethodCallBaton::MethodCallBaton(Java* java, jobject method, std::list<jobject>& args, v8::Handle<v8::Value>& callback) {
   JNIEnv *env = java->getJavaEnv();
   
   m_java = java;
@@ -29,6 +29,12 @@ void MethodCallBaton::run() {
   ev_ref(EV_DEFAULT_UC);
 }
 
+v8::Handle<v8::Value> MethodCallBaton::runSync() {
+  JNIEnv *env = m_java->getJavaEnv();
+  execute(env);
+  return resultsToV8(env);
+}
+
 /*static*/ void MethodCallBaton::EIO_MethodCall(eio_req* req) {
   MethodCallBaton* self = static_cast<MethodCallBaton*>(req->data);
   JNIEnv *env = javaAttachCurrentThread(self->m_java->getJvm());
@@ -49,26 +55,28 @@ void MethodCallBaton::after(JNIEnv *env) {
   if(m_callback->IsFunction()) {
     v8::Handle<v8::Value> argv[2];
     argv[0] = v8::Undefined();
-    switch(m_resultType) {
-      case TYPE_INT:
-        {
-          jclass integerClazz = env->FindClass("java/lang/Integer");
-          jmethodID integer_intValue = env->GetMethodID(integerClazz, "intValue", "()I");
-          int result = env->CallIntMethod(m_result, integer_intValue);
-          argv[1] = v8::Integer::New(result);
-        }
-        break;
-      case TYPE_OBJECT:
-        argv[1] = JavaObject::New(m_java, m_result);
-        break;
-      case TYPE_STRING:
-        argv[1] = v8::String::New(javaObjectToString(env, m_result).c_str());
-        break;
-    }
+    argv[1] = resultsToV8(env);
     v8::Function::Cast(*m_callback)->Call(v8::Context::GetCurrent()->Global(), 2, argv);
   }
 
   env->DeleteGlobalRef(m_result);  
+}
+
+v8::Handle<v8::Value> MethodCallBaton::resultsToV8(JNIEnv *env) {
+  switch(m_resultType) {
+    case TYPE_INT:
+      {
+        jclass integerClazz = env->FindClass("java/lang/Integer");
+        jmethodID integer_intValue = env->GetMethodID(integerClazz, "intValue", "()I");
+        int result = env->CallIntMethod(m_result, integer_intValue);
+        return v8::Integer::New(result);
+      }
+    case TYPE_OBJECT:
+      return JavaObject::New(m_java, m_result);
+    case TYPE_STRING:
+      return v8::String::New(javaObjectToString(env, m_result).c_str());
+  }
+  return v8::Undefined();
 }
 
 void NewInstanceBaton::execute(JNIEnv *env) {
@@ -108,8 +116,8 @@ NewInstanceBaton::NewInstanceBaton(
   Java* java,
   jclass clazz,
   jobject method,
-  std::list<jobject> args,
-  v8::Handle<v8::Value> &callback) : MethodCallBaton(java, method, args, callback) {
+  std::list<jobject>& args,
+  v8::Handle<v8::Value>& callback) : MethodCallBaton(java, method, args, callback) {
   JNIEnv *env = m_java->getJavaEnv();
   m_clazz = (jclass)env->NewGlobalRef(clazz);
 }
@@ -123,8 +131,8 @@ InstanceMethodCallBaton::InstanceMethodCallBaton(
   Java* java,
   JavaObject* obj,
   jobject method,
-  std::list<jobject> args,
-  v8::Handle<v8::Value> &callback) : MethodCallBaton(java, method, args, callback) {
+  std::list<jobject>& args,
+  v8::Handle<v8::Value>& callback) : MethodCallBaton(java, method, args, callback) {
   m_javaObject = obj;
   m_javaObject->Ref();
 }

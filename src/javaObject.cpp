@@ -29,10 +29,15 @@
   jclass methodClazz = env->FindClass("java/lang/reflect/Method");
   jmethodID method_getNameMethod = env->GetMethodID(methodClazz, "getName", "()Ljava/lang/String;");
   for(std::list<jobject>::iterator it = self->m_methods.begin(); it != self->m_methods.end(); it++) {
-		const char* methodNameStr = javaToString(env, (jstring)env->CallObjectMethod(*it, method_getNameMethod)).c_str();
-    v8::Handle<v8::String> methodName = v8::String::New(methodNameStr);
-    v8::Local<v8::FunctionTemplate> methodCallTemplate = v8::FunctionTemplate::New(methodCall, methodName);
+		std::string methodNameStr = javaToString(env, (jstring)env->CallObjectMethod(*it, method_getNameMethod));
+
+    v8::Handle<v8::String> methodName = v8::String::New(methodNameStr.c_str());
+		v8::Local<v8::FunctionTemplate> methodCallTemplate = v8::FunctionTemplate::New(methodCall, methodName);
     javaObjectObj->Set(methodName, methodCallTemplate->GetFunction());
+
+    v8::Handle<v8::String> methodNameSync = v8::String::New((methodNameStr + "Sync").c_str());
+		v8::Local<v8::FunctionTemplate> methodCallSyncTemplate = v8::FunctionTemplate::New(methodCallSync, methodName);
+    javaObjectObj->Set(methodNameSync, methodCallSyncTemplate->GetFunction());
   }
 
   return scope.Close(javaObjectObj);
@@ -70,7 +75,7 @@ JavaObject::~JavaObject() {
 
   jobject method = javaFindBestMatchingMethod(env, self->m_methods, *methodName, methodArgs);
   if(method == NULL) {
-    return v8::Undefined();
+    return v8::Undefined(); // TODO: callback with error
   }
 
   // run
@@ -78,4 +83,26 @@ JavaObject::~JavaObject() {
 	baton->run();
 
   return v8::Undefined();
+}
+
+/*static*/ v8::Handle<v8::Value> JavaObject::methodCallSync(const v8::Arguments& args) {
+	v8::HandleScope scope;
+  JavaObject* self = node::ObjectWrap::Unwrap<JavaObject>(args.This());
+  JNIEnv *env = self->m_java->getJavaEnv();
+
+  v8::String::AsciiValue methodName(args.Data());
+
+  std::list<jobject> methodArgs; // TODO: build args
+
+  jobject method = javaFindBestMatchingMethod(env, self->m_methods, *methodName, methodArgs);
+  if(method == NULL) {
+    return v8::Undefined();
+  }
+
+  // run
+	v8::Handle<v8::Value> callback = v8::Object::New();
+  InstanceMethodCallBaton* baton = new InstanceMethodCallBaton(self->m_java, self, method, methodArgs, callback);
+	v8::Handle<v8::Value> result = baton->runSync();
+	delete baton;
+  return scope.Close(result);;
 }

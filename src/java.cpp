@@ -82,5 +82,27 @@ Java::~Java() {
 }
 
 /*static*/ v8::Handle<v8::Value> Java::newInstanceSync(const v8::Arguments& args) {
-  return v8::Undefined();
+  v8::HandleScope scope;
+  Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
+  JNIEnv* env = self->getJavaEnv();
+
+  // argument - className
+  if(args.Length() < 1 || !args[0]->IsString()) {
+    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 0 must be a string")));
+  }
+  v8::Local<v8::String> classNameObj = v8::Local<v8::String>::Cast(args[0]);
+  v8::String::AsciiValue classNameVal(classNameObj);
+  std::string className = *classNameVal;
+
+  std::list<jobject> methodArgs; // TODO: build args
+  jclass clazz = javaFindClass(env, className);
+  std::list<jobject> constructors = javaReflectionGetConstructors(env, clazz);  
+  jobject method = javaFindBestMatchingConstructor(env, constructors, methodArgs);
+  
+  // run
+  v8::Handle<v8::Value> callback = v8::Object::New();
+  NewInstanceBaton* baton = new NewInstanceBaton(self, clazz, method, methodArgs, callback);
+  v8::Handle<v8::Value> result = baton->runSync();
+  delete baton;
+  return scope.Close(result);
 }

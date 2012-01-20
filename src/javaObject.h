@@ -24,6 +24,7 @@ private:
   JavaObject(Java* java, jobject obj);
   ~JavaObject();
   static v8::Handle<v8::Value> methodCall(const v8::Arguments& args);
+  static v8::Handle<v8::Value> methodCallSync(const v8::Arguments& args);
 
   static v8::Persistent<v8::FunctionTemplate> s_ct;
   Java* m_java;
