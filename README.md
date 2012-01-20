@@ -4,12 +4,12 @@ Bridge API to connect with existing Java APIs.
 
 ## Installation
 
-    $ npm install nodejavabridge
+    $ npm install java
 
 ## Usage
 
 ```javascript
-var java = require("nodejavabridge");
+var java = require("java");
 java.classpath.push("commons-lang3-3.1.jar");
 java.classpath.push("commons-io.jar");
 
