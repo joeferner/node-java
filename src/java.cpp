@@ -177,7 +177,76 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
 }
 
 /*static*/ v8::Handle<v8::Value> Java::callStaticMethod(const v8::Arguments& args) {
-  // TODO: write me
+  v8::HandleScope scope;
+  Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
+  v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
+  if(!ensureJvmResults->IsUndefined()) {
+    return ensureJvmResults;
+  }
+  JNIEnv* env = self->getJavaEnv();
+
+  int argsEnd = args.Length();
+
+  // argument - className
+  if(args.Length() < 1 || !args[0]->IsString()) {
+    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 0 must be a string")));
+  }
+  v8::Local<v8::String> classNameObj = v8::Local<v8::String>::Cast(args[0]);
+  v8::String::AsciiValue classNameVal(classNameObj);
+  std::string className = *classNameVal;
+
+  // argument - method name
+  if(args.Length() < 2 || !args[1]->IsString()) {
+    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 1 must be a string")));
+  }
+  v8::Local<v8::String> methodNameObj = v8::Local<v8::String>::Cast(args[1]);
+  v8::String::AsciiValue methodNameVal(methodNameObj);
+  std::string methodName = *methodNameVal;
+
+  // argument - callback
+  v8::Handle<v8::Value> callback;
+  if(args[args.Length()-1]->IsFunction()) {
+    callback = args[argsEnd-1];
+    argsEnd--;
+  } else {
+    callback = v8::Null();
+  }
+
+  // build args
+	std::list<int> methodArgTypes;
+  jarray methodArgs = v8ToJava(env, args, 2, argsEnd, &methodArgTypes);
+
+  // find class and method
+  jclass clazz = javaFindClass(env, className);
+  if(clazz == NULL) {
+    std::ostringstream errStr;
+    errStr << "Could not create class " << className.c_str();
+    v8::Handle<v8::Value> error = javaExceptionToV8(env, errStr.str());
+
+    v8::Handle<v8::Value> argv[2];
+    argv[0] = error;
+    argv[1] = v8::Undefined();
+    v8::Function::Cast(*callback)->Call(v8::Context::GetCurrent()->Global(), 2, argv);
+    return v8::Undefined();
+  }
+  std::list<jobject> staticMethods = javaReflectionGetStaticMethods(env, clazz);
+  jobject method = javaFindBestMatchingMethod(env, staticMethods, methodName.c_str(), methodArgTypes);
+  if(method == NULL) {
+    std::ostringstream errStr;
+    errStr << "Could not find method \"" << methodName.c_str() << "\"";
+    v8::Handle<v8::Value> error = javaExceptionToV8(env, errStr.str());
+
+    v8::Handle<v8::Value> argv[2];
+    argv[0] = error;
+    argv[1] = v8::Undefined();
+    v8::Function::Cast(*callback)->Call(v8::Context::GetCurrent()->Global(), 2, argv);
+    return v8::Undefined();
+  }
+
+  // run
+  StaticMethodCallBaton* baton = new StaticMethodCallBaton(self, clazz, method, methodArgs, callback);
+  baton->run();
+
   return v8::Undefined();
 }
 
@@ -217,10 +286,15 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   if(clazz == NULL) {
     std::ostringstream errStr;
     errStr << "Could not create class " << className.c_str();
-    return javaExceptionToV8(env, errStr.str());
+    return ThrowException(javaExceptionToV8(env, errStr.str()));
   }
   std::list<jobject> staticMethods = javaReflectionGetStaticMethods(env, clazz);
   jobject method = javaFindBestMatchingMethod(env, staticMethods, methodName.c_str(), methodArgTypes);
+  if(method == NULL) {
+    std::ostringstream errStr;
+    errStr << "Could not find method \"" << methodName.c_str() << "\"";
+    return ThrowException(javaExceptionToV8(env, errStr.str()));
+  }
 
   // run
   v8::Handle<v8::Value> callback = v8::Object::New();

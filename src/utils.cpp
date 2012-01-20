@@ -179,8 +179,8 @@ v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, const std::string& alternat
     printf("BEGIN Java Exception -------\n");
     env->ExceptionDescribe(); // TODO: handle error
     printf("END Java Exception ---------\n");
-    return ThrowException(v8::Exception::TypeError(v8::String::New("java exception")));
+    return v8::Exception::TypeError(v8::String::New("java exception"));
   } else {
-    return ThrowException(v8::Exception::TypeError(v8::String::New(alternateMessage.c_str())));
+    return v8::Exception::TypeError(v8::String::New(alternateMessage.c_str()));
   }
 }

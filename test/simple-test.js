@@ -28,6 +28,22 @@ exports['Simple'] = nodeunit.testCase({
     test.done();
   },
 
+  "test method does not exists (sync)": function(test) {
+    test.throws(
+      function() {
+        java.callStaticMethodSync("java.lang.System", "badMethod");
+      }
+    );
+    test.done();
+  },
+
+  "test method does not exists (async)": function(test) {
+    java.callStaticMethod("java.lang.System", "badMethod", function(err, result) {
+      if(err) { test.done(); return; }
+      test.done(new Error("should throw exception"));
+    });
+  },
+
   "create an instance of a class and call methods (getName) (async)": function(test) {
     java.newInstance("java.util.ArrayList", function(err, list) {
       if(err) { console.log(err); return; }
