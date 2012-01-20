@@ -115,11 +115,13 @@ void NewInstanceBaton::run(JNIEnv *env) {
     return;
   }
 
-  m_result = env->NewObject(clazz, method);
+  jobject result = env->NewObject(clazz, method);
   if(env->ExceptionCheck()) {
     env->ExceptionDescribe(); // TODO: handle error
     return;
   }
+  
+  m_result = env->NewGlobalRef(result);
 }
 
 void NewInstanceBaton::doCallback() {
@@ -127,7 +129,7 @@ void NewInstanceBaton::doCallback() {
     v8::Handle<v8::Value> argv[2];
     argv[0] = v8::Undefined();
     argv[1] = JavaObject::New(m_java, m_result);
-
     v8::Function::Cast(*this->m_callback)->Call(v8::Context::GetCurrent()->Global(), 2, argv);
   }
+  m_java->getJavaEnv()->DeleteGlobalRef(m_result);
 }

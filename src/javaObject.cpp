@@ -29,7 +29,8 @@
   jclass methodClazz = env->FindClass("java/lang/reflect/Method");
   jmethodID method_getNameMethod = env->GetMethodID(methodClazz, "getName", "()Ljava/lang/String;");
   for(std::list<jobject>::iterator it = self->m_methods.begin(); it != self->m_methods.end(); it++) {
-    v8::Handle<v8::String> methodName = v8::String::New(javaToString(env, (jstring)env->CallObjectMethod(*it, method_getNameMethod)).c_str());
+		const char* methodNameStr = javaToString(env, (jstring)env->CallObjectMethod(*it, method_getNameMethod)).c_str();
+    v8::Handle<v8::String> methodName = v8::String::New(methodNameStr);
     v8::Local<v8::FunctionTemplate> methodCallTemplate = v8::FunctionTemplate::New(methodCall, methodName);
     javaObjectObj->Set(methodName, methodCallTemplate->GetFunction());
   }
@@ -39,12 +40,12 @@
 
 JavaObject::JavaObject(Java *java, jobject obj) {
   m_java = java;
-  m_obj = obj;
-  m_class = java->getJavaEnv()->GetObjectClass(obj);
+  m_obj = m_java->getJavaEnv()->NewGlobalRef(obj);
+  m_class = m_java->getJavaEnv()->GetObjectClass(obj);
 }
 
 JavaObject::~JavaObject() {
-
+	m_java->getJavaEnv()->DeleteGlobalRef(m_obj);
 }
 
 /*static*/ v8::Handle<v8::Value> JavaObject::methodCall(const v8::Arguments& args) {

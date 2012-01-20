@@ -25,7 +25,7 @@ private:
   v8::Persistent<v8::Value> m_callback;
   jobject m_method;
   std::list<jobject> m_args;
-  jvalue m_result;
+  jobject m_result;
   int m_resultType;
 };
 

@@ -8,7 +8,8 @@
 
 typedef enum _jvalueType {
   TYPE_INT,
-  TYPE_OBJECT
+  TYPE_OBJECT,
+  TYPE_STRING
 } jvalueType;
 
 std::list<jobject> javaReflectionGetDeclaredMethods(JNIEnv *env, jclass clazz);

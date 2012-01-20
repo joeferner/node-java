@@ -25,6 +25,9 @@ std::string javaToString(JNIEnv *env, jstring str) {
 }
 
 std::string javaObjectToString(JNIEnv *env, jobject obj) {
+  if(obj == NULL) {
+    return "";
+  }
   jclass objClazz = env->GetObjectClass(obj);
   jmethodID methodId = env->GetMethodID(objClazz, "toString", "()Ljava/lang/String;");
   jstring result = (jstring)env->CallObjectMethod(obj, methodId);
@@ -68,6 +71,8 @@ jvalueType javaGetType(JNIEnv *env, jclass type) {
   const char *typeStr = javaObjectToString(env, type).c_str();
   if(strcmp(typeStr, "int") == 0) {
     return TYPE_INT;
+  } else if(strcmp(typeStr, "class java.lang.String") == 0) {
+    return TYPE_STRING;
   }
   
   //jclass intClazz = env->FindClass("java/lang/Integer");
