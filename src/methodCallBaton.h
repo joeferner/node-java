@@ -11,11 +11,6 @@
 class Java;
 class JavaObject;
 
-typedef enum _jvalueType {
-  TYPE_INT,
-  TYPE_OBJECT
-} jvalueType;
-
 class MethodCallBaton {
 public:
   MethodCallBaton(Java* java, JavaObject* obj, jobject method, std::list<jobject> args, v8::Handle<v8::Value> &callback);

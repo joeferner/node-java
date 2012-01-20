@@ -1,5 +1,6 @@
 
 #include "utils.h"
+#include <string.h>
 
 std::list<jobject> javaReflectionGetDeclaredMethods(JNIEnv *env, jclass clazz) {
   std::list<jobject> results;
@@ -60,4 +61,16 @@ JNIEnv* javaAttachCurrentThread(JavaVM* jvm) {
 
 void javaDetachCurrentThread(JavaVM* jvm) {
   jvm->DetachCurrentThread();
+}
+
+jvalueType javaGetType(JNIEnv *env, jclass type) {
+  // TODO: has to be a better way
+  const char *typeStr = javaObjectToString(env, type).c_str();
+  if(strcmp(typeStr, "int") == 0) {
+    return TYPE_INT;
+  }
+  
+  //jclass intClazz = env->FindClass("java/lang/Integer");
+
+  return TYPE_OBJECT;  
 }
