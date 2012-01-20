@@ -3,6 +3,7 @@
 #include <string.h>
 #include <algorithm>
 #include "javaObject.h"
+#include "methodCallBaton.h"
 
 /*static*/ v8::Persistent<v8::FunctionTemplate> Java::s_ct;
 
@@ -50,13 +51,15 @@ Java::~Java() {
 /*static*/ v8::Handle<v8::Value> Java::newInstance(const v8::Arguments& args) {
   v8::HandleScope scope;
   Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
+  JNIEnv* env = self->getJavaEnv();
 
   // argument - className
   if(args.Length() < 1 || !args[0]->IsString()) {
     return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 0 must be a string")));
   }
   v8::Local<v8::String> classNameObj = v8::Local<v8::String>::Cast(args[0]);
-  v8::String::AsciiValue className(classNameObj);
+  v8::String::AsciiValue classNameVal(classNameObj);
+  std::string className = *classNameVal;
 
   // argument - callback
   v8::Handle<v8::Value> callback;
@@ -66,70 +69,27 @@ Java::~Java() {
     callback = v8::Null();
   }
 
-  // run
-  NewInstanceBaton* baton = new NewInstanceBaton(self, *className, callback);
-  eio_custom(EIO_NewInstance, EIO_PRI_DEFAULT, EIO_AfterNewInstance, baton);
-  ev_ref(EV_DEFAULT_UC);
+  std::replace(className.begin(), className.end(), '.', '/');
 
-  return v8::Undefined();
-}
-
-/*static*/ void Java::EIO_NewInstance(eio_req* req) {
-  NewInstanceBaton* baton = static_cast<NewInstanceBaton*>(req->data);
-  JNIEnv *env = javaAttachCurrentThread(baton->m_java->getJvm());
-  baton->run(env);
-  javaDetachCurrentThread(baton->m_java->getJvm());
-}
-
-/*static*/ int Java::EIO_AfterNewInstance(eio_req* req) {
-  NewInstanceBaton* baton = static_cast<NewInstanceBaton*>(req->data);
-  ev_unref(EV_DEFAULT_UC);
-  baton->doCallback();
-  delete baton;
-  return 0;
-}
-
-NewInstanceBaton::NewInstanceBaton(Java* java, const char *className, v8::Handle<v8::Value> &callback) {
-  m_java = java;
-  m_className = className;
-  std::replace(m_className.begin(), m_className.end(), '.', '/');
-  m_callback = v8::Persistent<v8::Value>::New(callback);
-  m_java->Ref();
-}
-
-NewInstanceBaton::~NewInstanceBaton() {
-  m_callback.Dispose();
-  m_java->Unref();
-}
-
-void NewInstanceBaton::run(JNIEnv *env) {
-  jclass clazz = env->FindClass(m_className.c_str());
+  jclass clazz = env->FindClass(className.c_str());
   if(env->ExceptionCheck()) {
     env->ExceptionDescribe(); // TODO: handle error
-    return;
+    return v8::Undefined();
   }
 
   jmethodID method = env->GetMethodID(clazz, "<init>", "()V"); // TODO: add arguments
   if(env->ExceptionCheck()) {
     env->ExceptionDescribe(); // TODO: handle error
-    return;
+    return v8::Undefined();
   }
 
-  jobject result = env->NewObject(clazz, method);
-  if(env->ExceptionCheck()) {
-    env->ExceptionDescribe(); // TODO: handle error
-    return;
-  }
+  std::list<jobject> methodArgs; // TODO: build args
   
-  m_result = env->NewGlobalRef(result);
+  // run
+  NewInstanceBaton* baton = new NewInstanceBaton(self, clazz, method, methodArgs, callback);
+  eio_custom(MethodCallBaton::EIO_MethodCall, EIO_PRI_DEFAULT, MethodCallBaton::EIO_AfterMethodCall, baton);
+  ev_ref(EV_DEFAULT_UC);
+
+  return v8::Undefined();
 }
 
-void NewInstanceBaton::doCallback() {
-  if(m_callback->IsFunction()) {
-    v8::Handle<v8::Value> argv[2];
-    argv[0] = v8::Undefined();
-    argv[1] = JavaObject::New(m_java, m_result);
-    v8::Function::Cast(*this->m_callback)->Call(v8::Context::GetCurrent()->Global(), 2, argv);
-  }
-  m_java->getJavaEnv()->DeleteGlobalRef(m_result);
-}

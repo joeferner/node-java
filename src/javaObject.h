@@ -9,14 +9,16 @@
 #include "methodCallBaton.h"
 
 class Java;
-class MethodCallBaton;
 
-class JavaObject : node::ObjectWrap {
+class JavaObject : public node::ObjectWrap {
 public:
   static void Init(v8::Handle<v8::Object> target);
   static v8::Local<v8::Object> New(Java* java, jobject obj);
 
-  friend class MethodCallBaton;
+  jobject getObject() { return m_obj; }
+  
+  void Ref() { node::ObjectWrap::Ref(); }
+  void Unref() { node::ObjectWrap::Unref(); }
 
 private:
   JavaObject(Java* java, jobject obj);

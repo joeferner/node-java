@@ -74,9 +74,8 @@ JavaObject::~JavaObject() {
   }
 
   // run
-  MethodCallBaton* baton = new MethodCallBaton(self->m_java, self, method, methodArgs, callback);
-  eio_custom(MethodCallBaton::EIO_MethodCall, EIO_PRI_DEFAULT, MethodCallBaton::EIO_AfterMethodCall, baton);
-  ev_ref(EV_DEFAULT_UC);
+  InstanceMethodCallBaton* baton = new InstanceMethodCallBaton(self->m_java, self, method, methodArgs, callback);
+	baton->run();
 
   return v8::Undefined();
 }
