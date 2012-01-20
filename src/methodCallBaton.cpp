@@ -3,23 +3,18 @@
 #include "java.h"
 #include "javaObject.h"
 
-MethodCallBaton::MethodCallBaton(Java* java, jobject method, std::list<jobject>& args, v8::Handle<v8::Value>& callback) {
+MethodCallBaton::MethodCallBaton(Java* java, jobject method, jarray args, v8::Handle<v8::Value>& callback) {
   JNIEnv *env = java->getJavaEnv();
   
   m_java = java;
-  for(std::list<jobject>::iterator it = args.begin(); it != args.end(); it++) {
-    m_args.push_back(env->NewGlobalRef(*it));
-  }
+  m_args = (jarray)env->NewGlobalRef(args);
   m_callback = v8::Persistent<v8::Value>::New(callback);
   m_method = env->NewGlobalRef(method);
 }
 
 MethodCallBaton::~MethodCallBaton() {
   JNIEnv *env = m_java->getJavaEnv();
-  for(std::list<jobject>::iterator it = m_args.begin(); it != m_args.end(); it++) {
-    env->DeleteGlobalRef(*it);
-  }
-  
+  env->DeleteGlobalRef(m_args);
   env->DeleteGlobalRef(m_method);
   m_callback.Dispose();
 }
@@ -83,9 +78,7 @@ void NewInstanceBaton::execute(JNIEnv *env) {
   jclass constructorClazz = env->FindClass("java/lang/reflect/Constructor");
   jmethodID constructor_newInstance = env->GetMethodID(constructorClazz, "newInstance", "([Ljava/lang/Object;)Ljava/lang/Object;");
 
-  jclass objectClazz = env->FindClass("java/lang/Object");
-  jobjectArray parameters = env->NewObjectArray(0, objectClazz, NULL); // TODO: init parameters
-  jobject result = env->CallObjectMethod(m_method, constructor_newInstance, parameters);
+  jobject result = env->CallObjectMethod(m_method, constructor_newInstance, m_args);
   m_resultType = TYPE_OBJECT;
   m_result = env->NewGlobalRef(result);
   if(env->ExceptionCheck()) {
@@ -101,10 +94,8 @@ void InstanceMethodCallBaton::execute(JNIEnv *env) {
 
   jclass returnType = (jclass)env->CallObjectMethod(m_method, method_getReturnType);
 
-  jclass objectClazz = env->FindClass("java/lang/Object");
-  jobjectArray parameters = env->NewObjectArray(0, objectClazz, NULL); // TODO: init parameters
   m_resultType = javaGetType(env, returnType);
-  jobject result = env->CallObjectMethod(m_method, method_invoke, m_javaObject->getObject(), parameters);
+  jobject result = env->CallObjectMethod(m_method, method_invoke, m_javaObject->getObject(), m_args);
   m_result = env->NewGlobalRef(result);
   if(env->ExceptionCheck()) {
     env->ExceptionDescribe(); // TODO: handle error
@@ -116,7 +107,7 @@ NewInstanceBaton::NewInstanceBaton(
   Java* java,
   jclass clazz,
   jobject method,
-  std::list<jobject>& args,
+  jarray args,
   v8::Handle<v8::Value>& callback) : MethodCallBaton(java, method, args, callback) {
   JNIEnv *env = m_java->getJavaEnv();
   m_clazz = (jclass)env->NewGlobalRef(clazz);
@@ -131,7 +122,7 @@ InstanceMethodCallBaton::InstanceMethodCallBaton(
   Java* java,
   JavaObject* obj,
   jobject method,
-  std::list<jobject>& args,
+  jarray args,
   v8::Handle<v8::Value>& callback) : MethodCallBaton(java, method, args, callback) {
   m_javaObject = obj;
   m_javaObject->Ref();

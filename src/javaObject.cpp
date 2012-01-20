@@ -60,20 +60,21 @@ JavaObject::~JavaObject() {
 
   v8::String::AsciiValue methodName(args.Data());
 
-  int argsLength = args.Length();
+  int argsEnd = args.Length();
 
   // argument - callback
   v8::Handle<v8::Value> callback;
   if(args[args.Length()-1]->IsFunction()) {
-    callback = args[argsLength-1];
-    argsLength--;
+    callback = args[argsEnd-1];
+    argsEnd--;
   } else {
     callback = v8::Null();
   }
 
-  std::list<jobject> methodArgs; // TODO: build args
+	std::list<int> methodArgTypes;
+  jarray methodArgs = v8ToJava(env, args, 0, argsEnd, &methodArgTypes);
 
-  jobject method = javaFindBestMatchingMethod(env, self->m_methods, *methodName, methodArgs);
+  jobject method = javaFindBestMatchingMethod(env, self->m_methods, *methodName, methodArgTypes);
   if(method == NULL) {
     return v8::Undefined(); // TODO: callback with error
   }
@@ -92,9 +93,10 @@ JavaObject::~JavaObject() {
 
   v8::String::AsciiValue methodName(args.Data());
 
-  std::list<jobject> methodArgs; // TODO: build args
+	std::list<int> methodArgTypes;
+  jarray methodArgs = v8ToJava(env, args, 0, args.Length(), &methodArgTypes);
 
-  jobject method = javaFindBestMatchingMethod(env, self->m_methods, *methodName, methodArgs);
+  jobject method = javaFindBestMatchingMethod(env, self->m_methods, *methodName, methodArgTypes);
   if(method == NULL) {
     return v8::Undefined();
   }

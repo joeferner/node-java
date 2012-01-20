@@ -13,7 +13,7 @@ class JavaObject;
 
 class MethodCallBaton {
 public:
-  MethodCallBaton(Java* java, jobject method, std::list<jobject>& args, v8::Handle<v8::Value>& callback);
+  MethodCallBaton(Java* java, jobject method, jarray args, v8::Handle<v8::Value>& callback);
   virtual ~MethodCallBaton();
 
   static void EIO_MethodCall(eio_req* req);
@@ -28,7 +28,7 @@ protected:
   
   Java* m_java;
   v8::Persistent<v8::Value> m_callback;
-  std::list<jobject> m_args;
+  jarray m_args;
   jobject m_result;
   jobject m_method;
   int m_resultType;
@@ -36,7 +36,7 @@ protected:
 
 class InstanceMethodCallBaton : public MethodCallBaton {
 public:
-  InstanceMethodCallBaton(Java* java, JavaObject* obj, jobject method, std::list<jobject>& args, v8::Handle<v8::Value>& callback);
+  InstanceMethodCallBaton(Java* java, JavaObject* obj, jobject method, jarray args, v8::Handle<v8::Value>& callback);
   virtual ~InstanceMethodCallBaton();
 
 protected:
@@ -47,7 +47,7 @@ protected:
 
 class NewInstanceBaton : public MethodCallBaton {
 public:
-  NewInstanceBaton(Java* java, jclass clazz, jobject method, std::list<jobject>& args, v8::Handle<v8::Value>& callback);
+  NewInstanceBaton(Java* java, jclass clazz, jobject method, jarray args, v8::Handle<v8::Value>& callback);
   virtual ~NewInstanceBaton();
   
 protected:

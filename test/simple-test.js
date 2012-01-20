@@ -24,6 +24,10 @@ exports['Simple'] = nodeunit.testCase({
   
   "create an instance of a class and call methods (getName) (sync)": function(test) {
     var list = java.newInstanceSync("java.util.ArrayList");
+    test.equal(list.sizeSync(), 0);
+    list.addSync("hello");
+    list.addSync("world");
+    test.equal(list.sizeSync(), 2);
     var clazz = list.getClassSync();
     var result = clazz.getNameSync();
     test.equal(result, "java.util.ArrayList");

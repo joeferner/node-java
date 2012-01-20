@@ -54,15 +54,19 @@ jobject javaFindBestMatchingMethod(
   JNIEnv *env,
   std::list<jobject>& methods,
   const char *methodName,
-  std::list<jobject>& args) {
+  std::list<int>& argTypes) {
 
   jclass methodClazz = env->FindClass("java/lang/reflect/Method");
   jmethodID method_getNameMethod = env->GetMethodID(methodClazz, "getName", "()Ljava/lang/String;");
+  jmethodID method_getParameterTypes = env->GetMethodID(methodClazz, "getParameterTypes", "()[Ljava/lang/Class;");
 
   for(std::list<jobject>::iterator it = methods.begin(); it != methods.end(); it++) {
     std::string itMethodName = javaToString(env, (jstring)env->CallObjectMethod(*it, method_getNameMethod));
     if(itMethodName == methodName) {
-      return *it; // TODO: check parameters
+      jarray parameters = (jarray)env->CallObjectMethod(*it, method_getParameterTypes);
+      if(env->GetArrayLength(parameters) == (jsize)argTypes.size()) {
+        return *it; // TODO: check parameters
+      }
     }
   }
   return NULL;
@@ -71,14 +75,14 @@ jobject javaFindBestMatchingMethod(
 jobject javaFindBestMatchingConstructor(
   JNIEnv *env,
   std::list<jobject>& constructors,
-  std::list<jobject>& args) {
+  std::list<int>& argTypes) {
 
   jclass constructorClazz = env->FindClass("java/lang/reflect/Constructor");
   jmethodID constructor_getParameterTypes = env->GetMethodID(constructorClazz, "getParameterTypes", "()[Ljava/lang/Class;");
 
   for(std::list<jobject>::iterator it = constructors.begin(); it != constructors.end(); it++) {
     jarray parameters = (jarray)env->CallObjectMethod(*it, constructor_getParameterTypes);
-    if(env->GetArrayLength(parameters) == (jsize)args.size()) {    
+    if(env->GetArrayLength(parameters) == (jsize)argTypes.size()) {    
       return *it; // TODO: check parameters
     }
   }
@@ -123,3 +127,27 @@ jclass javaFindClass(JNIEnv* env, std::string className) {
   return clazz;
 }
 
+jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg, int *methodArgType) {
+  if(arg->IsString()) {
+    v8::String::AsciiValue val(arg->ToString());
+    return env->NewStringUTF(*val);
+  } else {
+    return NULL;
+  }
+}
+
+jarray v8ToJava(JNIEnv* env, const v8::Arguments& args, int start, int end, std::list<int> *methodArgTypes) {
+  jclass clazz = env->FindClass("java/lang/Object");
+  jobjectArray results = env->NewObjectArray(end-start, clazz, NULL);
+  
+  for(int i=start; i<end; i++) {
+    int methodArgType;
+    jobject val = v8ToJava(env, args[i], &methodArgType);
+    env->SetObjectArrayElement(results, i, val);
+    if(methodArgTypes) {
+      methodArgTypes->push_back(methodArgType);
+    }
+  }
+  
+  return results;
+}

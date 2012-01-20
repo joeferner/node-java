@@ -53,6 +53,8 @@ Java::~Java() {
   Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
   JNIEnv* env = self->getJavaEnv();
 
+  int argsEnd = args.Length();  
+  
   // argument - className
   if(args.Length() < 1 || !args[0]->IsString()) {
     return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 0 must be a string")));
@@ -64,15 +66,18 @@ Java::~Java() {
   // argument - callback
   v8::Handle<v8::Value> callback;
   if(args[args.Length()-1]->IsFunction()) {
-    callback = args[args.Length()-1];
+    callback = args[argsEnd-1];
+    argsEnd--;
   } else {
     callback = v8::Null();
   }
 
-  std::list<jobject> methodArgs; // TODO: build args
+	std::list<int> methodArgTypes;
+  jarray methodArgs = v8ToJava(env, args, 1, argsEnd, &methodArgTypes);  
+  
   jclass clazz = javaFindClass(env, className);
   std::list<jobject> constructors = javaReflectionGetConstructors(env, clazz);  
-  jobject method = javaFindBestMatchingConstructor(env, constructors, methodArgs);
+  jobject method = javaFindBestMatchingConstructor(env, constructors, methodArgTypes);
   
   // run
   NewInstanceBaton* baton = new NewInstanceBaton(self, clazz, method, methodArgs, callback);
@@ -86,6 +91,8 @@ Java::~Java() {
   Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
   JNIEnv* env = self->getJavaEnv();
 
+  int argsEnd = args.Length();  
+  
   // argument - className
   if(args.Length() < 1 || !args[0]->IsString()) {
     return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 0 must be a string")));
@@ -94,10 +101,12 @@ Java::~Java() {
   v8::String::AsciiValue classNameVal(classNameObj);
   std::string className = *classNameVal;
 
-  std::list<jobject> methodArgs; // TODO: build args
+	std::list<int> methodArgTypes;
+  jarray methodArgs = v8ToJava(env, args, 1, argsEnd, &methodArgTypes);
+
   jclass clazz = javaFindClass(env, className);
   std::list<jobject> constructors = javaReflectionGetConstructors(env, clazz);  
-  jobject method = javaFindBestMatchingConstructor(env, constructors, methodArgs);
+  jobject method = javaFindBestMatchingConstructor(env, constructors, methodArgTypes);
   
   // run
   v8::Handle<v8::Value> callback = v8::Object::New();
