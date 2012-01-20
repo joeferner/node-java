@@ -24,7 +24,7 @@ def configure(conf):
         conf.env.append_unique('CXXFLAGS', [ '-I' + jdk_include_dir ])
 
     conf.env.append_unique('LINKFLAGS', ['-framework JavaVM'])
-    conf.env.append_unique('LINKFLAGS', ['-lm', '-lstdc++', '-ldl'])
+    conf.env.append_unique('LINKFLAGS', ['-dynamiclib', '-lm', '-lstdc++', '-ldl'])
   else:
     jdk_include_dir = environ.get("JDK_INCLUDE_DIR", "/usr/local/share/jdk1.6.0_30/include/")
     if jdk_include_dir:
