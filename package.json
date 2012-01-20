@@ -1,5 +1,5 @@
 {
-  "name": "nodejavabridge",
+  "name": "java",
   "description": "Bridge API to connect with existing Java APIs",
   "keywords": ["java", "jvm", "bridge"],
   "homepage": "https://github.com/nearinfinity/node-java-bridge",
