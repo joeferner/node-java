@@ -7,15 +7,11 @@
 #include <jni.h>
 #include <string>
 
-class NewInstanceBaton;
-
 class Java : public node::ObjectWrap {
 public:
   static void Init(v8::Handle<v8::Object> target);
   JavaVM* getJvm() { return m_jvm; }
   JNIEnv* getJavaEnv() { return m_env; }
-
-  friend class NewInstanceBaton;
 
 private:
   Java();
@@ -24,7 +20,8 @@ private:
 
   static v8::Handle<v8::Value> New(const v8::Arguments& args);
   static v8::Handle<v8::Value> newInstance(const v8::Arguments& args);
-
+  static v8::Handle<v8::Value> newInstanceSync(const v8::Arguments& args);
+  
   static v8::Persistent<v8::FunctionTemplate> s_ct;
   JavaVM* m_jvm;
   JNIEnv* m_env;

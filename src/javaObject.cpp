@@ -25,7 +25,7 @@
 
   JNIEnv *env = self->m_java->getJavaEnv();
 
-  self->m_methods = javaReflectionGetDeclaredMethods(env, self->m_class);
+  self->m_methods = javaReflectionGetMethods(env, self->m_class);
   jclass methodClazz = env->FindClass("java/lang/reflect/Method");
   jmethodID method_getNameMethod = env->GetMethodID(methodClazz, "getName", "()Ljava/lang/String;");
   for(std::list<jobject>::iterator it = self->m_methods.begin(); it != self->m_methods.end(); it++) {

@@ -1,7 +1,6 @@
 
 #include "java.h"
 #include <string.h>
-#include <algorithm>
 #include "javaObject.h"
 #include "methodCallBaton.h"
 
@@ -16,6 +15,7 @@
   s_ct->SetClassName(v8::String::NewSymbol("Java"));
 
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newInstance", newInstance);
+  NODE_SET_PROTOTYPE_METHOD(s_ct, "newInstanceSync", newInstanceSync);
 
   target->Set(v8::String::NewSymbol("Java"), s_ct->GetFunction());
 }
@@ -69,27 +69,18 @@ Java::~Java() {
     callback = v8::Null();
   }
 
-  std::replace(className.begin(), className.end(), '.', '/');
-
-  jclass clazz = env->FindClass(className.c_str());
-  if(env->ExceptionCheck()) {
-    env->ExceptionDescribe(); // TODO: handle error
-    return v8::Undefined();
-  }
-
-  jmethodID method = env->GetMethodID(clazz, "<init>", "()V"); // TODO: add arguments
-  if(env->ExceptionCheck()) {
-    env->ExceptionDescribe(); // TODO: handle error
-    return v8::Undefined();
-  }
-
   std::list<jobject> methodArgs; // TODO: build args
+  jclass clazz = javaFindClass(env, className);
+  std::list<jobject> constructors = javaReflectionGetConstructors(env, clazz);  
+  jobject method = javaFindBestMatchingConstructor(env, constructors, methodArgs);
   
   // run
   NewInstanceBaton* baton = new NewInstanceBaton(self, clazz, method, methodArgs, callback);
-  eio_custom(MethodCallBaton::EIO_MethodCall, EIO_PRI_DEFAULT, MethodCallBaton::EIO_AfterMethodCall, baton);
-  ev_ref(EV_DEFAULT_UC);
+  baton->run();
 
   return v8::Undefined();
 }
 
+/*static*/ v8::Handle<v8::Value> Java::newInstanceSync(const v8::Arguments& args) {
+  return v8::Undefined();
+}

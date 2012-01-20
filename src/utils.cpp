@@ -1,12 +1,28 @@
 
 #include "utils.h"
 #include <string.h>
+#include <algorithm>
 
-std::list<jobject> javaReflectionGetDeclaredMethods(JNIEnv *env, jclass clazz) {
+std::list<jobject> javaReflectionGetMethods(JNIEnv *env, jclass clazz) {
   std::list<jobject> results;
 
   jclass clazzclazz = env->GetObjectClass(clazz);
   jmethodID methodId = env->GetMethodID(clazzclazz, "getMethods", "()[Ljava/lang/reflect/Method;");
+  jobjectArray methodObjects = (jobjectArray)env->CallObjectMethod(clazz, methodId);
+  jsize methodCount = env->GetArrayLength(methodObjects);
+  for(jsize i=0; i<methodCount; i++) {
+    jobject obj = env->GetObjectArrayElement(methodObjects, i);
+    results.push_back(obj);
+  }
+
+  return results;
+}
+
+std::list<jobject> javaReflectionGetConstructors(JNIEnv *env, jclass clazz) {
+  std::list<jobject> results;
+
+  jclass clazzclazz = env->GetObjectClass(clazz);
+  jmethodID methodId = env->GetMethodID(clazzclazz, "getConstructors", "()[Ljava/lang/reflect/Constructor;");
   jobjectArray methodObjects = (jobjectArray)env->CallObjectMethod(clazz, methodId);
   jsize methodCount = env->GetArrayLength(methodObjects);
   for(jsize i=0; i<methodCount; i++) {
@@ -52,6 +68,23 @@ jobject javaFindBestMatchingMethod(
   return NULL;
 }
 
+jobject javaFindBestMatchingConstructor(
+  JNIEnv *env,
+  std::list<jobject>& constructors,
+  std::list<jobject>& args) {
+
+  jclass constructorClazz = env->FindClass("java/lang/reflect/Constructor");
+  jmethodID constructor_getParameterTypes = env->GetMethodID(constructorClazz, "getParameterTypes", "()[Ljava/lang/Class;");
+
+  for(std::list<jobject>::iterator it = constructors.begin(); it != constructors.end(); it++) {
+    jarray parameters = (jarray)env->CallObjectMethod(*it, constructor_getParameterTypes);
+    if(env->GetArrayLength(parameters) == (jsize)args.size()) {    
+      return *it; // TODO: check parameters
+    }
+  }
+  return NULL;
+}
+
 JNIEnv* javaAttachCurrentThread(JavaVM* jvm) {
   JNIEnv* env;
   JavaVMAttachArgs attachArgs;
@@ -79,3 +112,14 @@ jvalueType javaGetType(JNIEnv *env, jclass type) {
 
   return TYPE_OBJECT;  
 }
+
+jclass javaFindClass(JNIEnv* env, std::string className) {
+  std::replace(className.begin(), className.end(), '.', '/');
+  jclass clazz = env->FindClass(className.c_str());
+  if(env->ExceptionCheck()) {
+    env->ExceptionDescribe(); // TODO: handle error
+    return NULL;
+  }
+  return clazz;
+}
+
