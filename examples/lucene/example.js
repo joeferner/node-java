@@ -8,6 +8,7 @@ var version = java.getStaticFieldValue("org.apache.lucene.util.Version", "LUCENE
 var analyzer = java.newInstanceSync("org.apache.lucene.analysis.standard.StandardAnalyzer", version);
 var writerConfig = java.newInstanceSync("org.apache.lucene.index.IndexWriterConfig", version, analyzer);
 var writer = java.newInstanceSync("org.apache.lucene.index.IndexWriter", idx, writerConfig);
+var queryParser = java.newInstanceSync("org.apache.lucene.queryParser.QueryParser", version, "content", analyzer);
 
 writer.addDocumentSync(createDocument("Theodore Roosevelt",
   "It behooves every man to remember that the work of the " +
@@ -47,10 +48,9 @@ function createDocument(title, content) {
 }
 
 function search(searcher, queryString) {
-  var query = java.callStaticMethodSync("org.apache.lucene.queryParser.QueryParser", "parse", queryString);
-  var topDocs = searcher.search(query, 10);
+  var query = queryParser.parseSync(queryString);
+  var topDocs = searcher.searchSync(query, 10);
 
-  console.log(topDocs);
   console.log("Found " + topDocs.totalHits + " hits for query " + queryString + ".")
   for(var i=0; i<topDocs.totalHits; i++) {
     var docId = topDocs.scoreDocs[i].doc;

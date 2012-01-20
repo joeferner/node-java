@@ -96,10 +96,12 @@ jobject javaFindBestMatchingMethod(
     return possibleMatches.front();
   } else {
     // TODO: argument match
+    /*
     printf("javaFindBestMatchingMethod: multiple matches (choosing the first)\n");
     for(std::list<jobject>::iterator it = possibleMatches.begin(); it != possibleMatches.end(); it++) {
       printf("  %s\n", javaObjectToString(env, *it).c_str());
     }
+    */
     return possibleMatches.front();
   }
 
@@ -129,10 +131,12 @@ jobject javaFindBestMatchingConstructor(
     return possibleMatches.front();
   } else {
     // TODO: argument match
+    /*
     printf("javaFindBestMatchingConstructor: multiple matches (choosing the first)\n");
     for(std::list<jobject>::iterator it = possibleMatches.begin(); it != possibleMatches.end(); it++) {
       printf("  %s\n", javaObjectToString(env, *it).c_str());
     }
+    */
     return possibleMatches.front();
   }
 
