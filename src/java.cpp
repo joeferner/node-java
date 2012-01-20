@@ -19,6 +19,8 @@
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newInstanceSync", newInstanceSync);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "callStaticMethod", callStaticMethod);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "callStaticMethodSync", callStaticMethodSync);
+  NODE_SET_PROTOTYPE_METHOD(s_ct, "newArray", newArray);
+  NODE_SET_PROTOTYPE_METHOD(s_ct, "newByte", newByte);
 
   target->Set(v8::String::NewSymbol("Java"), s_ct->GetFunction());
 }
@@ -179,6 +181,9 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   NewInstanceBaton* baton = new NewInstanceBaton(self, clazz, method, methodArgs, callback);
   v8::Handle<v8::Value> result = baton->runSync();
   delete baton;
+  if(result->IsNativeError()) {
+    return ThrowException(result);
+  }
   return scope.Close(result);
 }
 
@@ -307,5 +312,103 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   StaticMethodCallBaton* baton = new StaticMethodCallBaton(self, clazz, method, methodArgs, callback);
   v8::Handle<v8::Value> result = baton->runSync();
   delete baton;
+  if(result->IsNativeError()) {
+    return ThrowException(result);
+  }
   return scope.Close(result);
+}
+
+/*static*/ v8::Handle<v8::Value> Java::newArray(const v8::Arguments& args) {
+  v8::HandleScope scope;
+  Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
+  v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
+  if(!ensureJvmResults->IsUndefined()) {
+    return ensureJvmResults;
+  }
+  JNIEnv* env = self->getJavaEnv();
+
+  // argument - className
+  if(args.Length() < 1 || !args[0]->IsString()) {
+    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 0 must be a string")));
+  }
+  v8::Local<v8::String> classNameObj = v8::Local<v8::String>::Cast(args[0]);
+  v8::String::AsciiValue classNameVal(classNameObj);
+  std::string className = *classNameVal;
+
+  // argument - array
+  if(args.Length() < 2 || !args[1]->IsArray()) {
+    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 1 must be an array")));
+  }
+  v8::Local<v8::Array> arrayObj = v8::Local<v8::Array>::Cast(args[1]);
+
+  // find class and method
+  jarray results;
+  if(strcmp(className.c_str(), "byte") == 0) {
+    results = env->NewByteArray(arrayObj->Length());
+    for(uint32_t i=0; i<arrayObj->Length(); i++) {
+      int methodArgType;
+      v8::Local<v8::Value> item = arrayObj->Get(i);
+      jobject val = v8ToJava(env, item, &methodArgType);
+      jclass byteClazz = env->FindClass("java/lang/Byte");
+      jmethodID byte_byteValue = env->GetMethodID(byteClazz, "byteValue", "()B");
+      jbyte byteValues[1];
+      byteValues[0] = env->CallByteMethod(val, byte_byteValue);
+      env->SetByteArrayRegion((jbyteArray)results, i, 1, byteValues);
+    }
+  }
+
+  else
+  {
+    jclass clazz = javaFindClass(env, className);
+    if(clazz == NULL) {
+      std::ostringstream errStr;
+      errStr << "Could not create class " << className.c_str();
+      return ThrowException(javaExceptionToV8(env, errStr.str()));
+    }
+
+    // create array
+    results = env->NewObjectArray(arrayObj->Length(), clazz, NULL);
+
+    for(uint32_t i=0; i<arrayObj->Length(); i++) {
+      int methodArgType;
+      v8::Local<v8::Value> item = arrayObj->Get(i);
+      jobject val = v8ToJava(env, item, &methodArgType);
+      env->SetObjectArrayElement((jobjectArray)results, i, val);
+      if(env->ExceptionOccurred()) {
+        std::ostringstream errStr;
+        v8::String::AsciiValue valStr(item);
+        errStr << "Could not add item \"" << *valStr << "\" to array.";
+        return ThrowException(javaExceptionToV8(env, errStr.str()));
+      }
+    }
+  }
+
+  return scope.Close(JavaObject::New(self, results));
+}
+
+/*static*/ v8::Handle<v8::Value> Java::newByte(const v8::Arguments& args) {
+  v8::HandleScope scope;
+  Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
+  v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
+  if(!ensureJvmResults->IsUndefined()) {
+    return ensureJvmResults;
+  }
+  JNIEnv* env = self->getJavaEnv();
+
+  if(args.Length() != 1) {
+    return ThrowException(v8::Exception::TypeError(v8::String::New("newByte only takes 1 argument")));
+  }
+
+  // argument - value
+  if(!args[0]->IsNumber()) {
+    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 0 must be a number")));
+  }
+
+  v8::Local<v8::Number> val = args[0]->ToNumber();
+
+  jclass clazz = env->FindClass("java/lang/Byte");
+  jmethodID constructor = env->GetMethodID(clazz, "<init>", "(B)V");
+  jobject newObj = env->NewObject(clazz, constructor, (jbyte)val->Value());
+
+  return scope.Close(JavaObject::New(self, newObj));
 }

@@ -2,6 +2,7 @@
 #include "utils.h"
 #include <string.h>
 #include <algorithm>
+#include "javaObject.h"
 
 std::list<jobject> javaReflectionGetMethods(JNIEnv *env, jclass clazz) {
   std::list<jobject> results;
@@ -132,6 +133,8 @@ jvalueType javaGetType(JNIEnv *env, jclass type) {
     return TYPE_VOID;
   } else if(strcmp(typeStr, "boolean") == 0) {
     return TYPE_BOOLEAN;
+  } else if(strcmp(typeStr, "byte") == 0) {
+    return TYPE_BYTE;
   } else if(strcmp(typeStr, "class java.lang.String") == 0) {
     return TYPE_STRING;
   }
@@ -156,11 +159,21 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg, int *methodArgType) {
     jclass clazz = env->FindClass("java/lang/Integer");
     jmethodID constructor = env->GetMethodID(clazz, "<init>", "(I)V");
     return env->NewObject(clazz, constructor, val);
-  } else {
-    // TODO: handle other arg types
-    *methodArgType = TYPE_OBJECT;
-    return NULL;
+  } else if(arg->IsObject()) {
+    v8::Local<v8::Object> obj = v8::Object::Cast(*arg);
+    v8::String::AsciiValue constructorName(obj->GetConstructorName());
+    if(strcmp(*constructorName, "JavaObject") == 0) {
+      JavaObject* javaObject = node::ObjectWrap::Unwrap<JavaObject>(obj);
+      *methodArgType = TYPE_OBJECT;
+      return javaObject->getObject();
+    }
   }
+
+  // TODO: handle other arg types
+  v8::String::AsciiValue typeStr(arg);
+  printf("Unhandled type: %s\n", *typeStr);
+  *methodArgType = TYPE_OBJECT;
+  return NULL;
 }
 
 jarray v8ToJava(JNIEnv* env, const v8::Arguments& args, int start, int end, std::list<int> *methodArgTypes) {
@@ -185,8 +198,7 @@ v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, const std::string& alternat
     printf("BEGIN Java Exception -------\n");
     env->ExceptionDescribe(); // TODO: handle error
     printf("END Java Exception ---------\n");
-    return v8::Exception::TypeError(v8::String::New("java exception"));
-  } else {
-    return v8::Exception::TypeError(v8::String::New(alternateMessage.c_str()));
+    // TODO: convert error to v8 error
   }
+  return v8::Exception::TypeError(v8::String::New(alternateMessage.c_str()));
 }

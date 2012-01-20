@@ -23,6 +23,8 @@ private:
   static v8::Handle<v8::Value> newInstanceSync(const v8::Arguments& args);
   static v8::Handle<v8::Value> callStaticMethod(const v8::Arguments& args);
   static v8::Handle<v8::Value> callStaticMethodSync(const v8::Arguments& args);
+  static v8::Handle<v8::Value> newArray(const v8::Arguments& args);
+  static v8::Handle<v8::Value> newByte(const v8::Arguments& args);
   v8::Handle<v8::Value> ensureJvm();
 
   static v8::Persistent<v8::FunctionTemplate> s_ct;

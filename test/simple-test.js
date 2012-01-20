@@ -67,7 +67,6 @@ exports['Simple'] = nodeunit.testCase({
     list.addSync("hello");
     list.addSync("world");
     test.equal(list.sizeSync(), 2);
-    console.log("before get");
     var item0 = list.getSync(0);
     test.equal(item0.toStringSync(), "hello");
     var clazz = list.getClassSync();
@@ -88,5 +87,28 @@ exports['Simple'] = nodeunit.testCase({
         });
       }
     });
+  },
+
+  "passing objects to methods": function(test) {
+    var data = java.newArray("byte", toAsciiArray("hello world\n"));
+    //console.log("data", data.toStringSync());
+    var stream = java.newInstanceSync("java.io.ByteArrayInputStream", data);
+    //console.log("stream", stream);
+    var reader = java.newInstanceSync("java.io.InputStreamReader", stream);
+    //console.log("reader", reader);
+    var bufferedReader = java.newInstanceSync("java.io.BufferedReader", reader);
+    var str = bufferedReader.readLineSync();
+    console.log("bufferedReader.readLineSync", str);
+    test.equal(str, "hello world");
+    test.done();
   }
 });
+
+function toAsciiArray(str) {
+  var results = [];
+  for(var i=0; i<str.length; i++) {
+    var b = java.newByte(str.charCodeAt(i));
+    results.push(b);
+  }
+  return results;
+}

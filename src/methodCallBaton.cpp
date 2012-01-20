@@ -76,6 +76,13 @@ v8::Handle<v8::Value> MethodCallBaton::resultsToV8(JNIEnv *env) {
         bool result = env->CallBooleanMethod(m_result, boolean_booleanValue);
         return scope.Close(v8::Boolean::New(result));
       }
+    case TYPE_BYTE:
+      {
+        jclass byteClazz = env->FindClass("java/lang/Byte");
+        jmethodID byte_byteValue = env->GetMethodID(byteClazz, "byteValue", "()B");
+        jbyte result = env->CallByteMethod(m_result, byte_byteValue);
+        return scope.Close(v8::Number::New(result));
+      }
     case TYPE_LONG:
       {
         jclass longClazz = env->FindClass("java/lang/Long");
@@ -106,8 +113,7 @@ void NewInstanceBaton::execute(JNIEnv *env) {
   m_resultType = TYPE_OBJECT;
   m_result = env->NewGlobalRef(result);
   if(env->ExceptionCheck()) {
-    env->ExceptionDescribe(); // TODO: handle error
-    return;
+    m_error = v8::Persistent<v8::Value>::New(javaExceptionToV8(env, "Error running method"));
   }
 }
 
@@ -137,8 +143,7 @@ void InstanceMethodCallBaton::execute(JNIEnv *env) {
   jobject result = env->CallObjectMethod(m_method, method_invoke, m_javaObject->getObject(), m_args);
   m_result = env->NewGlobalRef(result);
   if(env->ExceptionCheck()) {
-    env->ExceptionDescribe(); // TODO: handle error
-    return;
+    m_error = v8::Persistent<v8::Value>::New(javaExceptionToV8(env, "Error running method"));
   }
 }
 

@@ -13,7 +13,8 @@ typedef enum _jvalueType {
   TYPE_LONG    = 3,
   TYPE_OBJECT  = 4,
   TYPE_STRING  = 5,
-  TYPE_BOOLEAN = 6
+  TYPE_BOOLEAN = 6,
+  TYPE_BYTE    = 7
 } jvalueType;
 
 std::list<jobject> javaReflectionGetMethods(JNIEnv *env, jclass clazz);
