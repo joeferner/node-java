@@ -13,7 +13,9 @@ var java = require("java");
 java.classpath.push("commons-lang3-3.1.jar");
 java.classpath.push("commons-io.jar");
 
-java.newInstance("java.util.ArrayList", function(list) {
+var list = java.newInstanceSync("java.util.ArrayList");
+
+java.newInstance("java.util.ArrayList", function(err, list) {
   // you have a list
 });
 
