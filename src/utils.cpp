@@ -82,7 +82,7 @@ jobject javaFindBestMatchingConstructor(
 
   for(std::list<jobject>::iterator it = constructors.begin(); it != constructors.end(); it++) {
     jarray parameters = (jarray)env->CallObjectMethod(*it, constructor_getParameterTypes);
-    if(env->GetArrayLength(parameters) == (jsize)argTypes.size()) {    
+    if(env->GetArrayLength(parameters) == (jsize)argTypes.size()) {
       return *it; // TODO: check parameters
     }
   }
@@ -106,15 +106,18 @@ void javaDetachCurrentThread(JavaVM* jvm) {
 jvalueType javaGetType(JNIEnv *env, jclass type) {
   // TODO: has to be a better way
   const char *typeStr = javaObjectToString(env, type).c_str();
+  //printf("%s\n", typeStr);
   if(strcmp(typeStr, "int") == 0) {
     return TYPE_INT;
+  } else if(strcmp(typeStr, "void") == 0) {
+    return TYPE_VOID;
+  } else if(strcmp(typeStr, "boolean") == 0) {
+    return TYPE_BOOLEAN;
   } else if(strcmp(typeStr, "class java.lang.String") == 0) {
     return TYPE_STRING;
   }
-  
-  //jclass intClazz = env->FindClass("java/lang/Integer");
 
-  return TYPE_OBJECT;  
+  return TYPE_OBJECT;
 }
 
 jclass javaFindClass(JNIEnv* env, std::string className) {
@@ -142,7 +145,7 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg, int *methodArgType) {
 jarray v8ToJava(JNIEnv* env, const v8::Arguments& args, int start, int end, std::list<int> *methodArgTypes) {
   jclass clazz = env->FindClass("java/lang/Object");
   jobjectArray results = env->NewObjectArray(end-start, clazz, NULL);
-  
+
   for(int i=start; i<end; i++) {
     int methodArgType;
     jobject val = v8ToJava(env, args[i], &methodArgType);
@@ -151,6 +154,6 @@ jarray v8ToJava(JNIEnv* env, const v8::Arguments& args, int start, int end, std:
       methodArgTypes->push_back(methodArgType);
     }
   }
-  
+
   return results;
 }

@@ -8,9 +8,11 @@
 #include <string>
 
 typedef enum _jvalueType {
+  TYPE_VOID,
   TYPE_INT,
   TYPE_OBJECT,
-  TYPE_STRING
+  TYPE_STRING,
+  TYPE_BOOLEAN
 } jvalueType;
 
 std::list<jobject> javaReflectionGetMethods(JNIEnv *env, jclass clazz);

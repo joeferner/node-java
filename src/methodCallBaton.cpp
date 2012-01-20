@@ -5,7 +5,7 @@
 
 MethodCallBaton::MethodCallBaton(Java* java, jobject method, jarray args, v8::Handle<v8::Value>& callback) {
   JNIEnv *env = java->getJavaEnv();
-  
+
   m_java = java;
   m_args = (jarray)env->NewGlobalRef(args);
   m_callback = v8::Persistent<v8::Value>::New(callback);
@@ -54,11 +54,20 @@ void MethodCallBaton::after(JNIEnv *env) {
     v8::Function::Cast(*m_callback)->Call(v8::Context::GetCurrent()->Global(), 2, argv);
   }
 
-  env->DeleteGlobalRef(m_result);  
+  env->DeleteGlobalRef(m_result);
 }
 
 v8::Handle<v8::Value> MethodCallBaton::resultsToV8(JNIEnv *env) {
   switch(m_resultType) {
+    case TYPE_VOID:
+      return v8::Undefined();
+    case TYPE_BOOLEAN:
+      {
+        jclass booleanClazz = env->FindClass("java/lang/Boolean");
+        jmethodID boolean_booleanValue = env->GetMethodID(booleanClazz, "booleanValue", "()Z");
+        bool result = env->CallBooleanMethod(m_result, boolean_booleanValue);
+        return v8::Boolean::New(result);
+      }
     case TYPE_INT:
       {
         jclass integerClazz = env->FindClass("java/lang/Integer");
@@ -84,7 +93,7 @@ void NewInstanceBaton::execute(JNIEnv *env) {
   if(env->ExceptionCheck()) {
     env->ExceptionDescribe(); // TODO: handle error
     return;
-  }  
+  }
 }
 
 void InstanceMethodCallBaton::execute(JNIEnv *env) {
@@ -100,7 +109,7 @@ void InstanceMethodCallBaton::execute(JNIEnv *env) {
   if(env->ExceptionCheck()) {
     env->ExceptionDescribe(); // TODO: handle error
     return;
-  }  
+  }
 }
 
 NewInstanceBaton::NewInstanceBaton(
@@ -131,4 +140,3 @@ InstanceMethodCallBaton::InstanceMethodCallBaton(
 InstanceMethodCallBaton::~InstanceMethodCallBaton() {
   m_javaObject->Unref();
 }
-
