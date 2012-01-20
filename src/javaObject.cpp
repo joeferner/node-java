@@ -40,6 +40,8 @@
     javaObjectObj->Set(methodNameSync, methodCallSyncTemplate->GetFunction());
   }
 
+  // TODO: add public field support
+
   return scope.Close(javaObjectObj);
 }
 

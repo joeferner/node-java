@@ -10,6 +10,8 @@ Bridge API to connect with existing Java APIs.
 
 ```javascript
 var java = require("nodejavabridge");
+java.classpath.push("commons-lang3-3.1.jar");
+java.classpath.push("commons-io.jar");
 
 java.newInstance("java.util.ArrayList", function(list) {
   // you have a list

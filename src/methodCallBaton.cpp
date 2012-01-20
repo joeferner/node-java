@@ -58,6 +58,14 @@ void MethodCallBaton::after(JNIEnv *env) {
 }
 
 v8::Handle<v8::Value> MethodCallBaton::resultsToV8(JNIEnv *env) {
+  v8::HandleScope scope;
+
+  if(!m_error.IsEmpty() && !m_error->IsNull()) {
+    v8::Handle<v8::Value> err = m_error;
+    m_error.Dispose();
+    return scope.Close(err);
+  }
+
   switch(m_resultType) {
     case TYPE_VOID:
       return v8::Undefined();
@@ -66,19 +74,26 @@ v8::Handle<v8::Value> MethodCallBaton::resultsToV8(JNIEnv *env) {
         jclass booleanClazz = env->FindClass("java/lang/Boolean");
         jmethodID boolean_booleanValue = env->GetMethodID(booleanClazz, "booleanValue", "()Z");
         bool result = env->CallBooleanMethod(m_result, boolean_booleanValue);
-        return v8::Boolean::New(result);
+        return scope.Close(v8::Boolean::New(result));
+      }
+    case TYPE_LONG:
+      {
+        jclass longClazz = env->FindClass("java/lang/Long");
+        jmethodID long_longValue = env->GetMethodID(longClazz, "longValue", "()J");
+        jlong result = env->CallLongMethod(m_result, long_longValue);
+        return scope.Close(v8::Number::New(result));
       }
     case TYPE_INT:
       {
         jclass integerClazz = env->FindClass("java/lang/Integer");
         jmethodID integer_intValue = env->GetMethodID(integerClazz, "intValue", "()I");
-        int result = env->CallIntMethod(m_result, integer_intValue);
-        return v8::Integer::New(result);
+        jint result = env->CallIntMethod(m_result, integer_intValue);
+        return scope.Close(v8::Integer::New(result));
       }
     case TYPE_OBJECT:
-      return JavaObject::New(m_java, m_result);
+      return scope.Close(JavaObject::New(m_java, m_result));
     case TYPE_STRING:
-      return v8::String::New(javaObjectToString(env, m_result).c_str());
+      return scope.Close(v8::String::New(javaObjectToString(env, m_result).c_str()));
   }
   return v8::Undefined();
 }
@@ -93,6 +108,21 @@ void NewInstanceBaton::execute(JNIEnv *env) {
   if(env->ExceptionCheck()) {
     env->ExceptionDescribe(); // TODO: handle error
     return;
+  }
+}
+
+void StaticMethodCallBaton::execute(JNIEnv *env) {
+  jclass methodClazz = env->FindClass("java/lang/reflect/Method");
+  jmethodID method_invoke = env->GetMethodID(methodClazz, "invoke", "(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;");
+  jmethodID method_getReturnType = env->GetMethodID(methodClazz, "getReturnType", "()Ljava/lang/Class;");
+
+  jclass returnType = (jclass)env->CallObjectMethod(m_method, method_getReturnType);
+
+  m_resultType = javaGetType(env, returnType);
+  jobject result = env->CallObjectMethod(m_method, method_invoke, NULL, m_args);
+  m_result = env->NewGlobalRef(result);
+  if(env->ExceptionCheck()) {
+    m_error = v8::Persistent<v8::Value>::New(javaExceptionToV8(env, "Error running method"));
   }
 }
 
@@ -123,6 +153,21 @@ NewInstanceBaton::NewInstanceBaton(
 }
 
 NewInstanceBaton::~NewInstanceBaton() {
+  JNIEnv *env = m_java->getJavaEnv();
+  env->DeleteGlobalRef(m_clazz);
+}
+
+StaticMethodCallBaton::StaticMethodCallBaton(
+  Java* java,
+  jclass clazz,
+  jobject method,
+  jarray args,
+  v8::Handle<v8::Value>& callback) : MethodCallBaton(java, method, args, callback) {
+  JNIEnv *env = m_java->getJavaEnv();
+  m_clazz = (jclass)env->NewGlobalRef(clazz);
+}
+
+StaticMethodCallBaton::~StaticMethodCallBaton() {
   JNIEnv *env = m_java->getJavaEnv();
   env->DeleteGlobalRef(m_clazz);
 }

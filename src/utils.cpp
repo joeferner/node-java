@@ -8,6 +8,23 @@ std::list<jobject> javaReflectionGetMethods(JNIEnv *env, jclass clazz) {
 
   jclass clazzclazz = env->GetObjectClass(clazz);
   jmethodID methodId = env->GetMethodID(clazzclazz, "getMethods", "()[Ljava/lang/reflect/Method;");
+  // TODO: filter out static and prive methods
+  jobjectArray methodObjects = (jobjectArray)env->CallObjectMethod(clazz, methodId);
+  jsize methodCount = env->GetArrayLength(methodObjects);
+  for(jsize i=0; i<methodCount; i++) {
+    jobject obj = env->GetObjectArrayElement(methodObjects, i);
+    results.push_back(obj);
+  }
+
+  return results;
+}
+
+std::list<jobject> javaReflectionGetStaticMethods(JNIEnv *env, jclass clazz) {
+  std::list<jobject> results;
+
+  jclass clazzclazz = env->GetObjectClass(clazz);
+  jmethodID methodId = env->GetMethodID(clazzclazz, "getDeclaredMethods", "()[Ljava/lang/reflect/Method;");
+  // TODO: filter out instance and prive methods
   jobjectArray methodObjects = (jobjectArray)env->CallObjectMethod(clazz, methodId);
   jsize methodCount = env->GetArrayLength(methodObjects);
   for(jsize i=0; i<methodCount; i++) {
@@ -109,6 +126,8 @@ jvalueType javaGetType(JNIEnv *env, jclass type) {
   //printf("%s\n", typeStr);
   if(strcmp(typeStr, "int") == 0) {
     return TYPE_INT;
+  } else if(strcmp(typeStr, "long") == 0) {
+    return TYPE_LONG;
   } else if(strcmp(typeStr, "void") == 0) {
     return TYPE_VOID;
   } else if(strcmp(typeStr, "boolean") == 0) {
@@ -123,10 +142,6 @@ jvalueType javaGetType(JNIEnv *env, jclass type) {
 jclass javaFindClass(JNIEnv* env, std::string className) {
   std::replace(className.begin(), className.end(), '.', '/');
   jclass clazz = env->FindClass(className.c_str());
-  if(env->ExceptionCheck()) {
-    env->ExceptionDescribe(); // TODO: handle error
-    return NULL;
-  }
   return clazz;
 }
 
@@ -149,11 +164,23 @@ jarray v8ToJava(JNIEnv* env, const v8::Arguments& args, int start, int end, std:
   for(int i=start; i<end; i++) {
     int methodArgType;
     jobject val = v8ToJava(env, args[i], &methodArgType);
-    env->SetObjectArrayElement(results, i, val);
+    env->SetObjectArrayElement(results, i - start, val);
     if(methodArgTypes) {
       methodArgTypes->push_back(methodArgType);
     }
   }
 
   return results;
+}
+
+v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, const std::string& alternateMessage) {
+  jthrowable ex = env->ExceptionOccurred();
+  if(ex) {
+    printf("BEGIN Java Exception -------\n");
+    env->ExceptionDescribe(); // TODO: handle error
+    printf("END Java Exception ---------\n");
+    return ThrowException(v8::Exception::TypeError(v8::String::New("java exception")));
+  } else {
+    return ThrowException(v8::Exception::TypeError(v8::String::New(alternateMessage.c_str())));
+  }
 }

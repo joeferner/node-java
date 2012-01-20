@@ -8,15 +8,17 @@
 #include <string>
 
 typedef enum _jvalueType {
-  TYPE_VOID,
-  TYPE_INT,
-  TYPE_OBJECT,
-  TYPE_STRING,
-  TYPE_BOOLEAN
+  TYPE_VOID    = 1,
+  TYPE_INT     = 2,
+  TYPE_LONG    = 3,
+  TYPE_OBJECT  = 4,
+  TYPE_STRING  = 5,
+  TYPE_BOOLEAN = 6
 } jvalueType;
 
 std::list<jobject> javaReflectionGetMethods(JNIEnv *env, jclass clazz);
 std::list<jobject> javaReflectionGetConstructors(JNIEnv *env, jclass clazz);
+std::list<jobject> javaReflectionGetStaticMethods(JNIEnv *env, jclass clazz);
 std::string javaToString(JNIEnv *env, jstring str);
 std::string javaObjectToString(JNIEnv *env, jobject obj);
 jobject javaFindBestMatchingMethod(
@@ -34,5 +36,6 @@ jvalueType javaGetType(JNIEnv *env, jclass type);
 jclass javaFindClass(JNIEnv* env, std::string className);
 jarray v8ToJava(JNIEnv* env, const v8::Arguments& args, int start, int end, std::list<int> *methodArgTypes);
 jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg, int *methodArgType);
+v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, const std::string& alternateMessage);
 
 #endif

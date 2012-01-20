@@ -20,14 +20,15 @@ public:
   static int EIO_AfterMethodCall(eio_req* req);
   void run();
   v8::Handle<v8::Value> runSync();
-  
+
 protected:
   virtual void execute(JNIEnv *env) = 0;
   virtual void after(JNIEnv *env);
   v8::Handle<v8::Value> resultsToV8(JNIEnv *env);
-  
+
   Java* m_java;
   v8::Persistent<v8::Value> m_callback;
+  v8::Persistent<v8::Value> m_error;
   jarray m_args;
   jobject m_result;
   jobject m_method;
@@ -41,7 +42,7 @@ public:
 
 protected:
   virtual void execute(JNIEnv *env);
-  
+
   JavaObject* m_javaObject;
 };
 
@@ -49,10 +50,21 @@ class NewInstanceBaton : public MethodCallBaton {
 public:
   NewInstanceBaton(Java* java, jclass clazz, jobject method, jarray args, v8::Handle<v8::Value>& callback);
   virtual ~NewInstanceBaton();
-  
+
 protected:
   virtual void execute(JNIEnv *env);
-  
+
+  jclass m_clazz;
+};
+
+class StaticMethodCallBaton : public MethodCallBaton {
+public:
+  StaticMethodCallBaton(Java* java, jclass clazz, jobject method, jarray args, v8::Handle<v8::Value>& callback);
+  virtual ~StaticMethodCallBaton();
+
+protected:
+  virtual void execute(JNIEnv *env);
+
   jclass m_clazz;
 };
 
