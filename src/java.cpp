@@ -125,7 +125,13 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   if(clazz == NULL) {
     std::ostringstream errStr;
     errStr << "Could not create class " << className.c_str();
-    return javaExceptionToV8(env, errStr.str());
+    v8::Handle<v8::Value> error = javaExceptionToV8(env, errStr.str());
+
+    v8::Handle<v8::Value> argv[2];
+    argv[0] = error;
+    argv[1] = v8::Undefined();
+    v8::Function::Cast(*callback)->Call(v8::Context::GetCurrent()->Global(), 2, argv);
+    return v8::Undefined();
   }
   std::list<jobject> constructors = javaReflectionGetConstructors(env, clazz);
   jobject method = javaFindBestMatchingConstructor(env, constructors, methodArgTypes);
@@ -163,7 +169,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   if(clazz == NULL) {
     std::ostringstream errStr;
     errStr << "Could not create class " << className.c_str();
-    return javaExceptionToV8(env, errStr.str());
+    return ThrowException(javaExceptionToV8(env, errStr.str()));
   }
   std::list<jobject> constructors = javaReflectionGetConstructors(env, clazz);
   jobject method = javaFindBestMatchingConstructor(env, constructors, methodArgTypes);

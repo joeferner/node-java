@@ -150,6 +150,12 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg, int *methodArgType) {
     *methodArgType = TYPE_STRING;
     v8::String::AsciiValue val(arg->ToString());
     return env->NewStringUTF(*val);
+  } else if(arg->IsInt32()) {
+    jint val = arg->ToInt32()->Value();
+    *methodArgType = TYPE_INT;
+    jclass clazz = env->FindClass("java/lang/Integer");
+    jmethodID constructor = env->GetMethodID(clazz, "<init>", "(I)V");
+    return env->NewObject(clazz, constructor, val);
   } else {
     // TODO: handle other arg types
     *methodArgType = TYPE_OBJECT;
