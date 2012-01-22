@@ -28,7 +28,8 @@ protected:
 
   Java* m_java;
   v8::Persistent<v8::Value> m_callback;
-  v8::Persistent<v8::Value> m_error;
+  jthrowable m_error;
+  std::string m_errorString;
   jarray m_args;
   jobject m_result;
   jobject m_method;

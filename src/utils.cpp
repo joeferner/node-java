@@ -263,13 +263,15 @@ jarray v8ToJava(JNIEnv* env, const v8::Arguments& args, int start, int end, std:
   return results;
 }
 
+v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, jthrowable ex, const std::string& alternateMessage) {
+  v8::HandleScope scope;
+
+  std::string msg = alternateMessage + "\n" + javaObjectToString(env, ex);
+  return scope.Close(v8::Exception::TypeError(v8::String::New(msg.c_str())));
+}
+
 v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, const std::string& alternateMessage) {
+  v8::HandleScope scope;
   jthrowable ex = env->ExceptionOccurred();
-  if(ex) {
-    printf("BEGIN Java Exception -------\n");
-    env->ExceptionDescribe(); // TODO: handle error
-    printf("END Java Exception ---------\n");
-    // TODO: convert error to v8 error
-  }
-  return v8::Exception::TypeError(v8::String::New(alternateMessage.c_str()));
+  return scope.Close(javaExceptionToV8(env, ex, alternateMessage));
 }

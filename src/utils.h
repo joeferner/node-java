@@ -39,5 +39,6 @@ jobject javaFindField(JNIEnv* env, jclass clazz, std::string fieldName);
 jarray v8ToJava(JNIEnv* env, const v8::Arguments& args, int start, int end, std::list<int> *methodArgTypes);
 jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg, int *methodArgType);
 v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, const std::string& alternateMessage);
+v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, jthrowable ex, const std::string& alternateMessage);
 
 #endif

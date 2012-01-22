@@ -133,6 +133,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     v8::Handle<v8::Value> argv[2];
     argv[0] = error;
     argv[1] = v8::Undefined();
+    
     v8::Function::Cast(*callback)->Call(v8::Context::GetCurrent()->Global(), 2, argv);
     return v8::Undefined();
   }

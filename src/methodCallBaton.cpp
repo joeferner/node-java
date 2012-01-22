@@ -10,6 +10,8 @@ MethodCallBaton::MethodCallBaton(Java* java, jobject method, jarray args, v8::Ha
   m_args = (jarray)env->NewGlobalRef(args);
   m_callback = v8::Persistent<v8::Value>::New(callback);
   m_method = env->NewGlobalRef(method);
+  m_error = NULL;
+  m_result = NULL;
 }
 
 MethodCallBaton::~MethodCallBaton() {
@@ -48,21 +50,29 @@ v8::Handle<v8::Value> MethodCallBaton::runSync() {
 
 void MethodCallBaton::after(JNIEnv *env) {
   if(m_callback->IsFunction()) {
+    v8::Handle<v8::Value> result = resultsToV8(env);
     v8::Handle<v8::Value> argv[2];
-    argv[0] = v8::Undefined();
-    argv[1] = resultsToV8(env);
+    if(result->IsNativeError()) {
+      argv[0] = result;
+      argv[1] = v8::Undefined();
+    } else {
+      argv[0] = v8::Undefined();
+      argv[1] = result;
+    }
     v8::Function::Cast(*m_callback)->Call(v8::Context::GetCurrent()->Global(), 2, argv);
   }
 
-  env->DeleteGlobalRef(m_result);
+  if(m_result) {
+    env->DeleteGlobalRef(m_result);
+  }
 }
 
 v8::Handle<v8::Value> MethodCallBaton::resultsToV8(JNIEnv *env) {
   v8::HandleScope scope;
 
-  if(!m_error.IsEmpty() && !m_error->IsNull()) {
-    v8::Handle<v8::Value> err = m_error;
-    m_error.Dispose();
+  if(m_error) {
+    v8::Handle<v8::Value> err = javaExceptionToV8(env, m_error, m_errorString);
+    env->DeleteGlobalRef(m_error);
     return scope.Close(err);
   }
 
@@ -112,11 +122,16 @@ void NewInstanceBaton::execute(JNIEnv *env) {
   //printf("invoke: %s\n", javaObjectToString(env, m_method).c_str());
 
   jobject result = env->CallObjectMethod(m_method, constructor_newInstance, m_args);
+  jthrowable err = env->ExceptionOccurred();
+  if(err) {
+    m_error = (jthrowable)env->NewGlobalRef(err);
+    m_errorString = "Error creating class";
+    env->ExceptionClear();
+    return;
+  }
+
   m_resultType = TYPE_OBJECT;
   m_result = env->NewGlobalRef(result);
-  if(env->ExceptionCheck()) {
-    m_error = v8::Persistent<v8::Value>::New(javaExceptionToV8(env, "Error running method"));
-  }
 }
 
 void StaticMethodCallBaton::execute(JNIEnv *env) {
@@ -137,8 +152,10 @@ void StaticMethodCallBaton::execute(JNIEnv *env) {
   m_resultType = javaGetType(env, returnType);
   jobject result = env->CallObjectMethod(m_method, method_invoke, NULL, m_args);
   m_result = env->NewGlobalRef(result);
-  if(env->ExceptionCheck()) {
-    m_error = v8::Persistent<v8::Value>::New(javaExceptionToV8(env, "Error running method"));
+  jthrowable err = env->ExceptionOccurred();
+  if(err) {
+    m_error = (jthrowable)env->NewGlobalRef(err);
+    m_errorString = "Error running static method";
   }
 }
 
@@ -160,8 +177,10 @@ void InstanceMethodCallBaton::execute(JNIEnv *env) {
   m_resultType = javaGetType(env, returnType);
   jobject result = env->CallObjectMethod(m_method, method_invoke, m_javaObject->getObject(), m_args);
   m_result = env->NewGlobalRef(result);
-  if(env->ExceptionCheck()) {
-    m_error = v8::Persistent<v8::Value>::New(javaExceptionToV8(env, "Error running method"));
+  jthrowable err = env->ExceptionOccurred();
+  if(err) {
+    m_error = (jthrowable)env->NewGlobalRef(err);
+    m_errorString = "Error running instance method";
   }
 }
 

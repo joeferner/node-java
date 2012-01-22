@@ -1,7 +1,4 @@
-
-
-var java = require("../");
-java.classpath.push("test/commons-lang3-3.1.jar");
+var java = require("./testHelpers").java;
 
 var nodeunit = require("nodeunit");
 var util = require("util");
