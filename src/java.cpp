@@ -69,7 +69,11 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   v8::Local<v8::Array> classPathArray = v8::Array::Cast(*classPathValue);
   for(uint32_t i=0; i<classPathArray->Length(); i++) {
     if(i != 0) {
-      classPath << ":"; // TODO: figure out path seperator
+      #ifdef WIN32
+      	classPath << ";";
+      #else
+      	classPath << ":";
+      #endif
     }
     v8::Local<v8::Value> arrayItemValue = classPathArray->Get(i);
     if(!arrayItemValue->IsString()) {

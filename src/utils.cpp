@@ -62,7 +62,7 @@ std::string javaToString(JNIEnv *env, jstring str) {
 
 std::string javaObjectToString(JNIEnv *env, jobject obj) {
   if(obj == NULL) {
-    return "";
+    return "(null)";
   }
   jclass objClazz = env->GetObjectClass(obj);
   jmethodID methodId = env->GetMethodID(objClazz, "toString", "()Ljava/lang/String;");
@@ -161,8 +161,9 @@ void javaDetachCurrentThread(JavaVM* jvm) {
 
 jvalueType javaGetType(JNIEnv *env, jclass type) {
   // TODO: has to be a better way
-  const char *typeStr = javaObjectToString(env, type).c_str();
-  //printf("%s\n", typeStr);
+  std::string str = javaObjectToString(env, type);
+  const char *typeStr = str.c_str();
+  //printf("javaGetType: %s\n", typeStr);
   if(strcmp(typeStr, "int") == 0) {
     return TYPE_INT;
   } else if(strcmp(typeStr, "long") == 0) {

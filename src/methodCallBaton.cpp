@@ -22,8 +22,9 @@ MethodCallBaton::~MethodCallBaton() {
 }
 
 void MethodCallBaton::run() {
-  eio_custom(MethodCallBaton::EIO_MethodCall, EIO_PRI_DEFAULT, MethodCallBaton::EIO_AfterMethodCall, this);
-  ev_ref(EV_DEFAULT_UC);
+  uv_work_t* req = new uv_work_t();
+  req->data = this;
+  uv_queue_work(uv_default_loop(), req, MethodCallBaton::EIO_MethodCall, MethodCallBaton::EIO_AfterMethodCall);
 }
 
 v8::Handle<v8::Value> MethodCallBaton::runSync() {
@@ -32,20 +33,19 @@ v8::Handle<v8::Value> MethodCallBaton::runSync() {
   return resultsToV8(env);
 }
 
-/*static*/ void MethodCallBaton::EIO_MethodCall(eio_req* req) {
+/*static*/ void MethodCallBaton::EIO_MethodCall(uv_work_t* req) {
   MethodCallBaton* self = static_cast<MethodCallBaton*>(req->data);
   JNIEnv *env = javaAttachCurrentThread(self->m_java->getJvm());
   self->execute(env);
   javaDetachCurrentThread(self->m_java->getJvm());
 }
 
-/*static*/ int MethodCallBaton::EIO_AfterMethodCall(eio_req* req) {
+/*static*/ void MethodCallBaton::EIO_AfterMethodCall(uv_work_t* req) {
   MethodCallBaton* self = static_cast<MethodCallBaton*>(req->data);
   JNIEnv *env = self->m_java->getJavaEnv();
   self->after(env);
-  ev_unref(EV_DEFAULT_UC);
+  delete req;
   delete self;
-  return 0;
 }
 
 void MethodCallBaton::after(JNIEnv *env) {

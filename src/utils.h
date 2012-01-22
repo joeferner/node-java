@@ -2,6 +2,7 @@
 #ifndef _utils_h_
 #define _utils_h_
 
+#define BUILDING_NODE_EXTENSION 1
 #include <v8.h>
 #include <jni.h>
 #include <list>

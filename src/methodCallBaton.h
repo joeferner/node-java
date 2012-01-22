@@ -2,11 +2,11 @@
 #ifndef _methodcallbaton_h_
 #define _methodcallbaton_h_
 
+#include "utils.h"
 #include <v8.h>
 #include <node.h>
 #include <jni.h>
 #include <list>
-#include "utils.h"
 
 class Java;
 class JavaObject;
@@ -16,8 +16,8 @@ public:
   MethodCallBaton(Java* java, jobject method, jarray args, v8::Handle<v8::Value>& callback);
   virtual ~MethodCallBaton();
 
-  static void EIO_MethodCall(eio_req* req);
-  static int EIO_AfterMethodCall(eio_req* req);
+  static void EIO_MethodCall(uv_work_t* req);
+  static void EIO_AfterMethodCall(uv_work_t* req);
   void run();
   v8::Handle<v8::Value> runSync();
 

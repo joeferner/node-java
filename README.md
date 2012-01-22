@@ -11,9 +11,23 @@ $ export JDK_LIB_DIR=/usr/local/share/jdk1.6.0_30/jre/lib/i386/client/
 $ npm install java
 ```
 
+## Installation Windows
+
+* Install Python
+* Download node.js source
+* Run a Visual Studios command prompt
+* Build node.js source by running "vcbuild.bat release"
+* The directory where jvm.dll exists must be in the PATH.
+
+```bash
+$ set NODE_ROOT=C:\Program Files (x86)\nodejs
+$ vcbuild.bat
+```
+
 ## Installation Mac
 
 ```bash
+$ ???
 $ npm install java
 ```
 
