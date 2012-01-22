@@ -151,12 +151,16 @@ void StaticMethodCallBaton::execute(JNIEnv *env) {
 
   m_resultType = javaGetType(env, returnType);
   jobject result = env->CallObjectMethod(m_method, method_invoke, NULL, m_args);
-  m_result = env->NewGlobalRef(result);
+
   jthrowable err = env->ExceptionOccurred();
   if(err) {
     m_error = (jthrowable)env->NewGlobalRef(err);
     m_errorString = "Error running static method";
+    env->ExceptionClear();
+    return;
   }
+
+  m_result = env->NewGlobalRef(result);
 }
 
 void InstanceMethodCallBaton::execute(JNIEnv *env) {
@@ -176,12 +180,16 @@ void InstanceMethodCallBaton::execute(JNIEnv *env) {
 
   m_resultType = javaGetType(env, returnType);
   jobject result = env->CallObjectMethod(m_method, method_invoke, m_javaObject->getObject(), m_args);
-  m_result = env->NewGlobalRef(result);
+
   jthrowable err = env->ExceptionOccurred();
   if(err) {
     m_error = (jthrowable)env->NewGlobalRef(err);
     m_errorString = "Error running instance method";
+    env->ExceptionClear();
+    return;
   }
+
+  m_result = env->NewGlobalRef(result);
 }
 
 NewInstanceBaton::NewInstanceBaton(
