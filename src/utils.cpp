@@ -2,6 +2,7 @@
 #include "utils.h"
 #include <string.h>
 #include <algorithm>
+#include <sstream>
 #include "javaObject.h"
 
 std::list<jobject> javaReflectionGetMethods(JNIEnv *env, jclass clazz) {
@@ -266,8 +267,30 @@ jarray v8ToJava(JNIEnv* env, const v8::Arguments& args, int start, int end, std:
 v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, jthrowable ex, const std::string& alternateMessage) {
   v8::HandleScope scope;
 
-  std::string msg = alternateMessage + "\n" + javaObjectToString(env, ex);
-  return scope.Close(v8::Exception::TypeError(v8::String::New(msg.c_str())));
+  std::ostringstream msg;
+  msg << alternateMessage;
+
+  if(ex) {
+    jclass stringWriterClazz = env->FindClass("java/io/StringWriter");
+    jmethodID stringWriter_constructor = env->GetMethodID(stringWriterClazz, "<init>", "()V");
+    jmethodID stringWriter_toString = env->GetMethodID(stringWriterClazz, "toString", "()Ljava/lang/String;");
+    jobject stringWriter = env->NewObject(stringWriterClazz, stringWriter_constructor);
+    
+    jclass printWriterClazz = env->FindClass("java/io/PrintWriter");
+    jmethodID printWriter_constructor = env->GetMethodID(printWriterClazz, "<init>", "(Ljava/io/Writer;)V");
+    jobject printWriter = env->NewObject(printWriterClazz, printWriter_constructor, stringWriter);
+  
+    jclass throwableClazz = env->FindClass("java/lang/Throwable");
+    jmethodID throwable_printStackTrace = env->GetMethodID(throwableClazz, "printStackTrace", "(Ljava/io/PrintWriter;)V");
+    env->CallObjectMethod(ex, throwable_printStackTrace, printWriter);
+    
+    jstring strObj = (jstring)env->CallObjectMethod(stringWriter, stringWriter_toString);
+    std::string stackTrace = javaToString(env, strObj);
+
+    msg << "\n" << stackTrace;
+  }  
+  
+  return scope.Close(v8::Exception::Error(v8::String::New(msg.str().c_str())));
 }
 
 v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, const std::string& alternateMessage) {

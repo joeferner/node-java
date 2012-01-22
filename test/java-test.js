@@ -64,4 +64,40 @@ exports['Java'] = nodeunit.testCase({
     });
     test.done();
   },
+  
+  "newInstance bad number of args": function(test) {
+    java.newInstance("Test", 42, "z", function(err, result) {
+      test.ok(err);
+      test.ok(!result);
+      test.done();
+    });
+  },
+
+  "newInstanceSync bad number of args": function(test) {
+    test.throws(function() {
+      java.newInstanceSync("Test", 42, "z");
+    });
+    test.done();
+  },
+  
+  "newInstance exception thrown from constructor": function(test) {
+    var ex = java.newInstanceSync("java.lang.Exception", "my exception");
+    java.newInstance("TestExceptions", ex, function(err, result) {
+      test.ok(err);
+      test.ok(err.toString().match(/my exception/));
+      test.ok(!result);
+      test.done();
+    });
+  },
+
+  "newInstanceSync exception thrown from constructor": function(test) {
+    var ex = java.newInstanceSync("java.lang.Exception", "my exception");
+    try {
+      java.newInstanceSync("TestExceptions", ex);
+      test.fail("should throw");
+    } catch(err) {
+      test.ok(err.toString().match(/my exception/));
+    }
+    test.done();
+  },
 });
