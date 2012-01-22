@@ -4,7 +4,7 @@ var java = require("./testHelpers").java;
 var nodeunit = require("nodeunit");
 var util = require("util");
 
-exports['Java'] = nodeunit.testCase({
+exports['Java - New Instance'] = nodeunit.testCase({
   "newInstance": function(test) {
     java.newInstance("Test", function(err, result) {
       test.ok(result);
