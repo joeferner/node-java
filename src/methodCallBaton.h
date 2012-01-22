@@ -33,7 +33,7 @@ protected:
   jarray m_args;
   jobject m_result;
   jobject m_method;
-  int m_resultType;
+  jvalueType m_resultType;
 };
 
 class InstanceMethodCallBaton : public MethodCallBaton {

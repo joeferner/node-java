@@ -1,6 +1,7 @@
 
 public class Test {
-  private int i;  
+  private int i;
+  public static int staticFieldInt = 42;
   
   public Test() {}
   public Test(int i) { this.i = i; }

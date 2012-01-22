@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <sstream>
 #include "javaObject.h"
+#include "java.h"
 
 std::list<jobject> javaReflectionGetMethods(JNIEnv *env, jclass clazz) {
   std::list<jobject> results;
@@ -73,7 +74,7 @@ jobject javaFindBestMatchingMethod(
   JNIEnv *env,
   std::list<jobject>& methods,
   const char *methodName,
-  std::list<int>& argTypes) {
+  std::list<jvalueType>& argTypes) {
 
   std::list<jobject> possibleMatches;
   jclass methodClazz = env->FindClass("java/lang/reflect/Method");
@@ -112,7 +113,7 @@ jobject javaFindBestMatchingMethod(
 jobject javaFindBestMatchingConstructor(
   JNIEnv *env,
   std::list<jobject>& constructors,
-  std::list<int>& argTypes) {
+  std::list<jvalueType>& argTypes) {
 
   std::list<jobject> possibleMatches;
   jclass constructorClazz = env->FindClass("java/lang/reflect/Constructor");
@@ -204,7 +205,7 @@ jobject javaFindField(JNIEnv* env, jclass clazz, std::string fieldName) {
   return NULL;
 }
 
-jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg, int *methodArgType) {
+jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg, jvalueType *methodArgType) {
   if(arg->IsNull()) {
     return NULL;
   }
@@ -248,12 +249,12 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg, int *methodArgType) {
   return NULL;
 }
 
-jarray v8ToJava(JNIEnv* env, const v8::Arguments& args, int start, int end, std::list<int> *methodArgTypes) {
+jarray v8ToJava(JNIEnv* env, const v8::Arguments& args, int start, int end, std::list<jvalueType> *methodArgTypes) {
   jclass clazz = env->FindClass("java/lang/Object");
   jobjectArray results = env->NewObjectArray(end-start, clazz, NULL);
 
   for(int i=start; i<end; i++) {
-    int methodArgType;
+    jvalueType methodArgType;
     jobject val = v8ToJava(env, args[i], &methodArgType);
     env->SetObjectArrayElement(results, i - start, val);
     if(methodArgTypes) {
@@ -297,4 +298,46 @@ v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, const std::string& alternat
   v8::HandleScope scope;
   jthrowable ex = env->ExceptionOccurred();
   return scope.Close(javaExceptionToV8(env, ex, alternateMessage));
+}
+
+v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jvalueType resultType, jobject obj) {
+  v8::HandleScope scope;  
+  
+  switch(resultType) {
+    case TYPE_VOID:
+      return v8::Undefined();
+    case TYPE_BOOLEAN:
+      {
+        jclass booleanClazz = env->FindClass("java/lang/Boolean");
+        jmethodID boolean_booleanValue = env->GetMethodID(booleanClazz, "booleanValue", "()Z");
+        bool result = env->CallBooleanMethod(obj, boolean_booleanValue);
+        return scope.Close(v8::Boolean::New(result));
+      }
+    case TYPE_BYTE:
+      {
+        jclass byteClazz = env->FindClass("java/lang/Byte");
+        jmethodID byte_byteValue = env->GetMethodID(byteClazz, "byteValue", "()B");
+        jbyte result = env->CallByteMethod(obj, byte_byteValue);
+        return scope.Close(v8::Number::New(result));
+      }
+    case TYPE_LONG:
+      {
+        jclass longClazz = env->FindClass("java/lang/Long");
+        jmethodID long_longValue = env->GetMethodID(longClazz, "longValue", "()J");
+        jlong result = env->CallLongMethod(obj, long_longValue);
+        return scope.Close(v8::Number::New(result));
+      }
+    case TYPE_INT:
+      {
+        jclass integerClazz = env->FindClass("java/lang/Integer");
+        jmethodID integer_intValue = env->GetMethodID(integerClazz, "intValue", "()I");
+        jint result = env->CallIntMethod(obj, integer_intValue);
+        return scope.Close(v8::Integer::New(result));
+      }
+    case TYPE_OBJECT:
+      return scope.Close(JavaObject::New(java, obj));
+    case TYPE_STRING:
+      return scope.Close(v8::String::New(javaObjectToString(env, obj).c_str()));
+  }
+  return v8::Undefined();
 }

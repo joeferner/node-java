@@ -22,6 +22,7 @@
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newArray", newArray);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newByte", newByte);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "getStaticFieldValue", getStaticFieldValue);
+  NODE_SET_PROTOTYPE_METHOD(s_ct, "setStaticFieldValue", setStaticFieldValue);
 
   target->Set(v8::String::NewSymbol("Java"), s_ct->GetFunction());
 }
@@ -121,7 +122,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     callback = v8::Null();
   }
 
-	std::list<int> methodArgTypes;
+	std::list<jvalueType> methodArgTypes;
   jarray methodArgs = v8ToJava(env, args, 1, argsEnd, &methodArgTypes);
 
   jclass clazz = javaFindClass(env, className);
@@ -179,7 +180,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   std::string className = *classNameVal;
   argsStart++;
 
-	std::list<int> methodArgTypes;
+	std::list<jvalueType> methodArgTypes;
   jarray methodArgs = v8ToJava(env, args, argsStart, argsEnd, &methodArgTypes);
 
   jclass clazz = javaFindClass(env, className);
@@ -244,7 +245,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   }
 
   // build args
-	std::list<int> methodArgTypes;
+	std::list<jvalueType> methodArgTypes;
   jarray methodArgs = v8ToJava(env, args, 2, argsEnd, &methodArgTypes);
 
   // find class and method
@@ -309,7 +310,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   std::string methodName = *methodNameVal;
 
   // build args
-	std::list<int> methodArgTypes;
+	std::list<jvalueType> methodArgTypes;
   jarray methodArgs = v8ToJava(env, args, 2, argsEnd, &methodArgTypes);
 
   // find class and method
@@ -366,7 +367,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   if(strcmp(className.c_str(), "byte") == 0) {
     results = env->NewByteArray(arrayObj->Length());
     for(uint32_t i=0; i<arrayObj->Length(); i++) {
-      int methodArgType;
+      jvalueType methodArgType;
       v8::Local<v8::Value> item = arrayObj->Get(i);
       jobject val = v8ToJava(env, item, &methodArgType);
       jclass byteClazz = env->FindClass("java/lang/Byte");
@@ -390,7 +391,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     results = env->NewObjectArray(arrayObj->Length(), clazz, NULL);
 
     for(uint32_t i=0; i<arrayObj->Length(); i++) {
-      int methodArgType;
+      jvalueType methodArgType;
       v8::Local<v8::Value> item = arrayObj->Get(i);
       jobject val = v8ToJava(env, item, &methodArgType);
       env->SetObjectArrayElement((jobjectArray)results, i, val);
@@ -474,11 +475,72 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     return ThrowException(javaExceptionToV8(env, errStr.str()));
   }
 
-  // get field value
   jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
   jmethodID field_get = env->GetMethodID(fieldClazz, "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
+  jmethodID field_getType = env->GetMethodID(fieldClazz, "getType", "()Ljava/lang/Class;");
+
+  // get field type
+  jclass fieldTypeClazz = (jclass)env->CallObjectMethod(field, field_getType);
+  jvalueType resultType = javaGetType(env, fieldTypeClazz);
+  
+  // get field value
   jobject val = env->CallObjectMethod(field, field_get, NULL);
 
-  return scope.Close(JavaObject::New(self, val));
+  return scope.Close(javaToV8(self, env, resultType, val));
 }
 
+/*static*/ v8::Handle<v8::Value> Java::setStaticFieldValue(const v8::Arguments& args) {
+  v8::HandleScope scope;
+  Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
+  v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
+  if(!ensureJvmResults->IsUndefined()) {
+    return ensureJvmResults;
+  }
+  JNIEnv* env = self->getJavaEnv();
+
+  // argument - className
+  if(args.Length() < 1 || !args[0]->IsString()) {
+    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 0 must be a string")));
+  }
+  v8::Local<v8::String> classNameObj = v8::Local<v8::String>::Cast(args[0]);
+  v8::String::AsciiValue classNameVal(classNameObj);
+  std::string className = *classNameVal;
+
+  // argument - field name
+  if(args.Length() < 2 || !args[1]->IsString()) {
+    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 1 must be a string")));
+  }
+  v8::Local<v8::String> fieldNameObj = v8::Local<v8::String>::Cast(args[1]);
+  v8::String::AsciiValue fieldNameVal(fieldNameObj);
+  std::string fieldName = *fieldNameVal;
+
+  // argument - new value
+  if(args.Length() < 3) {
+    return ThrowException(v8::Exception::TypeError(v8::String::New("setStaticFieldValue requires 3 arguments")));
+  }
+  jvalueType methodArgType;
+  jobject newValue = v8ToJava(env, args[2], &methodArgType);
+
+  // find the class
+  jclass clazz = javaFindClass(env, className);
+  if(clazz == NULL) {
+    std::ostringstream errStr;
+    errStr << "Could not create class " << className.c_str();
+    return ThrowException(javaExceptionToV8(env, errStr.str()));
+  }
+
+  // get the field
+  jobject field = javaFindField(env, clazz, fieldName);
+  if(field == NULL) {
+    std::ostringstream errStr;
+    errStr << "Could not find field " << fieldName.c_str() << " on class " << className.c_str();
+    return ThrowException(javaExceptionToV8(env, errStr.str()));
+  }
+
+  jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
+  jmethodID field_set = env->GetMethodID(fieldClazz, "set", "(Ljava/lang/Object;Ljava/lang/Object;)V");
+
+  // set field value
+  env->CallObjectMethod(field, field_set, NULL, newValue);
+  return v8::Undefined();
+}

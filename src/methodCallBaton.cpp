@@ -76,43 +76,7 @@ v8::Handle<v8::Value> MethodCallBaton::resultsToV8(JNIEnv *env) {
     return scope.Close(err);
   }
 
-  switch(m_resultType) {
-    case TYPE_VOID:
-      return v8::Undefined();
-    case TYPE_BOOLEAN:
-      {
-        jclass booleanClazz = env->FindClass("java/lang/Boolean");
-        jmethodID boolean_booleanValue = env->GetMethodID(booleanClazz, "booleanValue", "()Z");
-        bool result = env->CallBooleanMethod(m_result, boolean_booleanValue);
-        return scope.Close(v8::Boolean::New(result));
-      }
-    case TYPE_BYTE:
-      {
-        jclass byteClazz = env->FindClass("java/lang/Byte");
-        jmethodID byte_byteValue = env->GetMethodID(byteClazz, "byteValue", "()B");
-        jbyte result = env->CallByteMethod(m_result, byte_byteValue);
-        return scope.Close(v8::Number::New(result));
-      }
-    case TYPE_LONG:
-      {
-        jclass longClazz = env->FindClass("java/lang/Long");
-        jmethodID long_longValue = env->GetMethodID(longClazz, "longValue", "()J");
-        jlong result = env->CallLongMethod(m_result, long_longValue);
-        return scope.Close(v8::Number::New(result));
-      }
-    case TYPE_INT:
-      {
-        jclass integerClazz = env->FindClass("java/lang/Integer");
-        jmethodID integer_intValue = env->GetMethodID(integerClazz, "intValue", "()I");
-        jint result = env->CallIntMethod(m_result, integer_intValue);
-        return scope.Close(v8::Integer::New(result));
-      }
-    case TYPE_OBJECT:
-      return scope.Close(JavaObject::New(m_java, m_result));
-    case TYPE_STRING:
-      return scope.Close(v8::String::New(javaObjectToString(env, m_result).c_str()));
-  }
-  return v8::Undefined();
+  return scope.Close(javaToV8(m_java, env, m_resultType, m_result));
 }
 
 void NewInstanceBaton::execute(JNIEnv *env) {

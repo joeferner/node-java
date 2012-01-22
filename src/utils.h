@@ -7,6 +7,8 @@
 #include <list>
 #include <string>
 
+class Java;
+
 typedef enum _jvalueType {
   TYPE_VOID    = 1,
   TYPE_INT     = 2,
@@ -26,19 +28,20 @@ jobject javaFindBestMatchingMethod(
   JNIEnv *env,
   std::list<jobject>& methods,
   const char *methodName,
-  std::list<int>& argTypes);
+  std::list<jvalueType>& argTypes);
 jobject javaFindBestMatchingConstructor(
   JNIEnv *env,
   std::list<jobject>& constructors,
-  std::list<int>& argTypes);
+  std::list<jvalueType>& argTypes);
 JNIEnv* javaAttachCurrentThread(JavaVM* jvm);
 void javaDetachCurrentThread(JavaVM* jvm);
 jvalueType javaGetType(JNIEnv *env, jclass type);
 jclass javaFindClass(JNIEnv* env, std::string className);
 jobject javaFindField(JNIEnv* env, jclass clazz, std::string fieldName);
-jarray v8ToJava(JNIEnv* env, const v8::Arguments& args, int start, int end, std::list<int> *methodArgTypes);
-jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg, int *methodArgType);
+jarray v8ToJava(JNIEnv* env, const v8::Arguments& args, int start, int end, std::list<jvalueType> *methodArgTypes);
+jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg, jvalueType *methodArgType);
 v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, const std::string& alternateMessage);
 v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, jthrowable ex, const std::string& alternateMessage);
+v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jvalueType resultType, jobject obj);
 
 #endif

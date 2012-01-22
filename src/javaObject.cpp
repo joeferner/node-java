@@ -73,7 +73,7 @@ JavaObject::~JavaObject() {
     callback = v8::Null();
   }
 
-	std::list<int> methodArgTypes;
+	std::list<jvalueType> methodArgTypes;
   jarray methodArgs = v8ToJava(env, args, 0, argsEnd, &methodArgTypes);
 
   jobject method = javaFindBestMatchingMethod(env, self->m_methods, *methodName, methodArgTypes);
@@ -95,7 +95,7 @@ JavaObject::~JavaObject() {
 
   v8::String::AsciiValue methodName(args.Data());
 
-	std::list<int> methodArgTypes;
+	std::list<jvalueType> methodArgTypes;
   jarray methodArgs = v8ToJava(env, args, 0, args.Length(), &methodArgTypes);
 
   jobject method = javaFindBestMatchingMethod(env, self->m_methods, *methodName, methodArgTypes);
