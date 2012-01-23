@@ -106,6 +106,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     return ensureJvmResults;
   }
   JNIEnv* env = self->getJavaEnv();
+  bool callbackProvided;
 
   int argsEnd = args.Length();
 
@@ -122,8 +123,10 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   if(args[args.Length()-1]->IsFunction()) {
     callback = args[argsEnd-1];
     argsEnd--;
+    callbackProvided = true;
   } else {
     callback = v8::Null();
+    callbackProvided = false;
   }
 
 	std::list<jvalueType> methodArgTypes;
@@ -138,7 +141,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     v8::Handle<v8::Value> argv[2];
     argv[0] = error;
     argv[1] = v8::Undefined();
-    
+
     v8::Function::Cast(*callback)->Call(v8::Context::GetCurrent()->Global(), 2, argv);
     return v8::Undefined();
   }
@@ -160,7 +163,13 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   NewInstanceBaton* baton = new NewInstanceBaton(self, clazz, method, methodArgs, callback);
   baton->run();
 
-  return v8::Undefined();
+  if(callbackProvided) {
+    return v8::Undefined();
+  } else {
+    std::ostringstream str;
+    str << "\"Constructor for class '" << className << "' called without a callback did you mean to use the Sync version?\"";
+    return scope.Close(v8::String::New(str.str().c_str()));
+  }
 }
 
 /*static*/ v8::Handle<v8::Value> Java::newInstanceSync(const v8::Arguments& args) {
@@ -220,6 +229,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     return ensureJvmResults;
   }
   JNIEnv* env = self->getJavaEnv();
+  bool callbackProvided;
 
   int argsEnd = args.Length();
 
@@ -244,8 +254,10 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   if(args[args.Length()-1]->IsFunction()) {
     callback = args[argsEnd-1];
     argsEnd--;
+    callbackProvided = true;
   } else {
     callback = v8::Null();
+    callbackProvided = false;
   }
 
   // build args
@@ -283,7 +295,13 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   StaticMethodCallBaton* baton = new StaticMethodCallBaton(self, clazz, method, methodArgs, callback);
   baton->run();
 
-  return v8::Undefined();
+  if(callbackProvided) {
+    return v8::Undefined();
+  } else {
+    std::ostringstream str;
+    str << "\"Static method '" << methodName << "' called without a callback did you mean to use the Sync version?\"";
+    return scope.Close(v8::String::New(str.str().c_str()));
+  }
 }
 
 /*static*/ v8::Handle<v8::Value> Java::callStaticMethodSync(const v8::Arguments& args) {
@@ -486,7 +504,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   // get field type
   jclass fieldTypeClazz = (jclass)env->CallObjectMethod(field, field_getType);
   jvalueType resultType = javaGetType(env, fieldTypeClazz);
-  
+
   // get field value
   jobject val = env->CallObjectMethod(field, field_get, NULL);
   if(env->ExceptionOccurred()) {
@@ -494,7 +512,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     errStr << "Could not get field " << fieldName.c_str() << " on class " << className.c_str();
     return ThrowException(javaExceptionToV8(env, errStr.str()));
   }
-  
+
   return scope.Close(javaToV8(self, env, resultType, val));
 }
 
@@ -550,7 +568,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   jmethodID field_set = env->GetMethodID(fieldClazz, "set", "(Ljava/lang/Object;Ljava/lang/Object;)V");
 
   //printf("newValue: %s\n", javaObjectToString(env, newValue).c_str());
-  
+
   // set field value
   env->CallObjectMethod(field, field_set, NULL, newValue);
   if(env->ExceptionOccurred()) {
@@ -558,6 +576,6 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     errStr << "Could not set field " << fieldName.c_str() << " on class " << className.c_str();
     return ThrowException(javaExceptionToV8(env, errStr.str()));
   }
-  
+
   return v8::Undefined();
 }
