@@ -109,6 +109,8 @@ jvalueType javaGetType(JNIEnv *env, jclass type) {
     //printf("javaGetType: %s\n", typeStr);
     if(strcmp(typeStr, "int") == 0) {
       return TYPE_INT;
+    } else if(strcmp(typeStr, "double") == 0) {
+      return TYPE_DOUBLE;
     } else if(strcmp(typeStr, "long") == 0) {
       return TYPE_LONG;
     } else if(strcmp(typeStr, "void") == 0) {
@@ -171,10 +173,17 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
     return env->NewStringUTF(*val);
   }
 
-  if(arg->IsInt32()) {
+  if(arg->IsInt32() || arg->IsUint32()) {
     jint val = arg->ToInt32()->Value();
     jclass clazz = env->FindClass("java/lang/Integer");
     jmethodID constructor = env->GetMethodID(clazz, "<init>", "(I)V");
+    return env->NewObject(clazz, constructor, val);
+  }
+
+  if(arg->IsNumber()) {
+    jdouble val = arg->ToNumber()->Value();
+    jclass clazz = env->FindClass("java/lang/Double");
+    jmethodID constructor = env->GetMethodID(clazz, "<init>", "(D)V");
     return env->NewObject(clazz, constructor, val);
   }
 
@@ -309,6 +318,13 @@ v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jvalueType resultType, j
           jmethodID integer_intValue = env->GetMethodID(integerClazz, "intValue", "()I");
           jint result = env->CallIntMethod(obj, integer_intValue);
           return scope.Close(v8::Integer::New(result));
+        }
+      case TYPE_DOUBLE:
+        {
+          jclass doubleClazz = env->FindClass("java/lang/Double");
+          jmethodID double_doubleValue = env->GetMethodID(doubleClazz, "doubleValue", "()D");
+          jdouble result = env->CallDoubleMethod(obj, double_doubleValue);
+          return scope.Close(v8::Number::New(result));
         }
       case TYPE_STRING:
         return scope.Close(v8::String::New(javaObjectToString(env, obj).c_str()));

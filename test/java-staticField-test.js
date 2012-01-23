@@ -17,4 +17,24 @@ exports['Java - Static Field'] = nodeunit.testCase({
     test.equal(val, 112);
     test.done();
   },
+
+  "getStaticFieldValue double": function(test) {
+    var val = java.getStaticFieldValue("Test", "staticFieldDouble");
+    test.equal(val, 42.5);
+    test.done();
+  },
+
+  "setStaticFieldValue double": function(test) {
+    java.setStaticFieldValue("Test", "staticFieldDouble", 112.12);
+    var val = java.getStaticFieldValue("Test", "staticFieldDouble");
+    test.equal(val, 112.12);
+    test.done();
+  },
+
+  "setStaticFieldValue double (set int)": function(test) {
+    java.setStaticFieldValue("Test", "staticFieldDouble", 112);
+    var val = java.getStaticFieldValue("Test", "staticFieldDouble");
+    test.equal(val, 112);
+    test.done();
+  },
 });

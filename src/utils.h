@@ -24,7 +24,9 @@ typedef enum _jvalueType {
   TYPE_BOOLEAN       = 0x006,
   TYPE_ARRAY_BOOLEAN = 0x106,
   TYPE_BYTE          = 0x007,
-  TYPE_ARRAY_BYTE    = 0x107
+  TYPE_ARRAY_BYTE    = 0x107,
+  TYPE_DOUBLE        = 0x008,
+  TYPE_ARRAY_DOUBLE  = 0x108,
 } jvalueType;
 
 #define VALUE_TYPE_ARRAY 0x100

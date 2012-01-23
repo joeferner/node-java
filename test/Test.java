@@ -3,6 +3,7 @@ public class Test {
   private int i;
   public int nonstaticInt = 42;
   public static int staticFieldInt = 42;
+  public static double staticFieldDouble = 42.5;
   public static Test[] staticArrayObjects = null;
 
   public Test() {}
