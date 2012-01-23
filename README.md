@@ -66,8 +66,9 @@ java.newInstance("java.util.ArrayList", function(err, list) {
 ## java
 
 <a name="javaNewInstance" />
-### java.newInstance(className, [args...], callback)
-### java.newInstanceSync(className, [args...]) : result
+**java.newInstance(className, [args...], callback)**
+
+**java.newInstanceSync(className, [args...]) : result**
 
 Creates an instance of the specified class. If you are using the sync method an exception will be throw if an error occures,
 otherwise it will be the first argument in the callback.
@@ -87,8 +88,9 @@ __Example__
     });
 
 <a name="javaCallStaticMethod" />
-### java.callStaticMethod(className, methodName, [args...], callback)
-### java.callStaticMethodSync(className, methodName, [args...]) : result
+**java.callStaticMethod(className, methodName, [args...], callback)**
+
+**java.callStaticMethodSync(className, methodName, [args...]) : result**
 
 Calls a static method on the specified class. If you are using the sync method an exception will be throw if an error occures,
 otherwise it will be the first argument in the callback.
@@ -109,7 +111,7 @@ __Example__
     });
 
 <a name="javaGetStaticFieldValue" />
-### java.getStaticFieldValue(className, fieldName)
+**java.getStaticFieldValue(className, fieldName)**
 
 Gets a static field value from the specified class.
 
@@ -123,7 +125,7 @@ __Example__
     var data = java.getStaticFieldValue("com.nearinfinty.MyClass", "data");
 
 <a name="javaSetStaticFieldValue" />
-### java.setStaticFieldValue(className, fieldName, newValue)
+**java.setStaticFieldValue(className, fieldName, newValue)**
 
 Sets a static field value on the specified class.
 
@@ -138,7 +140,7 @@ __Example__
     java.getStaticFieldValue("com.nearinfinty.MyClass", "data", "Hello World");
 
 <a name="javaNewArray" />
-### java.newArray(className, values[])
+**java.newArray(className, values[])**
 
 Creates a new java array of type class.
 
@@ -152,7 +154,7 @@ __Example__
     var newArray = java.newArray("java.lang.String", ["item1", "item2", "item3"]);
 
 <a name="javaNewByte" />
-### java.newByte(val)
+**java.newByte(val)**
 
 Creates a new java byte. This is needed because javascript does not have the concept of a byte.
 
@@ -168,8 +170,9 @@ __Example__
 ## java object
 
 <a name="javaObjectCallMethod" />
-### obj._methodName_([args...], callback)
-### obj._methodNameSync_([args...]) : result
+**obj._methodName_([args...], callback)**
+
+**obj._methodNameSync_([args...]) : result**
 
 Once you have a java object either by creating a new instance or as a result of a method call you can then call methods on that object.
 All public, non-static methods are exposed in synchronous and asynchronous flavors.
@@ -188,8 +191,9 @@ __Example__
     });
 
 <a name="javaObjectGetSetField" />
-### obj._fieldName_ = val
-### val = obj._fieldName_
+**obj._fieldName_ = val**
+
+**val = obj._fieldName_**
 
 Once you have a java object either by creating a new instance or as a result of a method call you can get instance
 field values.
