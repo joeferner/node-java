@@ -28,7 +28,6 @@ $ vcbuild.bat
 ## Installation Mac
 
 ```bash
-$ ???
 $ npm install java
 ```
 

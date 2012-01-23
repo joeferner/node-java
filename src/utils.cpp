@@ -15,7 +15,7 @@ std::list<jobject> javaReflectionGetMethods(JNIEnv *env, jclass clazz) {
   jmethodID clazz_getMethods = env->GetMethodID(clazzclazz, "getMethods", "()[Ljava/lang/reflect/Method;");
   jclass methodClazz = env->FindClass("java/lang/reflect/Method");
   jmethodID method_getModifiers = env->GetMethodID(methodClazz, "getModifiers", "()I");
-  
+
   jobjectArray methodObjects = (jobjectArray)env->CallObjectMethod(clazz, clazz_getMethods);
   jsize methodCount = env->GetArrayLength(methodObjects);
   for(jsize i=0; i<methodCount; i++) {
@@ -37,7 +37,7 @@ std::list<jobject> javaReflectionGetFields(JNIEnv *env, jclass clazz) {
   jmethodID clazz_getFields = env->GetMethodID(clazzclazz, "getFields", "()[Ljava/lang/reflect/Field;");
   jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
   jmethodID field_getModifiers = env->GetMethodID(fieldClazz, "getModifiers", "()I");
-  
+
   jobjectArray fieldObjects = (jobjectArray)env->CallObjectMethod(clazz, clazz_getFields);
   jsize fieldCount = env->GetArrayLength(fieldObjects);
   for(jsize i=0; i<fieldCount; i++) {
@@ -104,7 +104,9 @@ jobject javaFindBestMatchingMethod(
   JNIEnv *env,
   std::list<jobject>& methods,
   const char *methodName,
-  std::list<jvalueType>& argTypes) {
+  jobjectArray args) {
+
+  jsize argsSize = env->GetArrayLength(args);
 
   std::list<jobject> possibleMatches;
   jclass methodClazz = env->FindClass("java/lang/reflect/Method");
@@ -114,8 +116,8 @@ jobject javaFindBestMatchingMethod(
   for(std::list<jobject>::iterator it = methods.begin(); it != methods.end(); it++) {
     std::string itMethodName = javaToString(env, (jstring)env->CallObjectMethod(*it, method_getNameMethod));
     if(itMethodName == methodName) {
-      jarray parameters = (jarray)env->CallObjectMethod(*it, method_getParameterTypes);
-      if(env->GetArrayLength(parameters) == (jsize)argTypes.size()) {
+      jobjectArray parameters = (jobjectArray)env->CallObjectMethod(*it, method_getParameterTypes);
+      if(env->GetArrayLength(parameters) == argsSize) {
         possibleMatches.push_back(*it);
       }
     }
@@ -127,13 +129,31 @@ jobject javaFindBestMatchingMethod(
   if(possibleMatches.size() == 1) {
     return possibleMatches.front();
   } else {
-    // TODO: argument match
+    // second pass to check arguments
+    for(std::list<jobject>::iterator it = possibleMatches.begin(); it != possibleMatches.end(); it++) {
+      jobjectArray possibleMatchArgs = (jobjectArray)env->CallObjectMethod(*it, method_getParameterTypes);
+      jsize i;
+      for(i=0; i<argsSize; i++) {
+        jobject arg = env->GetObjectArrayElement(args, i);
+        //jclass argClass = env->GetObjectClass(arg);
+        jclass possibleMatchArgClass = (jclass)env->GetObjectArrayElement(possibleMatchArgs, i);
+        jboolean isAssignableFrom = env->IsInstanceOf(arg, possibleMatchArgClass);
+        //printf("match\n\t%s\n\t%s\n\t%d\n", javaObjectToString(env,argClass).c_str(), javaObjectToString(env,possibleMatchArgClass).c_str(), isAssignableFrom);
+        if(!isAssignableFrom)
+          break;
+      }
+      if(i == argsSize) {
+        return *it;
+      }
+    }
+
     /*
     printf("javaFindBestMatchingMethod: multiple matches (choosing the first)\n");
     for(std::list<jobject>::iterator it = possibleMatches.begin(); it != possibleMatches.end(); it++) {
       printf("  %s\n", javaObjectToString(env, *it).c_str());
     }
     */
+
     return possibleMatches.front();
   }
 
@@ -143,7 +163,9 @@ jobject javaFindBestMatchingMethod(
 jobject javaFindBestMatchingConstructor(
   JNIEnv *env,
   std::list<jobject>& constructors,
-  std::list<jvalueType>& argTypes) {
+  jobjectArray args) {
+
+  jsize argsSize = env->GetArrayLength(args);
 
   std::list<jobject> possibleMatches;
   jclass constructorClazz = env->FindClass("java/lang/reflect/Constructor");
@@ -151,7 +173,7 @@ jobject javaFindBestMatchingConstructor(
 
   for(std::list<jobject>::iterator it = constructors.begin(); it != constructors.end(); it++) {
     jarray parameters = (jarray)env->CallObjectMethod(*it, constructor_getParameterTypes);
-    if(env->GetArrayLength(parameters) == (jsize)argTypes.size()) {
+    if(env->GetArrayLength(parameters) == argsSize) {
       possibleMatches.push_back(*it);
     }
   }
@@ -193,7 +215,7 @@ jvalueType javaGetType(JNIEnv *env, jclass type) {
   jclass clazzClazz = env->FindClass("java/lang/Class");
   jmethodID class_isArray = env->GetMethodID(clazzClazz, "isArray", "()Z");
   jmethodID class_getComponentType = env->GetMethodID(clazzClazz, "getComponentType", "()Ljava/lang/Class;");
-  
+
   jboolean isArray = env->CallBooleanMethod(type, class_isArray);
   if(isArray) {
     jclass componentTypeClass = (jclass)env->CallObjectMethod(type, class_getComponentType);
@@ -255,7 +277,7 @@ jobject javaFindField(JNIEnv* env, jclass clazz, std::string fieldName) {
   return NULL;
 }
 
-jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg, jvalueType *methodArgType) {
+jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
   if(arg->IsNull() || arg->IsUndefined()) {
     return NULL;
   }
@@ -266,23 +288,19 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg, jvalueType *methodArgTyp
     jclass objectClazz = env->FindClass("java/lang/Object");
     jobjectArray result = env->NewObjectArray(arraySize, objectClazz, NULL);
     for(uint32_t i=0; i<arraySize; i++) {
-      jvalueType argType;
-      jobject val = v8ToJava(env, array->Get(i), &argType);
+      jobject val = v8ToJava(env, array->Get(i));
       env->SetObjectArrayElement(result, i, val);
     }
-    *methodArgType = TYPE_ARRAY_OBJECT;
     return result;
   }
-  
+
   if(arg->IsString()) {
-    *methodArgType = TYPE_STRING;
     v8::String::AsciiValue val(arg->ToString());
     return env->NewStringUTF(*val);
   }
 
   if(arg->IsInt32()) {
     jint val = arg->ToInt32()->Value();
-    *methodArgType = TYPE_INT;
     jclass clazz = env->FindClass("java/lang/Integer");
     jmethodID constructor = env->GetMethodID(clazz, "<init>", "(I)V");
     return env->NewObject(clazz, constructor, val);
@@ -290,7 +308,6 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg, jvalueType *methodArgTyp
 
   if(arg->IsBoolean()) {
     jboolean val = arg->ToBoolean()->Value();
-    *methodArgType = TYPE_BOOLEAN;
     jclass clazz = env->FindClass("java/lang/Boolean");
     jmethodID constructor = env->GetMethodID(clazz, "<init>", "(Z)V");
     return env->NewObject(clazz, constructor, val);
@@ -301,7 +318,6 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg, jvalueType *methodArgTyp
     v8::String::AsciiValue constructorName(obj->GetConstructorName());
     if(strcmp(*constructorName, "JavaObject") == 0) {
       JavaObject* javaObject = node::ObjectWrap::Unwrap<JavaObject>(obj);
-      *methodArgType = TYPE_OBJECT;
       return javaObject->getObject();
     }
   }
@@ -309,21 +325,16 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg, jvalueType *methodArgTyp
   // TODO: handle other arg types
   v8::String::AsciiValue typeStr(arg);
   printf("Unhandled type: %s\n", *typeStr);
-  *methodArgType = TYPE_OBJECT;
   return NULL;
 }
 
-jarray v8ToJava(JNIEnv* env, const v8::Arguments& args, int start, int end, std::list<jvalueType> *methodArgTypes) {
+jobjectArray v8ToJava(JNIEnv* env, const v8::Arguments& args, int start, int end) {
   jclass clazz = env->FindClass("java/lang/Object");
   jobjectArray results = env->NewObjectArray(end-start, clazz, NULL);
 
   for(int i=start; i<end; i++) {
-    jvalueType methodArgType;
-    jobject val = v8ToJava(env, args[i], &methodArgType);
+    jobject val = v8ToJava(env, args[i]);
     env->SetObjectArrayElement(results, i - start, val);
-    if(methodArgTypes) {
-      methodArgTypes->push_back(methodArgType);
-    }
   }
 
   return results;
@@ -340,21 +351,21 @@ v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, jthrowable ex, const std::s
     jmethodID stringWriter_constructor = env->GetMethodID(stringWriterClazz, "<init>", "()V");
     jmethodID stringWriter_toString = env->GetMethodID(stringWriterClazz, "toString", "()Ljava/lang/String;");
     jobject stringWriter = env->NewObject(stringWriterClazz, stringWriter_constructor);
-    
+
     jclass printWriterClazz = env->FindClass("java/io/PrintWriter");
     jmethodID printWriter_constructor = env->GetMethodID(printWriterClazz, "<init>", "(Ljava/io/Writer;)V");
     jobject printWriter = env->NewObject(printWriterClazz, printWriter_constructor, stringWriter);
-  
+
     jclass throwableClazz = env->FindClass("java/lang/Throwable");
     jmethodID throwable_printStackTrace = env->GetMethodID(throwableClazz, "printStackTrace", "(Ljava/io/PrintWriter;)V");
     env->CallObjectMethod(ex, throwable_printStackTrace, printWriter);
-    
+
     jstring strObj = (jstring)env->CallObjectMethod(stringWriter, stringWriter_toString);
     std::string stackTrace = javaToString(env, strObj);
 
     msg << "\n" << stackTrace;
-  }  
-  
+  }
+
   return scope.Close(v8::Exception::Error(v8::String::New(msg.str().c_str())));
 }
 
@@ -366,31 +377,31 @@ v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, const std::string& alternat
 
 v8::Handle<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jvalueType itemType, jobjectArray objArray) {
   v8::HandleScope scope;
-  
+
   if(objArray == NULL) {
     return v8::Null();
   }
-  
+
   //printf("javaArrayToV8: %d %s\n", itemType, javaObjectToString(env, objArray).c_str());
-  
+
   jsize arraySize = env->GetArrayLength(objArray);
   //printf("array size: %d\n", arraySize);
-  
-  v8::Handle<v8::Array> result = v8::Array::New(arraySize);  
-  for(jsize i=0; i<arraySize; i++) {  
+
+  v8::Handle<v8::Array> result = v8::Array::New(arraySize);
+  for(jsize i=0; i<arraySize; i++) {
     jobject obj = env->GetObjectArrayElement(objArray, i);
     v8::Handle<v8::Value> item = javaToV8(java, env, itemType, obj);
     result->Set(i, item);
   }
-  
+
   return scope.Close(result);
 }
 
 v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jvalueType resultType, jobject obj) {
   v8::HandleScope scope;
-  
+
   //printf("javaToV8: %d %s\n", resultType, javaObjectToString(env, obj).c_str());
-  
+
   if((resultType & VALUE_TYPE_ARRAY) == VALUE_TYPE_ARRAY) {
     v8::Handle<v8::Value> result = javaArrayToV8(java, env, (jvalueType)(resultType & ~VALUE_TYPE_ARRAY), (jobjectArray)obj);
     return scope.Close(result);

@@ -85,10 +85,9 @@ JavaObject::~JavaObject() {
     callbackProvided = false;
   }
 
-	std::list<jvalueType> methodArgTypes;
-  jarray methodArgs = v8ToJava(env, args, 0, argsEnd, &methodArgTypes);
+  jobjectArray methodArgs = v8ToJava(env, args, 0, argsEnd);
 
-  jobject method = javaFindBestMatchingMethod(env, self->m_methods, *methodName, methodArgTypes);
+  jobject method = javaFindBestMatchingMethod(env, self->m_methods, *methodName, methodArgs);
   if(method == NULL) {
     return v8::Undefined(); // TODO: callback with error
   }
@@ -113,10 +112,9 @@ JavaObject::~JavaObject() {
 
   v8::String::AsciiValue methodName(args.Data());
 
-	std::list<jvalueType> methodArgTypes;
-  jarray methodArgs = v8ToJava(env, args, 0, args.Length(), &methodArgTypes);
+  jobjectArray methodArgs = v8ToJava(env, args, 0, args.Length());
 
-  jobject method = javaFindBestMatchingMethod(env, self->m_methods, *methodName, methodArgTypes);
+  jobject method = javaFindBestMatchingMethod(env, self->m_methods, *methodName, methodArgs);
   if(method == NULL) {
     return v8::Undefined();
   }
@@ -166,8 +164,7 @@ JavaObject::~JavaObject() {
   JavaObject* self = node::ObjectWrap::Unwrap<JavaObject>(info.This());
   JNIEnv *env = self->m_java->getJavaEnv();
 
-	jvalueType methodArgType;
-	jobject newValue = v8ToJava(env, value, &methodArgType);
+	jobject newValue = v8ToJava(env, value);
 
 	v8::String::AsciiValue propertyStr(property);
 	jobject field = javaFindField(env, self->m_class, *propertyStr);

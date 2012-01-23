@@ -6,6 +6,7 @@
 #include <v8.h>
 #include <jni.h>
 #include <list>
+#include <vector>
 #include <string>
 
 class Java;
@@ -38,18 +39,18 @@ jobject javaFindBestMatchingMethod(
   JNIEnv *env,
   std::list<jobject>& methods,
   const char *methodName,
-  std::list<jvalueType>& argTypes);
+  jobjectArray args);
 jobject javaFindBestMatchingConstructor(
   JNIEnv *env,
   std::list<jobject>& constructors,
-  std::list<jvalueType>& argTypes);
+  jobjectArray args);
 JNIEnv* javaAttachCurrentThread(JavaVM* jvm);
 void javaDetachCurrentThread(JavaVM* jvm);
 jvalueType javaGetType(JNIEnv *env, jclass type);
 jclass javaFindClass(JNIEnv* env, std::string className);
 jobject javaFindField(JNIEnv* env, jclass clazz, std::string fieldName);
-jarray v8ToJava(JNIEnv* env, const v8::Arguments& args, int start, int end, std::list<jvalueType> *methodArgTypes);
-jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg, jvalueType *methodArgType);
+jobjectArray v8ToJava(JNIEnv* env, const v8::Arguments& args, int start, int end);
+jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg);
 v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, const std::string& alternateMessage);
 v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, jthrowable ex, const std::string& alternateMessage);
 v8::Handle<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jvalueType itemType, jobjectArray objArray);

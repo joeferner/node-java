@@ -145,8 +145,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     callbackProvided = false;
   }
 
-	std::list<jvalueType> methodArgTypes;
-  jarray methodArgs = v8ToJava(env, args, 1, argsEnd, &methodArgTypes);
+  jobjectArray methodArgs = v8ToJava(env, args, 1, argsEnd);
 
   jclass clazz = javaFindClass(env, className);
   if(clazz == NULL) {
@@ -162,7 +161,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     return v8::Undefined();
   }
   std::list<jobject> constructors = javaReflectionGetConstructors(env, clazz);
-  jobject method = javaFindBestMatchingConstructor(env, constructors, methodArgTypes);
+  jobject method = javaFindBestMatchingConstructor(env, constructors, methodArgs);
   if(method == NULL) {
     std::ostringstream errStr;
     errStr << "Could not find constructor";
@@ -209,8 +208,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   std::string className = *classNameVal;
   argsStart++;
 
-	std::list<jvalueType> methodArgTypes;
-  jarray methodArgs = v8ToJava(env, args, argsStart, argsEnd, &methodArgTypes);
+  jobjectArray methodArgs = v8ToJava(env, args, argsStart, argsEnd);
 
   jclass clazz = javaFindClass(env, className);
   if(clazz == NULL) {
@@ -219,7 +217,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     return ThrowException(javaExceptionToV8(env, errStr.str()));
   }
   std::list<jobject> constructors = javaReflectionGetConstructors(env, clazz);
-  jobject method = javaFindBestMatchingConstructor(env, constructors, methodArgTypes);
+  jobject method = javaFindBestMatchingConstructor(env, constructors, methodArgs);
   if(method == NULL) {
     std::ostringstream errStr;
     errStr << "Could not find constructor";
@@ -277,8 +275,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   }
 
   // build args
-	std::list<jvalueType> methodArgTypes;
-  jarray methodArgs = v8ToJava(env, args, 2, argsEnd, &methodArgTypes);
+  jobjectArray methodArgs = v8ToJava(env, args, 2, argsEnd);
 
   // find class and method
   jclass clazz = javaFindClass(env, className);
@@ -294,7 +291,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     return v8::Undefined();
   }
   std::list<jobject> staticMethods = javaReflectionGetStaticMethods(env, clazz);
-  jobject method = javaFindBestMatchingMethod(env, staticMethods, methodName.c_str(), methodArgTypes);
+  jobject method = javaFindBestMatchingMethod(env, staticMethods, methodName.c_str(), methodArgs);
   if(method == NULL) {
     std::ostringstream errStr;
     errStr << "Could not find method \"" << methodName.c_str() << "\"";
@@ -348,8 +345,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   std::string methodName = *methodNameVal;
 
   // build args
-	std::list<jvalueType> methodArgTypes;
-  jarray methodArgs = v8ToJava(env, args, 2, argsEnd, &methodArgTypes);
+  jobjectArray methodArgs = v8ToJava(env, args, 2, argsEnd);
 
   // find class and method
   jclass clazz = javaFindClass(env, className);
@@ -359,7 +355,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     return ThrowException(javaExceptionToV8(env, errStr.str()));
   }
   std::list<jobject> staticMethods = javaReflectionGetStaticMethods(env, clazz);
-  jobject method = javaFindBestMatchingMethod(env, staticMethods, methodName.c_str(), methodArgTypes);
+  jobject method = javaFindBestMatchingMethod(env, staticMethods, methodName.c_str(), methodArgs);
   if(method == NULL) {
     std::ostringstream errStr;
     errStr << "Could not find method \"" << methodName.c_str() << "\"";
@@ -405,9 +401,8 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   if(strcmp(className.c_str(), "byte") == 0) {
     results = env->NewByteArray(arrayObj->Length());
     for(uint32_t i=0; i<arrayObj->Length(); i++) {
-      jvalueType methodArgType;
       v8::Local<v8::Value> item = arrayObj->Get(i);
-      jobject val = v8ToJava(env, item, &methodArgType);
+      jobject val = v8ToJava(env, item);
       jclass byteClazz = env->FindClass("java/lang/Byte");
       jmethodID byte_byteValue = env->GetMethodID(byteClazz, "byteValue", "()B");
       jbyte byteValues[1];
@@ -429,9 +424,8 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     results = env->NewObjectArray(arrayObj->Length(), clazz, NULL);
 
     for(uint32_t i=0; i<arrayObj->Length(); i++) {
-      jvalueType methodArgType;
       v8::Local<v8::Value> item = arrayObj->Get(i);
-      jobject val = v8ToJava(env, item, &methodArgType);
+      jobject val = v8ToJava(env, item);
       env->SetObjectArrayElement((jobjectArray)results, i, val);
       if(env->ExceptionOccurred()) {
         std::ostringstream errStr;
@@ -561,8 +555,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   if(args.Length() < 3) {
     return ThrowException(v8::Exception::TypeError(v8::String::New("setStaticFieldValue requires 3 arguments")));
   }
-  jvalueType methodArgType;
-  jobject newValue = v8ToJava(env, args[2], &methodArgType);
+  jobject newValue = v8ToJava(env, args[2]);
 
   // find the class
   jclass clazz = javaFindClass(env, className);
