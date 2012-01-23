@@ -43,6 +43,8 @@ def configure(conf):
     conf.env.append_unique('LINKFLAGS', ['-ljvm'])
 
 def build(bld):
+  bld.add_post_fun(post_build)
+
   obj = bld.new_task_gen("cxx", "shlib", "node_addon")
   obj.target = "nodejavabridge_bindings"
   obj.source = " ".join([
@@ -52,3 +54,7 @@ def build(bld):
     "src/methodCallBaton.cpp",
     "src/utils.cpp"])
   obj.includes = "src/"
+
+def post_build(bld):
+  if os.path.exists("/System/Library/Frameworks/JavaVM.framework/"):
+    os.system("install_name_tool -change @rpath/client.dylib /System/Library/Frameworks/JavaVM.framework/Libraries/server.dylib build/Release/nodejavabridge_bindings.node")
