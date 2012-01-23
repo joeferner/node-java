@@ -55,14 +55,6 @@ v8::Handle<v8::Value> Java::ensureJvm() {
   return v8::Undefined();
 }
 
-#ifdef MAC
-  extern "C" {
-    _JNI_IMPORT_OR_EXPORT_ jint JNICALL JNI_GetDefaultJavaVMInitArgs_Impl(void *args);
-    _JNI_IMPORT_OR_EXPORT_ jint JNICALL JNI_CreateJavaVM_Impl(JavaVM **pvm, void **penv, void *args);
-  }
-#endif
-
-
 v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   JavaVM* jvmTemp;
   JavaVMInitArgs args;
@@ -95,20 +87,12 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   JavaVMOption options[1];
   options[0].optionString = strdup(classPath.str().c_str());
 
-  #ifdef MAC
-    JNI_GetDefaultJavaVMInitArgs_Impl(&args);
-  #else
-    JNI_GetDefaultJavaVMInitArgs(&args);
-  #endif
+  JNI_GetDefaultJavaVMInitArgs(&args);
   args.version = JNI_VERSION_1_6;
   args.ignoreUnrecognized = false;
   args.options = options;
   args.nOptions = 1;
-  #ifdef MAC
-    JNI_CreateJavaVM_Impl(&jvmTemp, (void **)env, &args);
-  #else
-    JNI_CreateJavaVM(&jvmTemp, (void **)env, &args);
-  #endif
+  JNI_CreateJavaVM(&jvmTemp, (void **)env, &args);
   *jvm = jvmTemp;
 
   return v8::Undefined();
