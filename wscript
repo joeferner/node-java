@@ -21,22 +21,24 @@ def configure(conf):
   if os.path.exists("/System/Library/Frameworks/JavaVM.framework/"):
     jdk_include_dir = environ.get("JDK_INCLUDE_DIR", "/System/Library/Frameworks/JavaVM.framework/Headers")
     if jdk_include_dir:
-        conf.env.append_unique('CXXFLAGS', [ '-I' + jdk_include_dir ])
+      conf.env.append_unique('CXXFLAGS', [ '-I' + jdk_include_dir ])
+
+    conf.env.append_unique('CXXFLAGS', [ '-DMAC' ])
 
     conf.env.append_unique('LINKFLAGS', ['-framework JavaVM'])
     conf.env.append_unique('LINKFLAGS', ['-lm', '-lstdc++', '-ldl'])
   else:
     jdk_include_dir = environ.get("JDK_INCLUDE_DIR", "/usr/local/share/jdk1.6.0_30/include/")
     if jdk_include_dir:
-        conf.env.append_unique('CXXFLAGS', [ '-I' + jdk_include_dir ])
+      conf.env.append_unique('CXXFLAGS', [ '-I' + jdk_include_dir ])
 
     jdk_additional_include_dir = environ.get("JDK_AUX_INCLUDE_DIR", "/usr/local/share/jdk1.6.0_30/include/linux/")
     if jdk_additional_include_dir:
-        conf.env.append_unique('CXXFLAGS', [ '-I' + jdk_additional_include_dir ])
+      conf.env.append_unique('CXXFLAGS', [ '-I' + jdk_additional_include_dir ])
 
     jdk_lib_dir = environ.get("JDK_LIB_DIR", "/usr/local/share/jdk1.6.0_30/jre/lib/i386/client/")
     if jdk_lib_dir:
-        conf.env.append_unique('LINKFLAGS', [ '-L' + jdk_lib_dir ])
+      conf.env.append_unique('LINKFLAGS', [ '-L' + jdk_lib_dir ])
 
     conf.env.append_unique('LINKFLAGS', ['-ljvm'])
 
