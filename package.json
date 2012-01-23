@@ -1,6 +1,7 @@
 {
   "name": "java",
   "description": "Bridge API to connect with existing Java APIs.",
+  "author": "Joe Ferner <joe.ferner@nearinfinity.com>",
   "keywords": ["java", "jvm", "bridge"],
   "homepage": "https://github.com/nearinfinity/node-java-bridge",
   "version": "0.0.1",
@@ -11,14 +12,13 @@
   ],
   "bugs": { "url": "https://github.com/nearinfinity/node-java-bridge/issues" },
   "licenses": [ { "type" : "MIT" } ],
-  "repositories": [
-    { "type": "git", "url": "https://github.com/nearinfinity/node-java-bridge.git" }
-  ],
+  "repositories": { "type": "git", "url": "https://github.com/nearinfinity/node-java-bridge.git" },
   "devDependencies": {
     "nodeunit": "~0.6.4"
   },
   "scripts": {
     "test": "nodeunit test",
     "install": "node-waf configure build"
-  }
+  },
+  "main": "./index.js"
 }
