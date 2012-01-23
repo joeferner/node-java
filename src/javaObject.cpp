@@ -2,6 +2,7 @@
 #include "javaObject.h"
 #include "java.h"
 #include "utils.h"
+#include <sstream>
 
 /*static*/ v8::Persistent<v8::FunctionTemplate> JavaObject::s_ct;
 
@@ -27,9 +28,9 @@
 
   self->m_methods = javaReflectionGetMethods(env, self->m_class);
   jclass methodClazz = env->FindClass("java/lang/reflect/Method");
-  jmethodID method_getNameMethod = env->GetMethodID(methodClazz, "getName", "()Ljava/lang/String;");
+  jmethodID method_getName = env->GetMethodID(methodClazz, "getName", "()Ljava/lang/String;");
   for(std::list<jobject>::iterator it = self->m_methods.begin(); it != self->m_methods.end(); it++) {
-		std::string methodNameStr = javaToString(env, (jstring)env->CallObjectMethod(*it, method_getNameMethod));
+		std::string methodNameStr = javaToString(env, (jstring)env->CallObjectMethod(*it, method_getName));
 
     v8::Handle<v8::String> methodName = v8::String::New(methodNameStr.c_str());
 		v8::Local<v8::FunctionTemplate> methodCallTemplate = v8::FunctionTemplate::New(methodCall, methodName);
@@ -40,7 +41,15 @@
     javaObjectObj->Set(methodNameSync, methodCallSyncTemplate->GetFunction());
   }
 
-  // TODO: add public field support
+  self->m_fields = javaReflectionGetFields(env, self->m_class);
+  jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
+  jmethodID field_getName = env->GetMethodID(fieldClazz, "getName", "()Ljava/lang/String;");
+	for(std::list<jobject>::iterator it = self->m_fields.begin(); it != self->m_fields.end(); it++) {
+		std::string fieldNameStr = javaToString(env, (jstring)env->CallObjectMethod(*it, field_getName));
+
+    v8::Handle<v8::String> fieldName = v8::String::New(fieldNameStr.c_str());
+    javaObjectObj->SetAccessor(fieldName, fieldGetter, fieldSetter);
+	}
 
   return scope.Close(javaObjectObj);
 }
@@ -110,3 +119,68 @@ JavaObject::~JavaObject() {
 	delete baton;
   return scope.Close(result);;
 }
+
+/*static*/ v8::Handle<v8::Value> JavaObject::fieldGetter(v8::Local<v8::String> property, const v8::AccessorInfo& info) {
+	v8::HandleScope scope;
+  JavaObject* self = node::ObjectWrap::Unwrap<JavaObject>(info.This());
+  JNIEnv *env = self->m_java->getJavaEnv();
+
+	v8::String::AsciiValue propertyStr(property);
+	jobject field = javaFindField(env, self->m_class, *propertyStr);	
+	if(field == NULL) {
+    std::ostringstream errStr;
+    errStr << "Could not find field " << *propertyStr;
+    return ThrowException(javaExceptionToV8(env, errStr.str()));
+  }
+		
+	jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
+  jmethodID field_get = env->GetMethodID(fieldClazz, "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
+  jmethodID field_getType = env->GetMethodID(fieldClazz, "getType", "()Ljava/lang/Class;");
+
+  // get field type
+  jclass fieldTypeClazz = (jclass)env->CallObjectMethod(field, field_getType);
+  jvalueType resultType = javaGetType(env, fieldTypeClazz);
+  
+  // get field value
+  jobject val = env->CallObjectMethod(field, field_get, self->m_obj);
+  if(env->ExceptionOccurred()) {
+    std::ostringstream errStr;
+    errStr << "Could not get field " << *propertyStr;
+    return ThrowException(javaExceptionToV8(env, errStr.str()));
+  }
+
+  return scope.Close(javaToV8(self->m_java, env, resultType, val));
+}
+
+/*static*/ void JavaObject::fieldSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::AccessorInfo& info) {
+	v8::HandleScope scope;
+  JavaObject* self = node::ObjectWrap::Unwrap<JavaObject>(info.This());
+  JNIEnv *env = self->m_java->getJavaEnv();
+
+	jvalueType methodArgType;
+	jobject newValue = v8ToJava(env, value, &methodArgType);
+
+	v8::String::AsciiValue propertyStr(property);
+	jobject field = javaFindField(env, self->m_class, *propertyStr);	
+	if(field == NULL) {
+    std::ostringstream errStr;
+    errStr << "Could not find field " << *propertyStr;
+    ThrowException(javaExceptionToV8(env, errStr.str()));
+		return;
+  }
+		
+	jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
+  jmethodID field_set = env->GetMethodID(fieldClazz, "set", "(Ljava/lang/Object;Ljava/lang/Object;)V");
+
+  //printf("newValue: %s\n", javaObjectToString(env, newValue).c_str());
+  
+  // set field value
+  env->CallObjectMethod(field, field_set, self->m_obj, newValue);
+  if(env->ExceptionOccurred()) {
+    std::ostringstream errStr;
+    errStr << "Could not set field " << *propertyStr;
+    ThrowException(javaExceptionToV8(env, errStr.str()));
+		return;
+  }
+}
+

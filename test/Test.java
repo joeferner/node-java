@@ -1,6 +1,7 @@
 
 public class Test {
   private int i;
+  public int nonstaticInt = 42;
   public static int staticFieldInt = 42;
   public static Test[] staticArrayObjects = null;
   

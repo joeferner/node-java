@@ -31,6 +31,7 @@ typedef enum _jvalueType {
 std::list<jobject> javaReflectionGetMethods(JNIEnv *env, jclass clazz);
 std::list<jobject> javaReflectionGetConstructors(JNIEnv *env, jclass clazz);
 std::list<jobject> javaReflectionGetStaticMethods(JNIEnv *env, jclass clazz);
+std::list<jobject> javaReflectionGetFields(JNIEnv *env, jclass clazz);
 std::string javaToString(JNIEnv *env, jstring str);
 std::string javaObjectToString(JNIEnv *env, jobject obj);
 jobject javaFindBestMatchingMethod(

@@ -6,17 +6,47 @@
 #include "javaObject.h"
 #include "java.h"
 
+#define MODIFIER_STATIC 9
+
 std::list<jobject> javaReflectionGetMethods(JNIEnv *env, jclass clazz) {
   std::list<jobject> results;
 
   jclass clazzclazz = env->GetObjectClass(clazz);
-  jmethodID methodId = env->GetMethodID(clazzclazz, "getMethods", "()[Ljava/lang/reflect/Method;");
-  // TODO: filter out static and prive methods
-  jobjectArray methodObjects = (jobjectArray)env->CallObjectMethod(clazz, methodId);
+  jmethodID clazz_getMethods = env->GetMethodID(clazzclazz, "getMethods", "()[Ljava/lang/reflect/Method;");
+  jclass methodClazz = env->FindClass("java/lang/reflect/Method");
+  jmethodID method_getModifiers = env->GetMethodID(methodClazz, "getModifiers", "()I");
+  
+  jobjectArray methodObjects = (jobjectArray)env->CallObjectMethod(clazz, clazz_getMethods);
   jsize methodCount = env->GetArrayLength(methodObjects);
   for(jsize i=0; i<methodCount; i++) {
-    jobject obj = env->GetObjectArrayElement(methodObjects, i);
-    results.push_back(obj);
+    jobject method = env->GetObjectArrayElement(methodObjects, i);
+    jint methodModifiers = env->CallIntMethod(method, method_getModifiers);
+    if((methodModifiers & MODIFIER_STATIC) == MODIFIER_STATIC) {
+      continue;
+    }
+    results.push_back(method);
+  }
+
+  return results;
+}
+
+std::list<jobject> javaReflectionGetFields(JNIEnv *env, jclass clazz) {
+  std::list<jobject> results;
+
+  jclass clazzclazz = env->GetObjectClass(clazz);
+  jmethodID clazz_getFields = env->GetMethodID(clazzclazz, "getFields", "()[Ljava/lang/reflect/Field;");
+  jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
+  jmethodID field_getModifiers = env->GetMethodID(fieldClazz, "getModifiers", "()I");
+  
+  jobjectArray fieldObjects = (jobjectArray)env->CallObjectMethod(clazz, clazz_getFields);
+  jsize fieldCount = env->GetArrayLength(fieldObjects);
+  for(jsize i=0; i<fieldCount; i++) {
+    jobject field = env->GetObjectArrayElement(fieldObjects, i);
+    jint fieldModifiers = env->CallIntMethod(field, field_getModifiers);
+    if((fieldModifiers & MODIFIER_STATIC) == MODIFIER_STATIC) {
+      continue;
+    }
+    results.push_back(field);
   }
 
   return results;
@@ -226,7 +256,7 @@ jobject javaFindField(JNIEnv* env, jclass clazz, std::string fieldName) {
 }
 
 jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg, jvalueType *methodArgType) {
-  if(arg->IsNull()) {
+  if(arg->IsNull() || arg->IsUndefined()) {
     return NULL;
   }
 

@@ -9,6 +9,11 @@ exports['Java - New Instance'] = nodeunit.testCase({
     java.newInstance("Test", function(err, result) {
       test.ok(result);
       test.equal(result.getClassSync().toStringSync(), "class Test");
+      test.ok(result.getInt);
+      test.ok(result.getIntSync);
+      test.ok(!result.staticMethod);
+      test.ok(!result.staticMethodSync);
+      test.equal(result.nonstaticInt, 42);
       test.done();
     });
   },

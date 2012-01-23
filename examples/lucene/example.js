@@ -54,8 +54,8 @@ function search(searcher, queryString) {
   console.log("Found " + topDocs.totalHits + " hits for query " + queryString + ".");
   var scoreDocs = topDocs.scoreDocs;
   for(var i=0; i<topDocs.totalHits; i++) {
-    var docId = scoreDocs.doc;
-    var doc = searcher.doc(docId);
-    console.log((i + 1) + ". " + doc.get("title"));
+    var docId = scoreDocs[i].doc;
+    var doc = searcher.docSync(docId);
+    console.log((i + 1) + ". " + doc.getSync("title"));
   }
 }
