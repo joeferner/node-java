@@ -51,9 +51,10 @@ function search(searcher, queryString) {
   var query = queryParser.parseSync(queryString);
   var topDocs = searcher.searchSync(query, 10);
 
-  console.log("Found " + topDocs.totalHits + " hits for query " + queryString + ".")
+  console.log("Found " + topDocs.totalHits + " hits for query " + queryString + ".");
+  var scoreDocs = topDocs.scoreDocs;
   for(var i=0; i<topDocs.totalHits; i++) {
-    var docId = topDocs.scoreDocs[i].doc;
+    var docId = scoreDocs.doc;
     var doc = searcher.doc(docId);
     console.log((i + 1) + ". " + doc.get("title"));
   }

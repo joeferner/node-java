@@ -11,14 +11,22 @@
 class Java;
 
 typedef enum _jvalueType {
-  TYPE_VOID    = 1,
-  TYPE_INT     = 2,
-  TYPE_LONG    = 3,
-  TYPE_OBJECT  = 4,
-  TYPE_STRING  = 5,
-  TYPE_BOOLEAN = 6,
-  TYPE_BYTE    = 7
+  TYPE_VOID          = 0x001,
+  TYPE_INT           = 0x002,
+  TYPE_ARRAY_INT     = 0x102,
+  TYPE_LONG          = 0x003,
+  TYPE_ARRAY_LONG    = 0x103,
+  TYPE_OBJECT        = 0x004,
+  TYPE_ARRAY_OBJECT  = 0x104,
+  TYPE_STRING        = 0x005,
+  TYPE_ARRAY_STRING  = 0x105,
+  TYPE_BOOLEAN       = 0x006,
+  TYPE_ARRAY_BOOLEAN = 0x106,
+  TYPE_BYTE          = 0x007,
+  TYPE_ARRAY_BYTE    = 0x107
 } jvalueType;
+
+#define VALUE_TYPE_ARRAY 0x100
 
 std::list<jobject> javaReflectionGetMethods(JNIEnv *env, jclass clazz);
 std::list<jobject> javaReflectionGetConstructors(JNIEnv *env, jclass clazz);
@@ -43,6 +51,7 @@ jarray v8ToJava(JNIEnv* env, const v8::Arguments& args, int start, int end, std:
 jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg, jvalueType *methodArgType);
 v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, const std::string& alternateMessage);
 v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, jthrowable ex, const std::string& alternateMessage);
+v8::Handle<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jvalueType itemType, jobjectArray objArray);
 v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jvalueType resultType, jobject obj);
 
 #endif

@@ -2,6 +2,7 @@
 public class Test {
   private int i;
   public static int staticFieldInt = 42;
+  public static Test[] staticArrayObjects = null;
   
   public Test() {}
   public Test(int i) { this.i = i; }

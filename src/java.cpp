@@ -489,7 +489,12 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   
   // get field value
   jobject val = env->CallObjectMethod(field, field_get, NULL);
-
+  if(env->ExceptionOccurred()) {
+    std::ostringstream errStr;
+    errStr << "Could not get field " << fieldName.c_str() << " on class " << className.c_str();
+    return ThrowException(javaExceptionToV8(env, errStr.str()));
+  }
+  
   return scope.Close(javaToV8(self, env, resultType, val));
 }
 
@@ -544,7 +549,15 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
   jmethodID field_set = env->GetMethodID(fieldClazz, "set", "(Ljava/lang/Object;Ljava/lang/Object;)V");
 
+  //printf("newValue: %s\n", javaObjectToString(env, newValue).c_str());
+  
   // set field value
   env->CallObjectMethod(field, field_set, NULL, newValue);
+  if(env->ExceptionOccurred()) {
+    std::ostringstream errStr;
+    errStr << "Could not set field " << fieldName.c_str() << " on class " << className.c_str();
+    return ThrowException(javaExceptionToV8(env, errStr.str()));
+  }
+  
   return v8::Undefined();
 }
