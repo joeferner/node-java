@@ -30,20 +30,9 @@ typedef enum _jvalueType {
 #define VALUE_TYPE_ARRAY 0x100
 
 std::list<jobject> javaReflectionGetMethods(JNIEnv *env, jclass clazz);
-std::list<jobject> javaReflectionGetConstructors(JNIEnv *env, jclass clazz);
-std::list<jobject> javaReflectionGetStaticMethods(JNIEnv *env, jclass clazz);
 std::list<jobject> javaReflectionGetFields(JNIEnv *env, jclass clazz);
 std::string javaToString(JNIEnv *env, jstring str);
 std::string javaObjectToString(JNIEnv *env, jobject obj);
-jobject javaFindBestMatchingMethod(
-  JNIEnv *env,
-  std::list<jobject>& methods,
-  const char *methodName,
-  jobjectArray args);
-jobject javaFindBestMatchingConstructor(
-  JNIEnv *env,
-  std::list<jobject>& constructors,
-  jobjectArray args);
 JNIEnv* javaAttachCurrentThread(JavaVM* jvm);
 void javaDetachCurrentThread(JavaVM* jvm);
 jvalueType javaGetType(JNIEnv *env, jclass type);
@@ -55,5 +44,8 @@ v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, const std::string& alternat
 v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, jthrowable ex, const std::string& alternateMessage);
 v8::Handle<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jvalueType itemType, jobjectArray objArray);
 v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jvalueType resultType, jobject obj);
+jobjectArray javaObjectArrayToClasses(JNIEnv *env, jobjectArray objs);
+jobject javaFindMethod(JNIEnv *env, jclass clazz, std::string& methodName, jobjectArray methodArgs);
+jobject javaFindConstructor(JNIEnv *env, jclass clazz, jobjectArray methodArgs);
 
 #endif

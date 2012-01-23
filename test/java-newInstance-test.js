@@ -69,7 +69,7 @@ exports['Java - New Instance'] = nodeunit.testCase({
     });
     test.done();
   },
-  
+
   "newInstance bad number of args": function(test) {
     java.newInstance("Test", 42, "z", function(err, result) {
       test.ok(err);
@@ -84,7 +84,7 @@ exports['Java - New Instance'] = nodeunit.testCase({
     });
     test.done();
   },
-  
+
   "newInstance exception thrown from constructor": function(test) {
     var ex = java.newInstanceSync("java.lang.Exception", "my exception");
     java.newInstance("TestExceptions", ex, function(err, result) {

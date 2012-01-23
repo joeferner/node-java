@@ -16,7 +16,7 @@ public:
   static v8::Local<v8::Object> New(Java* java, jobject obj);
 
   jobject getObject() { return m_obj; }
-  
+
   void Ref() { node::ObjectWrap::Ref(); }
   void Unref() { node::ObjectWrap::Unref(); }
 
@@ -32,7 +32,6 @@ private:
   Java* m_java;
   jobject m_obj;
   jclass m_class;
-  std::list<jobject> m_methods;
   std::list<jobject> m_fields;
 };
 

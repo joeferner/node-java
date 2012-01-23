@@ -26,10 +26,10 @@
 
   JNIEnv *env = self->m_java->getJavaEnv();
 
-  self->m_methods = javaReflectionGetMethods(env, self->m_class);
+  std::list<jobject> methods = javaReflectionGetMethods(env, self->m_class);
   jclass methodClazz = env->FindClass("java/lang/reflect/Method");
   jmethodID method_getName = env->GetMethodID(methodClazz, "getName", "()Ljava/lang/String;");
-  for(std::list<jobject>::iterator it = self->m_methods.begin(); it != self->m_methods.end(); it++) {
+  for(std::list<jobject>::iterator it = methods.begin(); it != methods.end(); it++) {
 		std::string methodNameStr = javaToString(env, (jstring)env->CallObjectMethod(*it, method_getName));
 
     v8::Handle<v8::String> methodName = v8::String::New(methodNameStr.c_str());
@@ -71,6 +71,7 @@ JavaObject::~JavaObject() {
   bool callbackProvided;
 
   v8::String::AsciiValue methodName(args.Data());
+  std::string methodNameStr = *methodName;
 
   int argsEnd = args.Length();
 
@@ -87,9 +88,18 @@ JavaObject::~JavaObject() {
 
   jobjectArray methodArgs = v8ToJava(env, args, 0, argsEnd);
 
-  jobject method = javaFindBestMatchingMethod(env, self->m_methods, *methodName, methodArgs);
+  jobject method = javaFindMethod(env, self->m_class, methodNameStr, methodArgs);
   if(method == NULL) {
-    return v8::Undefined(); // TODO: callback with error
+    std::ostringstream errStr;
+    errStr << "Could not call method " << methodNameStr;
+    v8::Handle<v8::Value> error = javaExceptionToV8(env, errStr.str());
+
+    v8::Handle<v8::Value> argv[2];
+    argv[0] = error;
+    argv[1] = v8::Undefined();
+
+    v8::Function::Cast(*callback)->Call(v8::Context::GetCurrent()->Global(), 2, argv);
+    return v8::Undefined();
   }
 
   // run
@@ -111,10 +121,11 @@ JavaObject::~JavaObject() {
   JNIEnv *env = self->m_java->getJavaEnv();
 
   v8::String::AsciiValue methodName(args.Data());
+  std::string methodNameStr = *methodName;
 
   jobjectArray methodArgs = v8ToJava(env, args, 0, args.Length());
 
-  jobject method = javaFindBestMatchingMethod(env, self->m_methods, *methodName, methodArgs);
+  jobject method = javaFindMethod(env, self->m_class, methodNameStr, methodArgs);
   if(method == NULL) {
     return v8::Undefined();
   }

@@ -9,7 +9,7 @@ exports['Java Object'] = nodeunit.testCase({
     this.testObj = java.newInstanceSync("Test");
     callback();
   },
-  
+
   "field": function(test) {
     test.equal(this.testObj.nonstaticInt, 42);
     this.testObj.nonstaticInt = 112;

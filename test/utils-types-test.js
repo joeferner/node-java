@@ -24,11 +24,28 @@ exports['Utils - Types'] = nodeunit.testCase({
     test.done();
   },
 
-  "Method Overload": function(test) {
+  "Static Method Overload": function(test) {
     var result = java.callStaticMethodSync("Test", "staticMethodOverload", "a");
     test.equal(result, 1);
     result = java.callStaticMethodSync("Test", "staticMethodOverload", 1);
     test.equal(result, 2);
+    result = java.callStaticMethodSync("Test", "staticMethodOverload", java.newInstanceSync("Test$SuperClass"));
+    test.equal(result, 3);
+    result = java.callStaticMethodSync("Test", "staticMethodOverload", java.newInstanceSync("Test$SubClass"));
+    test.equal(result, 4);
+    test.done();
+  },
+
+  "Method Overload": function(test) {
+    var testObj = java.newInstanceSync("Test");
+    var result = testObj.methodOverloadSync("a");
+    test.equal(result, 1);
+    result = testObj.methodOverloadSync(1);
+    test.equal(result, 2);
+    result = testObj.methodOverloadSync(java.newInstanceSync("Test$SuperClass"));
+    test.equal(result, 3);
+    result = testObj.methodOverloadSync(java.newInstanceSync("Test$SubClass"));
+    test.equal(result, 4);
     test.done();
   }
 });

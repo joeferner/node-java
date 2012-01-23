@@ -43,6 +43,7 @@ exports['Java - Call Static Method'] = nodeunit.testCase({
     });
   },
 
+
   "callStaticMethodSync bad class name": function(test) {
     test.throws(function() {
       java.callStaticMethodSync("BadClassName", "staticMethod");
@@ -64,7 +65,7 @@ exports['Java - Call Static Method'] = nodeunit.testCase({
     });
     test.done();
   },
-  
+
   "callStaticMethod bad number of args": function(test) {
     java.callStaticMethod("Test", "staticMethod", 42, "z", function(err, result) {
       test.ok(err);
@@ -79,7 +80,22 @@ exports['Java - Call Static Method'] = nodeunit.testCase({
     });
     test.done();
   },
-  
+
+  "callStaticMethod bad method name": function(test) {
+    java.callStaticMethod("Test", "badMethodName", function(err, result) {
+      test.ok(err);
+      test.ok(!result);
+      test.done();
+    });
+  },
+
+  "callStaticMethodSync bad method name": function(test) {
+    test.throws(function() {
+      java.callStaticMethodSync("Test", "badMethodName");
+    });
+    test.done();
+  },
+
   "callStaticMethod exception thrown from method": function(test) {
     var ex = java.newInstanceSync("java.lang.Exception", "my exception");
     java.callStaticMethod("Test", "staticMethodThrows", ex, function(err, result) {

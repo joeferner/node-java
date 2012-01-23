@@ -144,8 +144,8 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     v8::Function::Cast(*callback)->Call(v8::Context::GetCurrent()->Global(), 2, argv);
     return v8::Undefined();
   }
-  std::list<jobject> constructors = javaReflectionGetConstructors(env, clazz);
-  jobject method = javaFindBestMatchingConstructor(env, constructors, methodArgs);
+
+  jobject method = javaFindConstructor(env, clazz, methodArgs);
   if(method == NULL) {
     std::ostringstream errStr;
     errStr << "Could not find constructor";
@@ -200,8 +200,8 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     errStr << "Could not create class " << className.c_str();
     return ThrowException(javaExceptionToV8(env, errStr.str()));
   }
-  std::list<jobject> constructors = javaReflectionGetConstructors(env, clazz);
-  jobject method = javaFindBestMatchingConstructor(env, constructors, methodArgs);
+
+  jobject method = javaFindConstructor(env, clazz, methodArgs);
   if(method == NULL) {
     std::ostringstream errStr;
     errStr << "Could not find constructor";
@@ -274,8 +274,9 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     v8::Function::Cast(*callback)->Call(v8::Context::GetCurrent()->Global(), 2, argv);
     return v8::Undefined();
   }
-  std::list<jobject> staticMethods = javaReflectionGetStaticMethods(env, clazz);
-  jobject method = javaFindBestMatchingMethod(env, staticMethods, methodName.c_str(), methodArgs);
+
+  // find method
+  jobject method = javaFindMethod(env, clazz, methodName, methodArgs);
   if(method == NULL) {
     std::ostringstream errStr;
     errStr << "Could not find method \"" << methodName.c_str() << "\"";
@@ -338,8 +339,9 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     errStr << "Could not create class " << className.c_str();
     return ThrowException(javaExceptionToV8(env, errStr.str()));
   }
-  std::list<jobject> staticMethods = javaReflectionGetStaticMethods(env, clazz);
-  jobject method = javaFindBestMatchingMethod(env, staticMethods, methodName.c_str(), methodArgs);
+
+  // find method
+  jobject method = javaFindMethod(env, clazz, methodName, methodArgs);
   if(method == NULL) {
     std::ostringstream errStr;
     errStr << "Could not find method \"" << methodName.c_str() << "\"";

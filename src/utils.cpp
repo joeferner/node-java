@@ -52,37 +52,6 @@ std::list<jobject> javaReflectionGetFields(JNIEnv *env, jclass clazz) {
   return results;
 }
 
-std::list<jobject> javaReflectionGetStaticMethods(JNIEnv *env, jclass clazz) {
-  std::list<jobject> results;
-
-  jclass clazzclazz = env->GetObjectClass(clazz);
-  jmethodID methodId = env->GetMethodID(clazzclazz, "getDeclaredMethods", "()[Ljava/lang/reflect/Method;");
-  // TODO: filter out instance and prive methods
-  jobjectArray methodObjects = (jobjectArray)env->CallObjectMethod(clazz, methodId);
-  jsize methodCount = env->GetArrayLength(methodObjects);
-  for(jsize i=0; i<methodCount; i++) {
-    jobject obj = env->GetObjectArrayElement(methodObjects, i);
-    results.push_back(obj);
-  }
-
-  return results;
-}
-
-std::list<jobject> javaReflectionGetConstructors(JNIEnv *env, jclass clazz) {
-  std::list<jobject> results;
-
-  jclass clazzclazz = env->GetObjectClass(clazz);
-  jmethodID methodId = env->GetMethodID(clazzclazz, "getConstructors", "()[Ljava/lang/reflect/Constructor;");
-  jobjectArray methodObjects = (jobjectArray)env->CallObjectMethod(clazz, methodId);
-  jsize methodCount = env->GetArrayLength(methodObjects);
-  for(jsize i=0; i<methodCount; i++) {
-    jobject obj = env->GetObjectArrayElement(methodObjects, i);
-    results.push_back(obj);
-  }
-
-  return results;
-}
-
 std::string javaToString(JNIEnv *env, jstring str) {
   const char* chars = env->GetStringUTFChars(str, NULL);
   std::string results = chars;
@@ -98,103 +67,6 @@ std::string javaObjectToString(JNIEnv *env, jobject obj) {
   jmethodID methodId = env->GetMethodID(objClazz, "toString", "()Ljava/lang/String;");
   jstring result = (jstring)env->CallObjectMethod(obj, methodId);
   return javaToString(env, result);
-}
-
-jobject javaFindBestMatchingMethod(
-  JNIEnv *env,
-  std::list<jobject>& methods,
-  const char *methodName,
-  jobjectArray args) {
-
-  jsize argsSize = env->GetArrayLength(args);
-
-  std::list<jobject> possibleMatches;
-  jclass methodClazz = env->FindClass("java/lang/reflect/Method");
-  jmethodID method_getNameMethod = env->GetMethodID(methodClazz, "getName", "()Ljava/lang/String;");
-  jmethodID method_getParameterTypes = env->GetMethodID(methodClazz, "getParameterTypes", "()[Ljava/lang/Class;");
-
-  for(std::list<jobject>::iterator it = methods.begin(); it != methods.end(); it++) {
-    std::string itMethodName = javaToString(env, (jstring)env->CallObjectMethod(*it, method_getNameMethod));
-    if(itMethodName == methodName) {
-      jobjectArray parameters = (jobjectArray)env->CallObjectMethod(*it, method_getParameterTypes);
-      if(env->GetArrayLength(parameters) == argsSize) {
-        possibleMatches.push_back(*it);
-      }
-    }
-  }
-
-  if(possibleMatches.size() == 0) {
-    return NULL;
-  }
-  if(possibleMatches.size() == 1) {
-    return possibleMatches.front();
-  } else {
-    // second pass to check arguments
-    for(std::list<jobject>::iterator it = possibleMatches.begin(); it != possibleMatches.end(); it++) {
-      jobjectArray possibleMatchArgs = (jobjectArray)env->CallObjectMethod(*it, method_getParameterTypes);
-      jsize i;
-      for(i=0; i<argsSize; i++) {
-        jobject arg = env->GetObjectArrayElement(args, i);
-        //jclass argClass = env->GetObjectClass(arg);
-        jclass possibleMatchArgClass = (jclass)env->GetObjectArrayElement(possibleMatchArgs, i);
-        jboolean isAssignableFrom = env->IsInstanceOf(arg, possibleMatchArgClass);
-        //printf("match\n\t%s\n\t%s\n\t%d\n", javaObjectToString(env,argClass).c_str(), javaObjectToString(env,possibleMatchArgClass).c_str(), isAssignableFrom);
-        if(!isAssignableFrom)
-          break;
-      }
-      if(i == argsSize) {
-        return *it;
-      }
-    }
-
-    /*
-    printf("javaFindBestMatchingMethod: multiple matches (choosing the first)\n");
-    for(std::list<jobject>::iterator it = possibleMatches.begin(); it != possibleMatches.end(); it++) {
-      printf("  %s\n", javaObjectToString(env, *it).c_str());
-    }
-    */
-
-    return possibleMatches.front();
-  }
-
-  return NULL;
-}
-
-jobject javaFindBestMatchingConstructor(
-  JNIEnv *env,
-  std::list<jobject>& constructors,
-  jobjectArray args) {
-
-  jsize argsSize = env->GetArrayLength(args);
-
-  std::list<jobject> possibleMatches;
-  jclass constructorClazz = env->FindClass("java/lang/reflect/Constructor");
-  jmethodID constructor_getParameterTypes = env->GetMethodID(constructorClazz, "getParameterTypes", "()[Ljava/lang/Class;");
-
-  for(std::list<jobject>::iterator it = constructors.begin(); it != constructors.end(); it++) {
-    jarray parameters = (jarray)env->CallObjectMethod(*it, constructor_getParameterTypes);
-    if(env->GetArrayLength(parameters) == argsSize) {
-      possibleMatches.push_back(*it);
-    }
-  }
-
-  if(possibleMatches.size() == 0) {
-    return NULL;
-  }
-  if(possibleMatches.size() == 1) {
-    return possibleMatches.front();
-  } else {
-    // TODO: argument match
-    /*
-    printf("javaFindBestMatchingConstructor: multiple matches (choosing the first)\n");
-    for(std::list<jobject>::iterator it = possibleMatches.begin(); it != possibleMatches.end(); it++) {
-      printf("  %s\n", javaObjectToString(env, *it).c_str());
-    }
-    */
-    return possibleMatches.front();
-  }
-
-  return NULL;
 }
 
 JNIEnv* javaAttachCurrentThread(JavaVM* jvm) {
@@ -372,6 +244,7 @@ v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, jthrowable ex, const std::s
 v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, const std::string& alternateMessage) {
   v8::HandleScope scope;
   jthrowable ex = env->ExceptionOccurred();
+  env->ExceptionClear();
   return scope.Close(javaExceptionToV8(env, ex, alternateMessage));
 }
 
@@ -447,4 +320,35 @@ v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jvalueType resultType, j
     }
   }
   return v8::Undefined();
+}
+
+jobjectArray javaObjectArrayToClasses(JNIEnv *env, jobjectArray objs) {
+  jclass clazzClazz = env->FindClass("java/lang/Class");
+  jsize objsLength = env->GetArrayLength(objs);
+  jobjectArray results = env->NewObjectArray(objsLength, clazzClazz, NULL);
+  for(jsize i=0; i<objsLength; i++) {
+    jclass objClazz = env->GetObjectClass(env->GetObjectArrayElement(objs, i));
+    env->SetObjectArrayElement(results, i, objClazz);
+  }
+  return results;
+}
+
+jobject javaFindMethod(JNIEnv *env, jclass clazz, std::string& methodName, jobjectArray methodArgs) {
+  jclass methodUtilsClazz = env->FindClass("com/nearinfinity/org/apache/commons/lang3/reflect/MethodUtils");
+  jmethodID methodUtils_getMatchingAccessibleMethod = env->GetStaticMethodID(methodUtilsClazz, "getMatchingAccessibleMethod", "(Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;");
+  const char *methodNameCStr = methodName.c_str();
+  jstring methodNameJavaStr = env->NewStringUTF(methodNameCStr);
+  jobjectArray methodArgClasses = javaObjectArrayToClasses(env, methodArgs);
+  jobject method = env->CallStaticObjectMethod(methodUtilsClazz, methodUtils_getMatchingAccessibleMethod, clazz, methodNameJavaStr, methodArgClasses);
+
+  return method;
+}
+
+jobject javaFindConstructor(JNIEnv *env, jclass clazz, jobjectArray methodArgs) {
+  jclass constructorUtilsClazz = env->FindClass("com/nearinfinity/org/apache/commons/lang3/reflect/ConstructorUtils");
+  jmethodID constructorUtils_getMatchingAccessibleConstructor = env->GetStaticMethodID(constructorUtilsClazz, "getMatchingAccessibleConstructor", "(Ljava/lang/Class;[Ljava/lang/Class;)Ljava/lang/reflect/Constructor;");
+  jobjectArray methodArgClasses = javaObjectArrayToClasses(env, methodArgs);
+  jobject method = env->CallStaticObjectMethod(constructorUtilsClazz, constructorUtils_getMatchingAccessibleConstructor, clazz, methodArgClasses);
+
+  return method;
 }
