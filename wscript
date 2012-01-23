@@ -25,8 +25,8 @@ def configure(conf):
 
     conf.env.append_unique('CXXFLAGS', [ '-DMAC' ])
 
-    conf.env.append_unique('LINKFLAGS', ['-framework JavaVM'])
-    conf.env.append_unique('LINKFLAGS', ['-lm', '-lstdc++', '-ldl'])
+    conf.env.append_unique('LINKFLAGS', [ '-L/System/Library/Frameworks/JavaVM.framework/Libraries' ])
+    conf.env.append_unique('LINKFLAGS', [ '-lserver' ])
   else:
     jdk_include_dir = environ.get("JDK_INCLUDE_DIR", "/usr/local/share/jdk1.6.0_30/include/")
     if jdk_include_dir:
@@ -57,4 +57,4 @@ def build(bld):
 
 def post_build(bld):
   if os.path.exists("/System/Library/Frameworks/JavaVM.framework/"):
-    os.system("install_name_tool -change @rpath/client.dylib /System/Library/Frameworks/JavaVM.framework/Libraries/server.dylib build/Release/nodejavabridge_bindings.node")
+    os.system("install_name_tool -change @rpath/libclient.dylib /System/Library/Frameworks/JavaVM.framework/Libraries/libserver.dylib build/Release/nodejavabridge_bindings.node")
