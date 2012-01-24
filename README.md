@@ -14,10 +14,7 @@ $ npm install java
 
 ## Installation Windows
 
-* Install Python
-* Download node.js source
-* Run a Visual Studios command prompt
-* Build node.js source by running "vcbuild.bat release"
+* [Install node.js from source](https://github.com/joyent/node/wiki/Installation)
 * The directory where jvm.dll exists must be in the PATH.
 
 ```bash
