@@ -68,25 +68,17 @@ JavaObject::~JavaObject() {
   v8::HandleScope scope;
   JavaObject* self = node::ObjectWrap::Unwrap<JavaObject>(args.This());
   JNIEnv *env = self->m_java->getJavaEnv();
-  bool callbackProvided;
 
   v8::String::AsciiValue methodName(args.Data());
   std::string methodNameStr = *methodName;
 
+  int argsStart = 0;
   int argsEnd = args.Length();
 
-  // argument - callback
-  v8::Handle<v8::Value> callback;
-  if(args[args.Length()-1]->IsFunction()) {
-    callback = args[argsEnd-1];
-    argsEnd--;
-    callbackProvided = true;
-  } else {
-    callback = v8::Null();
-    callbackProvided = false;
-  }
+  // arguments
+  ARGS_BACK_CALLBACK();
 
-  jobjectArray methodArgs = v8ToJava(env, args, 0, argsEnd);
+  jobjectArray methodArgs = v8ToJava(env, args, argsStart, argsEnd);
 
   jobject method = javaFindMethod(env, self->m_class, methodNameStr, methodArgs);
   if(method == NULL) {
@@ -123,7 +115,10 @@ JavaObject::~JavaObject() {
   v8::String::AsciiValue methodName(args.Data());
   std::string methodNameStr = *methodName;
 
-  jobjectArray methodArgs = v8ToJava(env, args, 0, args.Length());
+  int argsStart = 0;
+  int argsEnd = args.Length();
+
+  jobjectArray methodArgs = v8ToJava(env, args, argsStart, argsEnd);
 
   jobject method = javaFindMethod(env, self->m_class, methodNameStr, methodArgs);
   if(method == NULL) {
