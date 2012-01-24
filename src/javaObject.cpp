@@ -82,15 +82,7 @@ JavaObject::~JavaObject() {
 
   jobject method = javaFindMethod(env, self->m_class, methodNameStr, methodArgs);
   if(method == NULL) {
-    std::ostringstream errStr;
-    errStr << "Could not call method " << methodNameStr;
-    v8::Handle<v8::Value> error = javaExceptionToV8(env, errStr.str());
-
-    v8::Handle<v8::Value> argv[2];
-    argv[0] = error;
-    argv[1] = v8::Undefined();
-
-    v8::Function::Cast(*callback)->Call(v8::Context::GetCurrent()->Global(), 2, argv);
+    EXCEPTION_CALL_CALLBACK("Could not call method " << methodNameStr);
     return v8::Undefined();
   }
 
@@ -98,13 +90,7 @@ JavaObject::~JavaObject() {
   InstanceMethodCallBaton* baton = new InstanceMethodCallBaton(self->m_java, self, method, methodArgs, callback);
 	baton->run();
 
-  if(callbackProvided) {
-    return v8::Undefined();
-  } else {
-    std::ostringstream str;
-    str << "\"Method '" << *methodName << "' called without a callback did you mean to use the Sync version?\"";
-    return scope.Close(v8::String::New(str.str().c_str()));
-  }
+  END_CALLBACK_FUNCTION("\"Method '" << *methodName << "' called without a callback did you mean to use the Sync version?\"");
 }
 
 /*static*/ v8::Handle<v8::Value> JavaObject::methodCallSync(const v8::Arguments& args) {

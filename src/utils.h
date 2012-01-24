@@ -70,4 +70,22 @@ jobject javaFindConstructor(JNIEnv *env, jclass clazz, jobjectArray methodArgs);
     callbackProvided = false;                 \
   }
 
+#define EXCEPTION_CALL_CALLBACK(STRBUILDER) \
+  std::ostringstream errStr;                                                            \
+  errStr << STRBUILDER;                                                                 \
+  v8::Handle<v8::Value> error = javaExceptionToV8(env, errStr.str());                   \
+  v8::Handle<v8::Value> argv[2];                                                        \
+  argv[0] = error;                                                                      \
+  argv[1] = v8::Undefined();                                                            \
+  v8::Function::Cast(*callback)->Call(v8::Context::GetCurrent()->Global(), 2, argv);
+
+#define END_CALLBACK_FUNCTION(MSG) \
+  if(callbackProvided) {                                     \
+    return v8::Undefined();                                  \
+  } else {                                                   \
+    std::ostringstream str;                                  \
+    str << MSG;                                              \
+    return scope.Close(v8::String::New(str.str().c_str()));  \
+  }
+
 #endif

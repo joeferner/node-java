@@ -114,32 +114,18 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   ARGS_FRONT_CLASSNAME();
   ARGS_BACK_CALLBACK();
 
-  jobjectArray methodArgs = v8ToJava(env, args, argsStart, argsEnd);
-
+  // find class
   jclass clazz = javaFindClass(env, className);
   if(clazz == NULL) {
-    std::ostringstream errStr;
-    errStr << "Could not find class " << className.c_str();
-    v8::Handle<v8::Value> error = javaExceptionToV8(env, errStr.str());
-
-    v8::Handle<v8::Value> argv[2];
-    argv[0] = error;
-    argv[1] = v8::Undefined();
-
-    v8::Function::Cast(*callback)->Call(v8::Context::GetCurrent()->Global(), 2, argv);
+    EXCEPTION_CALL_CALLBACK("Could not find class " << className.c_str());
     return v8::Undefined();
   }
 
+  // get method
+  jobjectArray methodArgs = v8ToJava(env, args, argsStart, argsEnd);
   jobject method = javaFindConstructor(env, clazz, methodArgs);
   if(method == NULL) {
-    std::ostringstream errStr;
-    errStr << "Could not find constructor";
-    v8::Handle<v8::Value> error = javaExceptionToV8(env, errStr.str());
-
-    v8::Handle<v8::Value> argv[2];
-    argv[0] = error;
-    argv[1] = v8::Undefined();
-    v8::Function::Cast(*callback)->Call(v8::Context::GetCurrent()->Global(), 2, argv);
+    EXCEPTION_CALL_CALLBACK("Could not find constructor");
     return v8::Undefined();
   }
 
@@ -147,13 +133,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   NewInstanceBaton* baton = new NewInstanceBaton(self, clazz, method, methodArgs, callback);
   baton->run();
 
-  if(callbackProvided) {
-    return v8::Undefined();
-  } else {
-    std::ostringstream str;
-    str << "\"Constructor for class '" << className << "' called without a callback did you mean to use the Sync version?\"";
-    return scope.Close(v8::String::New(str.str().c_str()));
-  }
+  END_CALLBACK_FUNCTION("\"Constructor for class '" << className << "' called without a callback did you mean to use the Sync version?\"");
 }
 
 /*static*/ v8::Handle<v8::Value> Java::newInstanceSync(const v8::Arguments& args) {
@@ -171,8 +151,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   // arguments
   ARGS_FRONT_CLASSNAME();
 
-  jobjectArray methodArgs = v8ToJava(env, args, argsStart, argsEnd);
-
+  // find class
   jclass clazz = javaFindClass(env, className);
   if(clazz == NULL) {
     std::ostringstream errStr;
@@ -180,6 +159,8 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     return ThrowException(javaExceptionToV8(env, errStr.str()));
   }
 
+  // find method
+  jobjectArray methodArgs = v8ToJava(env, args, argsStart, argsEnd);
   jobject method = javaFindConstructor(env, clazz, methodArgs);
   if(method == NULL) {
     std::ostringstream errStr;
@@ -215,34 +196,18 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   ARGS_FRONT_STRING(methodName);
   ARGS_BACK_CALLBACK();
 
-  // build args
-  jobjectArray methodArgs = v8ToJava(env, args, argsStart, argsEnd);
-
-  // find class and method
+  // find class
   jclass clazz = javaFindClass(env, className);
   if(clazz == NULL) {
-    std::ostringstream errStr;
-    errStr << "Could not create class " << className.c_str();
-    v8::Handle<v8::Value> error = javaExceptionToV8(env, errStr.str());
-
-    v8::Handle<v8::Value> argv[2];
-    argv[0] = error;
-    argv[1] = v8::Undefined();
-    v8::Function::Cast(*callback)->Call(v8::Context::GetCurrent()->Global(), 2, argv);
+    EXCEPTION_CALL_CALLBACK("Could not create class " << className.c_str());
     return v8::Undefined();
   }
 
   // find method
+  jobjectArray methodArgs = v8ToJava(env, args, argsStart, argsEnd);
   jobject method = javaFindMethod(env, clazz, methodName, methodArgs);
   if(method == NULL) {
-    std::ostringstream errStr;
-    errStr << "Could not find method \"" << methodName.c_str() << "\"";
-    v8::Handle<v8::Value> error = javaExceptionToV8(env, errStr.str());
-
-    v8::Handle<v8::Value> argv[2];
-    argv[0] = error;
-    argv[1] = v8::Undefined();
-    v8::Function::Cast(*callback)->Call(v8::Context::GetCurrent()->Global(), 2, argv);
+    EXCEPTION_CALL_CALLBACK("Could not find method \"" << methodName.c_str() << "\"");
     return v8::Undefined();
   }
 
@@ -250,13 +215,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   StaticMethodCallBaton* baton = new StaticMethodCallBaton(self, clazz, method, methodArgs, callback);
   baton->run();
 
-  if(callbackProvided) {
-    return v8::Undefined();
-  } else {
-    std::ostringstream str;
-    str << "\"Static method '" << methodName << "' called without a callback did you mean to use the Sync version?\"";
-    return scope.Close(v8::String::New(str.str().c_str()));
-  }
+  END_CALLBACK_FUNCTION("\"Static method '" << methodName << "' called without a callback did you mean to use the Sync version?\"");
 }
 
 /*static*/ v8::Handle<v8::Value> Java::callStaticMethodSync(const v8::Arguments& args) {
@@ -275,10 +234,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   ARGS_FRONT_CLASSNAME();
   ARGS_FRONT_STRING(methodName);
 
-  // build args
-  jobjectArray methodArgs = v8ToJava(env, args, argsStart, argsEnd);
-
-  // find class and method
+  // find class
   jclass clazz = javaFindClass(env, className);
   if(clazz == NULL) {
     std::ostringstream errStr;
@@ -287,6 +243,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   }
 
   // find method
+  jobjectArray methodArgs = v8ToJava(env, args, argsStart, argsEnd);
   jobject method = javaFindMethod(env, clazz, methodName, methodArgs);
   if(method == NULL) {
     std::ostringstream errStr;
