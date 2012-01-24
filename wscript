@@ -25,18 +25,27 @@ def configure(conf):
 
     conf.env.append_unique('LINKFLAGS', [ '-framework', 'JavaVM' ])
   else:
-    jdk_include_dir = environ.get("JDK_INCLUDE_DIR", "/usr/local/share/jdk1.6.0_30/include/")
+    java_home = environ.get("JAVA_HOME")
+
+    jdk_include_dir = environ.get("JDK_INCLUDE_DIR", java_home + "/include")
     if jdk_include_dir:
       conf.env.append_unique('CXXFLAGS', [ '-I' + jdk_include_dir ])
 
-    jdk_additional_include_dir = environ.get("JDK_AUX_INCLUDE_DIR", "/usr/local/share/jdk1.6.0_30/include/linux/")
+    jdk_additional_include_dir = environ.get("JDK_AUX_INCLUDE_DIR", jdk_include_dir + "/linux")
     if jdk_additional_include_dir:
       conf.env.append_unique('CXXFLAGS', [ '-I' + jdk_additional_include_dir ])
 
-    jdk_lib_dir = environ.get("JDK_LIB_DIR", "/usr/local/share/jdk1.6.0_30/jre/lib/i386/client/")
+    jdk_lib_dir_guess = ""
+    if os.path.exists(java_home + "/jre/lib/i386/client/"):
+      jdk_lib_dir_guess = java_home + "/jre/lib/i386/server/"
+    else:
+      jdk_lib_dir_guess = java_home + "/jre/lib/amd64/server/"
+
+    jdk_lib_dir = environ.get("JDK_LIB_DIR", jdk_lib_dir_guess)
     if jdk_lib_dir:
       conf.env.append_unique('LINKFLAGS', [ '-L' + jdk_lib_dir ])
 
+    conf.env.append_unique('LINKFLAGS', ['-Wl,-rpath,' + jdk_lib_dir])
     conf.env.append_unique('LINKFLAGS', ['-ljvm'])
 
 def build(bld):

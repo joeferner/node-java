@@ -5,10 +5,7 @@ Bridge API to connect with existing Java APIs.
 ## Installation Linux
 
 ```bash
-$ sudo ln -s /usr/local/share/jdk1.6.0_30/jre/lib/i386/client/libjvm.so /usr/local/lib/libjvm.so
-$ export JDK_INCLUDE_DIR=/usr/local/share/jdk1.6.0_30/include/
-$ export JDK_AUX_INCLUDE_DIR=/usr/local/share/jdk1.6.0_30/include/linux/
-$ export JDK_LIB_DIR=/usr/local/share/jdk1.6.0_30/jre/lib/i386/client/
+$ export JAVA_HOME=/usr/local/share/jdk1.6.0_30
 $ npm install java
 ```
 
