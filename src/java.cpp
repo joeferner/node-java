@@ -106,35 +106,20 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     return ensureJvmResults;
   }
   JNIEnv* env = self->getJavaEnv();
-  bool callbackProvided;
 
+  int argsStart = 0;
   int argsEnd = args.Length();
 
-  // argument - className
-  if(args.Length() < 1 || !args[0]->IsString()) {
-    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 0 must be a string")));
-  }
-  v8::Local<v8::String> classNameObj = v8::Local<v8::String>::Cast(args[0]);
-  v8::String::AsciiValue classNameVal(classNameObj);
-  std::string className = *classNameVal;
+  // arguments
+  ARGS_FRONT_CLASSNAME();
+  ARGS_BACK_CALLBACK();
 
-  // argument - callback
-  v8::Handle<v8::Value> callback;
-  if(args[args.Length()-1]->IsFunction()) {
-    callback = args[argsEnd-1];
-    argsEnd--;
-    callbackProvided = true;
-  } else {
-    callback = v8::Null();
-    callbackProvided = false;
-  }
-
-  jobjectArray methodArgs = v8ToJava(env, args, 1, argsEnd);
+  jobjectArray methodArgs = v8ToJava(env, args, argsStart, argsEnd);
 
   jclass clazz = javaFindClass(env, className);
   if(clazz == NULL) {
     std::ostringstream errStr;
-    errStr << "Could not create class " << className.c_str();
+    errStr << "Could not find class " << className.c_str();
     v8::Handle<v8::Value> error = javaExceptionToV8(env, errStr.str());
 
     v8::Handle<v8::Value> argv[2];
@@ -180,17 +165,11 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   }
   JNIEnv* env = self->getJavaEnv();
 
-  int argsEnd = args.Length();
   int argsStart = 0;
+  int argsEnd = args.Length();
 
-  // argument - className
-  if(args.Length() < 1 || !args[0]->IsString()) {
-    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 0 must be a string")));
-  }
-  v8::Local<v8::String> classNameObj = v8::Local<v8::String>::Cast(args[0]);
-  v8::String::AsciiValue classNameVal(classNameObj);
-  std::string className = *classNameVal;
-  argsStart++;
+  // arguments
+  ARGS_FRONT_CLASSNAME();
 
   jobjectArray methodArgs = v8ToJava(env, args, argsStart, argsEnd);
 
@@ -227,39 +206,17 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     return ensureJvmResults;
   }
   JNIEnv* env = self->getJavaEnv();
-  bool callbackProvided;
 
+  int argsStart = 0;
   int argsEnd = args.Length();
 
-  // argument - className
-  if(args.Length() < 1 || !args[0]->IsString()) {
-    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 0 must be a string")));
-  }
-  v8::Local<v8::String> classNameObj = v8::Local<v8::String>::Cast(args[0]);
-  v8::String::AsciiValue classNameVal(classNameObj);
-  std::string className = *classNameVal;
-
-  // argument - method name
-  if(args.Length() < 2 || !args[1]->IsString()) {
-    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 1 must be a string")));
-  }
-  v8::Local<v8::String> methodNameObj = v8::Local<v8::String>::Cast(args[1]);
-  v8::String::AsciiValue methodNameVal(methodNameObj);
-  std::string methodName = *methodNameVal;
-
-  // argument - callback
-  v8::Handle<v8::Value> callback;
-  if(args[args.Length()-1]->IsFunction()) {
-    callback = args[argsEnd-1];
-    argsEnd--;
-    callbackProvided = true;
-  } else {
-    callback = v8::Null();
-    callbackProvided = false;
-  }
+  // arguments
+  ARGS_FRONT_CLASSNAME();
+  ARGS_FRONT_STRING(methodName);
+  ARGS_BACK_CALLBACK();
 
   // build args
-  jobjectArray methodArgs = v8ToJava(env, args, 2, argsEnd);
+  jobjectArray methodArgs = v8ToJava(env, args, argsStart, argsEnd);
 
   // find class and method
   jclass clazz = javaFindClass(env, className);
@@ -311,26 +268,15 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   }
   JNIEnv* env = self->getJavaEnv();
 
+  int argsStart = 0;
   int argsEnd = args.Length();
 
-  // argument - className
-  if(args.Length() < 1 || !args[0]->IsString()) {
-    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 0 must be a string")));
-  }
-  v8::Local<v8::String> classNameObj = v8::Local<v8::String>::Cast(args[0]);
-  v8::String::AsciiValue classNameVal(classNameObj);
-  std::string className = *classNameVal;
-
-  // argument - method name
-  if(args.Length() < 2 || !args[1]->IsString()) {
-    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 1 must be a string")));
-  }
-  v8::Local<v8::String> methodNameObj = v8::Local<v8::String>::Cast(args[1]);
-  v8::String::AsciiValue methodNameVal(methodNameObj);
-  std::string methodName = *methodNameVal;
+  // arguments
+  ARGS_FRONT_CLASSNAME();
+  ARGS_FRONT_STRING(methodName);
 
   // build args
-  jobjectArray methodArgs = v8ToJava(env, args, 2, argsEnd);
+  jobjectArray methodArgs = v8ToJava(env, args, argsStart, argsEnd);
 
   // find class and method
   jclass clazz = javaFindClass(env, className);
@@ -368,19 +314,21 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   }
   JNIEnv* env = self->getJavaEnv();
 
-  // argument - className
-  if(args.Length() < 1 || !args[0]->IsString()) {
-    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 0 must be a string")));
-  }
-  v8::Local<v8::String> classNameObj = v8::Local<v8::String>::Cast(args[0]);
-  v8::String::AsciiValue classNameVal(classNameObj);
-  std::string className = *classNameVal;
+  int argsStart = 0;
+  int argsEnd = args.Length();
+
+  // arguments
+  ARGS_FRONT_CLASSNAME();
 
   // argument - array
-  if(args.Length() < 2 || !args[1]->IsArray()) {
-    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 1 must be an array")));
+  if(args.Length() < argsStart+1 || !args[argsStart]->IsArray()) {
+    std::ostringstream errStr;
+    errStr << "Argument " << (argsStart+1) << " must be an array";
+    return ThrowException(v8::Exception::TypeError(v8::String::New(errStr.str().c_str())));
   }
-  v8::Local<v8::Array> arrayObj = v8::Local<v8::Array>::Cast(args[1]);
+  v8::Local<v8::Array> arrayObj = v8::Local<v8::Array>::Cast(args[argsStart]);
+
+  UNUSED_VARIABLE(argsEnd);
 
   // find class and method
   jarray results;
@@ -440,7 +388,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
 
   // argument - value
   if(!args[0]->IsNumber()) {
-    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 0 must be a number")));
+    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 1 must be a number")));
   }
 
   v8::Local<v8::Number> val = args[0]->ToNumber();
@@ -461,21 +409,13 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   }
   JNIEnv* env = self->getJavaEnv();
 
-  // argument - className
-  if(args.Length() < 1 || !args[0]->IsString()) {
-    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 0 must be a string")));
-  }
-  v8::Local<v8::String> classNameObj = v8::Local<v8::String>::Cast(args[0]);
-  v8::String::AsciiValue classNameVal(classNameObj);
-  std::string className = *classNameVal;
+  int argsStart = 0;
+  int argsEnd = args.Length();
 
-  // argument - field name
-  if(args.Length() < 2 || !args[1]->IsString()) {
-    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 1 must be a string")));
-  }
-  v8::Local<v8::String> fieldNameObj = v8::Local<v8::String>::Cast(args[1]);
-  v8::String::AsciiValue fieldNameVal(fieldNameObj);
-  std::string fieldName = *fieldNameVal;
+  // arguments
+  ARGS_FRONT_CLASSNAME();
+  ARGS_FRONT_STRING(fieldName);
+  UNUSED_VARIABLE(argsEnd);
 
   // find the class
   jclass clazz = javaFindClass(env, className);
@@ -516,27 +456,23 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   }
   JNIEnv* env = self->getJavaEnv();
 
-  // argument - className
-  if(args.Length() < 1 || !args[0]->IsString()) {
-    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 0 must be a string")));
-  }
-  v8::Local<v8::String> classNameObj = v8::Local<v8::String>::Cast(args[0]);
-  v8::String::AsciiValue classNameVal(classNameObj);
-  std::string className = *classNameVal;
+  int argsStart = 0;
+  int argsEnd = args.Length();
 
-  // argument - field name
-  if(args.Length() < 2 || !args[1]->IsString()) {
-    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 1 must be a string")));
-  }
-  v8::Local<v8::String> fieldNameObj = v8::Local<v8::String>::Cast(args[1]);
-  v8::String::AsciiValue fieldNameVal(fieldNameObj);
-  std::string fieldName = *fieldNameVal;
+  // arguments
+  ARGS_FRONT_CLASSNAME();
+  ARGS_FRONT_STRING(fieldName);
 
   // argument - new value
-  if(args.Length() < 3) {
-    return ThrowException(v8::Exception::TypeError(v8::String::New("setStaticFieldValue requires 3 arguments")));
+  if(args.Length() < argsStart+1) {
+    std::ostringstream errStr;
+    errStr << "setStaticFieldValue requires " << (argsStart+1) << " arguments";
+    return ThrowException(v8::Exception::TypeError(v8::String::New(errStr.str().c_str())));
   }
-  jobject newValue = v8ToJava(env, args[2]);
+  jobject newValue = v8ToJava(env, args[argsStart]);
+  argsStart++;
+
+  UNUSED_VARIABLE(argsEnd);
 
   // find the class
   jclass clazz = javaFindClass(env, className);

@@ -43,4 +43,31 @@ jobject javaFindField(JNIEnv* env, jclass clazz, std::string& fieldName);
 jobject javaFindMethod(JNIEnv *env, jclass clazz, std::string& methodName, jobjectArray methodArgs);
 jobject javaFindConstructor(JNIEnv *env, jclass clazz, jobjectArray methodArgs);
 
+#define UNUSED_VARIABLE(var) var = var;
+
+#define ARGS_FRONT_STRING(ARGNAME) \
+  if(args.Length() < argsStart+1 || !args[argsStart]->IsString()) {                          \
+    std::ostringstream errStr;                                                               \
+    errStr << "Argument " << (argsStart+1) << " must be a string";                           \
+    return ThrowException(v8::Exception::TypeError(v8::String::New(errStr.str().c_str())));  \
+  }                                                                                          \
+  v8::Local<v8::String> _##ARGNAME##_obj = v8::Local<v8::String>::Cast(args[argsStart]);     \
+  v8::String::AsciiValue _##ARGNAME##_val(_##ARGNAME##_obj);                                 \
+  std::string ARGNAME = *_##ARGNAME##_val;                                              \
+  argsStart++;
+
+#define ARGS_FRONT_CLASSNAME() ARGS_FRONT_STRING(className)
+
+#define ARGS_BACK_CALLBACK() \
+  bool callbackProvided;                      \
+  v8::Handle<v8::Value> callback;             \
+  if(args[args.Length()-1]->IsFunction()) {   \
+    callback = args[argsEnd-1];               \
+    argsEnd--;                                \
+    callbackProvided = true;                  \
+  } else {                                    \
+    callback = v8::Null();                    \
+    callbackProvided = false;                 \
+  }
+
 #endif
