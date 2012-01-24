@@ -65,7 +65,7 @@ exports['Simple'] = nodeunit.testCase({
     list.addSync("world");
     test.equal(list.sizeSync(), 2);
     var item0 = list.getSync(0);
-    test.equal(item0.toStringSync(), "hello");
+    test.equal(item0, "hello");
     var clazz = list.getClassSync();
     var result = clazz.getNameSync();
     test.equal(result, "java.util.ArrayList");

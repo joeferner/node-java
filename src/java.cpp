@@ -495,11 +495,6 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
 
   jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
   jmethodID field_get = env->GetMethodID(fieldClazz, "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
-  jmethodID field_getType = env->GetMethodID(fieldClazz, "getType", "()Ljava/lang/Class;");
-
-  // get field type
-  jclass fieldTypeClazz = (jclass)env->CallObjectMethod(field, field_getType);
-  jvalueType resultType = javaGetType(env, fieldTypeClazz);
 
   // get field value
   jobject val = env->CallObjectMethod(field, field_get, NULL);
@@ -509,7 +504,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     return ThrowException(javaExceptionToV8(env, errStr.str()));
   }
 
-  return scope.Close(javaToV8(self, env, resultType, val));
+  return scope.Close(javaToV8(self, env, val));
 }
 
 /*static*/ v8::Handle<v8::Value> Java::setStaticFieldValue(const v8::Arguments& args) {

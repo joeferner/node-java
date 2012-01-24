@@ -86,38 +86,26 @@ void javaDetachCurrentThread(JavaVM* jvm) {
 jvalueType javaGetType(JNIEnv *env, jclass type) {
   jclass clazzClazz = env->FindClass("java/lang/Class");
   jmethodID class_isArray = env->GetMethodID(clazzClazz, "isArray", "()Z");
-  jmethodID class_getComponentType = env->GetMethodID(clazzClazz, "getComponentType", "()Ljava/lang/Class;");
 
   jboolean isArray = env->CallBooleanMethod(type, class_isArray);
   if(isArray) {
-    jclass componentTypeClass = (jclass)env->CallObjectMethod(type, class_getComponentType);
-    jvalueType componentType = javaGetType(env, componentTypeClass);
-    switch(componentType) {
-      case TYPE_INT: return TYPE_ARRAY_INT;
-      case TYPE_LONG: return TYPE_ARRAY_LONG;
-      case TYPE_OBJECT: return TYPE_ARRAY_OBJECT;
-      case TYPE_STRING: return TYPE_ARRAY_STRING;
-      case TYPE_BOOLEAN: return TYPE_ARRAY_BOOLEAN;
-      case TYPE_BYTE: return TYPE_ARRAY_BYTE;
-      default:
-        return TYPE_ARRAY_OBJECT;
-    }
+    return TYPE_ARRAY;
   } else {
     // TODO: has to be a better way
     std::string str = javaObjectToString(env, type);
     const char *typeStr = str.c_str();
     //printf("javaGetType: %s\n", typeStr);
-    if(strcmp(typeStr, "int") == 0) {
-      return TYPE_INT;
-    } else if(strcmp(typeStr, "double") == 0) {
-      return TYPE_DOUBLE;
-    } else if(strcmp(typeStr, "long") == 0) {
-      return TYPE_LONG;
-    } else if(strcmp(typeStr, "void") == 0) {
+    if(strcmp(typeStr, "void") == 0) {
       return TYPE_VOID;
-    } else if(strcmp(typeStr, "boolean") == 0) {
+    } else if(strcmp(typeStr, "int") == 0 || strcmp(typeStr, "class java.lang.Integer") == 0) {
+      return TYPE_INT;
+    } else if(strcmp(typeStr, "double") == 0 || strcmp(typeStr, "class java.lang.Double") == 0) {
+      return TYPE_DOUBLE;
+    } else if(strcmp(typeStr, "long") == 0 || strcmp(typeStr, "class java.lang.Long") == 0) {
+      return TYPE_LONG;
+    } else if(strcmp(typeStr, "boolean") == 0 || strcmp(typeStr, "class java.lang.Boolean") == 0) {
       return TYPE_BOOLEAN;
-    } else if(strcmp(typeStr, "byte") == 0) {
+    } else if(strcmp(typeStr, "byte") == 0 || strcmp(typeStr, "class java.lang.Byte") == 0) {
       return TYPE_BYTE;
     } else if(strcmp(typeStr, "class java.lang.String") == 0) {
       return TYPE_STRING;
@@ -126,13 +114,14 @@ jvalueType javaGetType(JNIEnv *env, jclass type) {
   }
 }
 
-jclass javaFindClass(JNIEnv* env, std::string className) {
-  std::replace(className.begin(), className.end(), '.', '/');
-  jclass clazz = env->FindClass(className.c_str());
+jclass javaFindClass(JNIEnv* env, std::string& className) {
+  std::string searchClassName = className;
+  std::replace(searchClassName.begin(), searchClassName.end(), '.', '/');
+  jclass clazz = env->FindClass(searchClassName.c_str());
   return clazz;
 }
 
-jobject javaFindField(JNIEnv* env, jclass clazz, std::string fieldName) {
+jobject javaFindField(JNIEnv* env, jclass clazz, std::string& fieldName) {
   jclass clazzclazz = env->GetObjectClass(clazz);
   jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
   jmethodID field_getName = env->GetMethodID(fieldClazz, "getName", "()Ljava/lang/String;");
@@ -257,14 +246,14 @@ v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, const std::string& alternat
   return scope.Close(javaExceptionToV8(env, ex, alternateMessage));
 }
 
-v8::Handle<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jvalueType itemType, jobjectArray objArray) {
+v8::Handle<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArray) {
   v8::HandleScope scope;
 
   if(objArray == NULL) {
     return v8::Null();
   }
 
-  //printf("javaArrayToV8: %d %s\n", itemType, javaObjectToString(env, objArray).c_str());
+  //printf("javaArrayToV8: %d %s\n", javaObjectToString(env, objArray).c_str());
 
   jsize arraySize = env->GetArrayLength(objArray);
   //printf("array size: %d\n", arraySize);
@@ -272,69 +261,77 @@ v8::Handle<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jvalueType itemType
   v8::Handle<v8::Array> result = v8::Array::New(arraySize);
   for(jsize i=0; i<arraySize; i++) {
     jobject obj = env->GetObjectArrayElement(objArray, i);
-    v8::Handle<v8::Value> item = javaToV8(java, env, itemType, obj);
+    v8::Handle<v8::Value> item = javaToV8(java, env, obj);
     result->Set(i, item);
   }
 
   return scope.Close(result);
 }
 
-v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jvalueType resultType, jobject obj) {
+v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj) {
   v8::HandleScope scope;
+
+  if(obj == NULL) {
+    return v8::Null();
+  }
+
+  jclass objClazz = env->GetObjectClass(obj);
+  jvalueType resultType = javaGetType(env, objClazz);
 
   //printf("javaToV8: %d %s\n", resultType, javaObjectToString(env, obj).c_str());
 
-  if((resultType & VALUE_TYPE_ARRAY) == VALUE_TYPE_ARRAY) {
-    v8::Handle<v8::Value> result = javaArrayToV8(java, env, (jvalueType)(resultType & ~VALUE_TYPE_ARRAY), (jobjectArray)obj);
-    return scope.Close(result);
-  } else {
-    switch(resultType) {
-      case TYPE_VOID:
-        return v8::Undefined();
-      case TYPE_BOOLEAN:
-        {
-          jclass booleanClazz = env->FindClass("java/lang/Boolean");
-          jmethodID boolean_booleanValue = env->GetMethodID(booleanClazz, "booleanValue", "()Z");
-          bool result = env->CallBooleanMethod(obj, boolean_booleanValue);
-          return scope.Close(v8::Boolean::New(result));
-        }
-      case TYPE_BYTE:
-        {
-          jclass byteClazz = env->FindClass("java/lang/Byte");
-          jmethodID byte_byteValue = env->GetMethodID(byteClazz, "byteValue", "()B");
-          jbyte result = env->CallByteMethod(obj, byte_byteValue);
-          return scope.Close(v8::Number::New(result));
-        }
-      case TYPE_LONG:
-        {
-          jclass longClazz = env->FindClass("java/lang/Long");
-          jmethodID long_longValue = env->GetMethodID(longClazz, "longValue", "()J");
-          jlong result = env->CallLongMethod(obj, long_longValue);
-          return scope.Close(v8::Number::New(result));
-        }
-      case TYPE_INT:
-        {
-          jclass integerClazz = env->FindClass("java/lang/Integer");
-          jmethodID integer_intValue = env->GetMethodID(integerClazz, "intValue", "()I");
-          jint result = env->CallIntMethod(obj, integer_intValue);
-          return scope.Close(v8::Integer::New(result));
-        }
-      case TYPE_DOUBLE:
-        {
-          jclass doubleClazz = env->FindClass("java/lang/Double");
-          jmethodID double_doubleValue = env->GetMethodID(doubleClazz, "doubleValue", "()D");
-          jdouble result = env->CallDoubleMethod(obj, double_doubleValue);
-          return scope.Close(v8::Number::New(result));
-        }
-      case TYPE_STRING:
-        return scope.Close(v8::String::New(javaObjectToString(env, obj).c_str()));
-      case TYPE_OBJECT:
-        return scope.Close(JavaObject::New(java, obj));
-      default:
-        printf("unhandled type: 0x%03x\n", resultType);
-        return scope.Close(JavaObject::New(java, obj));
-    }
+  switch(resultType) {
+    case TYPE_ARRAY:
+      {
+        v8::Handle<v8::Value> result = javaArrayToV8(java, env, (jobjectArray)obj);
+        return scope.Close(result);
+      }
+    case TYPE_VOID:
+      return v8::Undefined();
+    case TYPE_BOOLEAN:
+      {
+        jclass booleanClazz = env->FindClass("java/lang/Boolean");
+        jmethodID boolean_booleanValue = env->GetMethodID(booleanClazz, "booleanValue", "()Z");
+        bool result = env->CallBooleanMethod(obj, boolean_booleanValue);
+        return scope.Close(v8::Boolean::New(result));
+      }
+    case TYPE_BYTE:
+      {
+        jclass byteClazz = env->FindClass("java/lang/Byte");
+        jmethodID byte_byteValue = env->GetMethodID(byteClazz, "byteValue", "()B");
+        jbyte result = env->CallByteMethod(obj, byte_byteValue);
+        return scope.Close(v8::Number::New(result));
+      }
+    case TYPE_LONG:
+      {
+        jclass longClazz = env->FindClass("java/lang/Long");
+        jmethodID long_longValue = env->GetMethodID(longClazz, "longValue", "()J");
+        jlong result = env->CallLongMethod(obj, long_longValue);
+        return scope.Close(v8::Number::New(result));
+      }
+    case TYPE_INT:
+      {
+        jclass integerClazz = env->FindClass("java/lang/Integer");
+        jmethodID integer_intValue = env->GetMethodID(integerClazz, "intValue", "()I");
+        jint result = env->CallIntMethod(obj, integer_intValue);
+        return scope.Close(v8::Integer::New(result));
+      }
+    case TYPE_DOUBLE:
+      {
+        jclass doubleClazz = env->FindClass("java/lang/Double");
+        jmethodID double_doubleValue = env->GetMethodID(doubleClazz, "doubleValue", "()D");
+        jdouble result = env->CallDoubleMethod(obj, double_doubleValue);
+        return scope.Close(v8::Number::New(result));
+      }
+    case TYPE_STRING:
+      return scope.Close(v8::String::New(javaObjectToString(env, obj).c_str()));
+    case TYPE_OBJECT:
+      return scope.Close(JavaObject::New(java, obj));
+    default:
+      printf("unhandled type: 0x%03x\n", resultType);
+      return scope.Close(JavaObject::New(java, obj));
   }
+
   return v8::Undefined();
 }
 

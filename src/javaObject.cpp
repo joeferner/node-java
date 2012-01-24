@@ -143,31 +143,27 @@ JavaObject::~JavaObject() {
   JavaObject* self = node::ObjectWrap::Unwrap<JavaObject>(info.This());
   JNIEnv *env = self->m_java->getJavaEnv();
 
-	v8::String::AsciiValue propertyStr(property);
-	jobject field = javaFindField(env, self->m_class, *propertyStr);
+	v8::String::AsciiValue propertyCStr(property);
+  std::string propertyStr = *propertyCStr;
+	jobject field = javaFindField(env, self->m_class, propertyStr);
 	if(field == NULL) {
     std::ostringstream errStr;
-    errStr << "Could not find field " << *propertyStr;
+    errStr << "Could not find field " << propertyStr;
     return ThrowException(javaExceptionToV8(env, errStr.str()));
   }
 
 	jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
   jmethodID field_get = env->GetMethodID(fieldClazz, "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
-  jmethodID field_getType = env->GetMethodID(fieldClazz, "getType", "()Ljava/lang/Class;");
-
-  // get field type
-  jclass fieldTypeClazz = (jclass)env->CallObjectMethod(field, field_getType);
-  jvalueType resultType = javaGetType(env, fieldTypeClazz);
 
   // get field value
   jobject val = env->CallObjectMethod(field, field_get, self->m_obj);
   if(env->ExceptionOccurred()) {
     std::ostringstream errStr;
-    errStr << "Could not get field " << *propertyStr;
+    errStr << "Could not get field " << propertyStr;
     return ThrowException(javaExceptionToV8(env, errStr.str()));
   }
 
-  return scope.Close(javaToV8(self->m_java, env, resultType, val));
+  return scope.Close(javaToV8(self->m_java, env, val));
 }
 
 /*static*/ void JavaObject::fieldSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::AccessorInfo& info) {
@@ -177,11 +173,12 @@ JavaObject::~JavaObject() {
 
 	jobject newValue = v8ToJava(env, value);
 
-	v8::String::AsciiValue propertyStr(property);
-	jobject field = javaFindField(env, self->m_class, *propertyStr);
+	v8::String::AsciiValue propertyCStr(property);
+  std::string propertyStr = *propertyCStr;
+	jobject field = javaFindField(env, self->m_class, propertyStr);
 	if(field == NULL) {
     std::ostringstream errStr;
-    errStr << "Could not find field " << *propertyStr;
+    errStr << "Could not find field " << propertyStr;
     ThrowException(javaExceptionToV8(env, errStr.str()));
 		return;
   }
@@ -195,7 +192,7 @@ JavaObject::~JavaObject() {
   env->CallObjectMethod(field, field_set, self->m_obj, newValue);
   if(env->ExceptionOccurred()) {
     std::ostringstream errStr;
-    errStr << "Could not set field " << *propertyStr;
+    errStr << "Could not set field " << propertyStr;
     ThrowException(javaExceptionToV8(env, errStr.str()));
 		return;
   }

@@ -76,7 +76,7 @@ v8::Handle<v8::Value> MethodCallBaton::resultsToV8(JNIEnv *env) {
     return scope.Close(err);
   }
 
-  return scope.Close(javaToV8(m_java, env, m_resultType, m_result));
+  return scope.Close(javaToV8(m_java, env, m_result));
 }
 
 void NewInstanceBaton::execute(JNIEnv *env) {
@@ -94,16 +94,12 @@ void NewInstanceBaton::execute(JNIEnv *env) {
     return;
   }
 
-  m_resultType = TYPE_OBJECT;
   m_result = env->NewGlobalRef(result);
 }
 
 void StaticMethodCallBaton::execute(JNIEnv *env) {
   jclass methodClazz = env->FindClass("java/lang/reflect/Method");
   jmethodID method_invoke = env->GetMethodID(methodClazz, "invoke", "(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;");
-  jmethodID method_getReturnType = env->GetMethodID(methodClazz, "getReturnType", "()Ljava/lang/Class;");
-
-  jclass returnType = (jclass)env->CallObjectMethod(m_method, method_getReturnType);
 
   /*
   printf("calling %s\n", javaObjectToString(env, m_method).c_str());
@@ -113,7 +109,6 @@ void StaticMethodCallBaton::execute(JNIEnv *env) {
   }
   */
 
-  m_resultType = javaGetType(env, returnType);
   jobject result = env->CallObjectMethod(m_method, method_invoke, NULL, m_args);
 
   jthrowable err = env->ExceptionOccurred();
@@ -130,9 +125,6 @@ void StaticMethodCallBaton::execute(JNIEnv *env) {
 void InstanceMethodCallBaton::execute(JNIEnv *env) {
   jclass methodClazz = env->FindClass("java/lang/reflect/Method");
   jmethodID method_invoke = env->GetMethodID(methodClazz, "invoke", "(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;");
-  jmethodID method_getReturnType = env->GetMethodID(methodClazz, "getReturnType", "()Ljava/lang/Class;");
-
-  jclass returnType = (jclass)env->CallObjectMethod(m_method, method_getReturnType);
 
   /*
   printf("calling %s\n", javaObjectToString(env, m_method).c_str());
@@ -142,7 +134,6 @@ void InstanceMethodCallBaton::execute(JNIEnv *env) {
   }
   */
 
-  m_resultType = javaGetType(env, returnType);
   jobject result = env->CallObjectMethod(m_method, method_invoke, m_javaObject->getObject(), m_args);
 
   jthrowable err = env->ExceptionOccurred();
