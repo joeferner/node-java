@@ -94,12 +94,9 @@ function Builder() {
 	if(process.platform == 'win32') {
 		this.cppCompiler = "cl.exe";
 		this.linker = "link.exe";
-		this.nodeDir = process.env["NODE_PATH"];
+		this.nodeDir = process.env["NODE_ROOT"];
 	} else {
-		this.nodeDir = process.env["NODE_PATH"] || path.join(process.execPath, '..');
-		if(this.nodeDir.match(/node_modules$/)) {
-			this.nodeDir = path.join(this.nodeDir, '..');
-		}
+		this.nodeDir = process.env["NODE_ROOT"] || path.join(process.execPath, '..');
 	}
 
 	if(this.nodeDir) {
