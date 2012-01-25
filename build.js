@@ -86,6 +86,12 @@ function Builder() {
   this.objectFiles = [];
 
 	if(process.platform == 'win32') {
+		if(!process.env["VCINSTALLDIR"] && !process.env["VS100COMNTOOLS"]) {
+			this.fail("You appear to not be running in a Visual Studio prompt.");
+		}
+	}
+
+	if(process.platform == 'win32') {
 		this.cppCompiler = "cl.exe";
 		this.linker = "link.exe";
 		this.nodeDir = process.env["NODE_PATH"];
@@ -426,7 +432,10 @@ Builder.prototype.fail = function(message) {
 }
 
 Builder.prototype.trimQuotes = function(str) {
-	return str.replace(/^"/, '').replace(/"$/, '');
+	if(str) {
+		str = str.replace(/^"/, '').replace(/"$/, '');
+	}
+	return str;
 }
 
 build(new Builder());

@@ -12,11 +12,11 @@ $ npm install java
 ## Installation Windows
 
 * [Install node.js from source](https://github.com/joyent/node/wiki/Installation)
-* The directory where jvm.dll exists must be in the PATH.
+* The directory where jvm.dll exists must be in the PATH. (e.g. C:\Program Files (x86)\Java\jdk1.6.0_18\jre\bin\client)
 
 ```bash
-$ set NODE_ROOT=C:\Program Files (x86)\nodejs
-$ vcbuild.bat
+$ set NODE_PATH=C:\dev\node-v0.6.8-0
+$ npm install java
 ```
 
 ## Installation Mac
