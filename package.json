@@ -4,7 +4,7 @@
   "author": "Joe Ferner <joe.ferner@nearinfinity.com>",
   "keywords": ["java", "jvm", "bridge"],
   "homepage": "https://github.com/nearinfinity/node-java",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "engines": { "node" : ">=0.6.0" },
   "maintainers": [
     { "name": "Jeff Kunkle", "email": "jeff.kunkle@nearinfinity.com" },

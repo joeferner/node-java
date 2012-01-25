@@ -15,7 +15,9 @@ $ npm install java
 * The directory where jvm.dll exists must be in the PATH. (e.g. C:\Program Files (x86)\Java\jdk1.6.0_18\jre\bin\client)
 
 ```bash
-$ set NODE_PATH=C:\dev\node-v0.6.8-0
+$ set PATH=%PATH%;C:\Program Files (x86)\Java\jdk1.6.0_18\jre\bin\client
+$ set JAVA_HOME=C:\Program Files (x86)\Java\jdk1.6.0_18\
+$ set NODE_ROOT=C:\dev\node-v0.6.8-0
 $ npm install java
 ```
 
