@@ -66,16 +66,24 @@ function Builder() {
   this.flagGroups = {};
   this.target = "native_bindings";
   this.sourceFiles = [];
-  this.verbose = true;
+  this.verbose = false;
+  this.cppCompiler = "g++";
+  this.linker = "g++";
+  this.objectFiles = [];
+
+  for(var i=0; i<process.argv.length; i++) {
+    var arg = process.argv[i];
+    if(arg == '-v' || arg == '--verbose') {
+      this.verbose = true;
+    }
+  }
+
   this.nodeDir = this.getNodeDir();
   this.nodeIncludeDir = path.join(this.nodeDir, '..', 'include', 'node');
   this.nodeLibDir = path.join(this.nodeDir, '..', 'lib');
-  this.cppCompiler = "g++";
-  this.linker = "g++";
   this.projectDir = path.resolve('.');
   this.buildDir = path.resolve(this.projectDir, 'build');
   this.ouputDir = path.resolve(this.buildDir, 'Release');
-  this.objectFiles = [];
   
   this.appendUnique('CXXFLAGS', [
     '-g',
@@ -177,7 +185,8 @@ Builder.prototype.run = function(cmd, args, callback) {
   });
 }
 
-Builder.prototype._compile = function(curFileIdx, totalTasks, callback) {
+Builder.prototype._compile = function(curFileIdx, callback) {
+  var self = this;
   var fileName = path.resolve(this.sourceFiles[curFileIdx]);
   var outFileName = path.join(this.ouputDir, path.relative(this.projectDir, fileName));
   outFileName = outFileName.replace(/\.cpp$/, '.o');
@@ -185,15 +194,18 @@ Builder.prototype._compile = function(curFileIdx, totalTasks, callback) {
   
   console.log(util.format(
     "[%d/%d] cxx: %s -> %s",
-    curFileIdx+1,
-    totalTasks,
+    this.currentTask+1,
+    this.totalTasks,
     path.relative(this.projectDir, fileName),
     path.relative(this.projectDir, outFileName)));
   var args = this.getCompilerArgs(fileName, outFileName);
   if(this.verbose) {
     console.log(this.cppCompiler, args.join(' '));
   }
-  this.run(this.cppCompiler, args, callback);
+  this.run(this.cppCompiler, args, function(code) {
+    self.currentTask++;
+    callback(code);
+  });
 }
 
 Builder.prototype.compile = function(callback) {
@@ -210,7 +222,7 @@ Builder.prototype.compile = function(callback) {
   var err = false;
   doCompile = function() {
     if(curFileIdx < self.sourceFiles.length) {
-      self._compile(curFileIdx, self.sourceFiles.length, function(code) {
+      self._compile(curFileIdx, function(code) {
         if(code != 0) {
           err = true;
         }
@@ -218,7 +230,9 @@ Builder.prototype.compile = function(callback) {
         doCompile();
       });
     } else {
-      console.log("Done compiling.");
+      if(self.verbose) {
+        console.log("Done compiling.");
+      }
       if(err) {
         callback(new Error("At least one file failed to compile."));
       } else {
@@ -236,8 +250,8 @@ Builder.prototype.link = function(callback) {
   var outFileName = path.resolve(path.join(this.ouputDir, this.target + ".node"));
   console.log(util.format(
     "[%d/%d] cxx_link: %s -> %s",
-    0,
-    0,
+    this.currentTask+1,
+    this.totalTasks,
     this.objectFiles.map(function(f) { return path.relative(self.projectDir, f); }).join(' '),
     path.relative(this.projectDir, outFileName)));
   
@@ -248,7 +262,10 @@ Builder.prototype.link = function(callback) {
   }
 
   this.run(this.linker, args, function(code) {
-    console.log("Done linking.");
+    self.currentTask++;
+    if(self.verbose) {
+      console.log("Done linking.");
+    }
     if(code != 0) {
       callback(new Error("Failed to link."));
     } else {
@@ -257,13 +274,19 @@ Builder.prototype.link = function(callback) {
   });
 }
 
-Builder.prototype.compileAndLink = function() {
+Builder.prototype.compileAndLink = function(callback) {
+  this.currentTask = 0;
+  this.totalTasks = this.sourceFiles.length + 1; // +1 is for linking
+  callback = callback || function() {};
   var self = this;
   this.compile(function(err) {
     if(err) { self.fail(err); return; }
     self.link(function(err) {
       if(err) { self.fail(err); return; }
-      console.log("Done.");
+      if(self.verbose) {
+        console.log("Done.");
+      }
+      callback();
     });
   });
 }
