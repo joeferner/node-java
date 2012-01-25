@@ -8,9 +8,6 @@ var childProcess = require('child_process');
 function build(builder) {
   builder.appendUnique('CXXFLAGS', ['-Wall']);
   builder.appendUnique('CXXFLAGS', ['-Isrc/']);
-  builder.appendUnique('CXXFLAGS', ['-g']);
-  builder.appendUnique('CXXFLAGS', ['-D_FILE_OFFSET_BITS=64']);
-  builder.appendUnique('CXXFLAGS', ['-D_LARGEFILE_SOURCE']);
   builder.appendUnique('CXXFLAGS', ['-DHAVE_CONFIG_H']);
 
   // MAC has a built in JVM
@@ -60,8 +57,7 @@ function build(builder) {
   builder.appendSourceDir('./src');
   builder.appendUnique('CXXFLAGS', '-Isrc/');
 
-  builder.compile();
-  builder.link();
+  builder.compileAndLink();
 }
 
 /* ----------------------------------------------------------------------------- */
@@ -73,11 +69,29 @@ function Builder() {
   this.verbose = true;
   this.nodeDir = this.getNodeDir();
   this.nodeIncludeDir = path.join(this.nodeDir, '..', 'include', 'node');
-
-  this.appendUnique('CXXFLAGS', '-g');
-  this.appendUnique('CXXFLAGS_NODE', '-D_LARGEFILE_SOURCE');
-  this.appendUnique('CXXFLAGS_NODE', '-D_FILE_OFFSET_BITS=64');
-  this.appendUnique('CXXFLAGS', '-I' + this.nodeIncludeDir);
+  this.nodeLibDir = path.join(this.nodeDir, '..', 'lib');
+  this.cppCompiler = "g++";
+  this.linker = "g++";
+  this.projectDir = path.resolve('.');
+  this.buildDir = path.resolve(this.projectDir, 'build');
+  this.ouputDir = path.resolve(this.buildDir, 'Release');
+  this.objectFiles = [];
+  
+  this.appendUnique('CXXFLAGS', [
+    '-g',
+    '-c',
+    '-fPIC',
+    '-DPIC',
+    '-D_LARGEFILE_SOURCE',
+    '-D_FILE_OFFSET_BITS=64',
+    '-D_GNU_SOURCE',
+    '-I' + this.nodeIncludeDir
+  ]);
+  
+  this.appendUnique('LINKFLAGS', [
+    '-shared',
+    '-L' + this.nodeLibDir
+  ]);
 }
 
 Builder.prototype.getNodeDir = function() {
@@ -117,53 +131,141 @@ Builder.prototype.appendSourceDir = function(dirName) {
   }
 }
 
-Builder.prototype.getCompilerArgs = function(fileName) {
+Builder.prototype.getCompilerArgs = function(fileName, outFileName) {
+  fileName = path.resolve(fileName);
+  this.createDir(path.dirname(outFileName));
   var args = [];
   var flags = this.getFlags('CXXFLAGS');
   args = args.concat(flags);
   args.push(fileName);
+  args.push("-o");
+  args.push(outFileName);
   return args;
 }
 
-Builder.prototype.getCompiler = function() {
-  return "g++";
+Builder.prototype.getLinkerArgs = function(outFileName) {
+  this.createDir(path.dirname(outFileName));
+  var args = [];
+  var flags = this.getFlags('LINKFLAGS');
+  args = args.concat(this.objectFiles);
+  args.push("-o");
+  args.push(outFileName);
+  args = args.concat(flags);
+  return args;
 }
 
-Builder.prototype.compile = function() {
-  if(!path.existsSync("build")) {
-    fs.mkdirSync("build");
+Builder.prototype.createDir = function(dirName) {
+  var parent = path.dirname(dirName);
+  if(!path.existsSync(parent)) {
+    this.createDir(parent);
   }
+  if(!path.existsSync(dirName)) {
+    fs.mkdirSync(dirName);
+  }
+}
+
+Builder.prototype.run = function(cmd, args, callback) {
+  var child = childProcess.spawn(cmd, args);
+  child.stdout.on('data', function (data) {
+    process.stdout.write(data);
+  });
+  child.stderr.on('data', function (data) {
+    process.stderr.write(data);
+  });
+  child.on('exit', function(code) {
+    callback(code);
+  });
+}
+
+Builder.prototype._compile = function(curFileIdx, totalTasks, callback) {
+  var fileName = path.resolve(this.sourceFiles[curFileIdx]);
+  var outFileName = path.join(this.ouputDir, path.relative(this.projectDir, fileName));
+  outFileName = outFileName.replace(/\.cpp$/, '.o');
+  this.objectFiles.push(outFileName);
+  
+  console.log(util.format(
+    "[%d/%d] cxx: %s -> %s",
+    curFileIdx+1,
+    totalTasks,
+    path.relative(this.projectDir, fileName),
+    path.relative(this.projectDir, outFileName)));
+  var args = this.getCompilerArgs(fileName, outFileName);
+  if(this.verbose) {
+    console.log(this.cppCompiler, args.join(' '));
+  }
+  this.run(this.cppCompiler, args, callback);
+}
+
+Builder.prototype.compile = function(callback) {
+  var self = this;
+  this.createDir(this.ouputDir);
 
   if(this.sourceFiles.length == 0) {
-    this.fail("Nothing to compile!");
+    callback(new Error("Nothing to compile!"));
+    return;
   }
 
-  var compiler = this.getCompiler();
-
-  for(var i=0; i<this.sourceFiles.length; i++) {
-    var fileName = this.sourceFiles[i];
-    console.log(util.format("[%d/%d] Compiling %s", i+1, this.sourceFiles.length, fileName));
-    var args = this.getCompilerArgs(fileName);
-    if(this.verbose) {
-      console.log(compiler, args.join(' '));
+  var curFileIdx = 0;
+  var doCompile;
+  var err = false;
+  doCompile = function() {
+    if(curFileIdx < self.sourceFiles.length) {
+      self._compile(curFileIdx, self.sourceFiles.length, function(code) {
+        if(code != 0) {
+          err = true;
+        }
+        curFileIdx++;
+        doCompile();
+      });
+    } else {
+      console.log("Done compiling.");
+      if(err) {
+        callback(new Error("At least one file failed to compile."));
+      } else {
+        callback();
+      }
     }
-    var child = childProcess.spawn(compiler, args);
-    child.stdout.on('data', function (data) {
-      process.stdout.write(data);
-    });
-    child.stderr.on('data', function (data) {
-      process.stderr.write(data);
-    });
-    child.on('exit', function(code) {
-      console.log(code);
-    });
   }
-
-  console.log("Done compiling");
+  doCompile();
 }
 
-Builder.prototype.link = function() {
+Builder.prototype.link = function(callback) {
+  var self = this;
+  this.createDir(this.ouputDir);  
+  
+  var outFileName = path.resolve(path.join(this.ouputDir, this.target + ".node"));
+  console.log(util.format(
+    "[%d/%d] cxx_link: %s -> %s",
+    0,
+    0,
+    this.objectFiles.map(function(f) { return path.relative(self.projectDir, f); }).join(' '),
+    path.relative(this.projectDir, outFileName)));
+  
+  var args = this.getLinkerArgs(outFileName);
 
+  if(this.verbose) {
+    console.log(this.linker, args.join(' '));
+  }
+
+  this.run(this.linker, args, function(code) {
+    console.log("Done linking.");
+    if(code != 0) {
+      callback(new Error("Failed to link."));
+    } else {
+      callback();
+    }
+  });
+}
+
+Builder.prototype.compileAndLink = function() {
+  var self = this;
+  this.compile(function(err) {
+    if(err) { self.fail(err); return; }
+    self.link(function(err) {
+      if(err) { self.fail(err); return; }
+      console.log("Done.");
+    });
+  });
 }
 
 Builder.prototype.failIfNotExists = function(dirName, message) {
@@ -174,6 +276,9 @@ Builder.prototype.failIfNotExists = function(dirName, message) {
 }
 
 Builder.prototype.fail = function(message) {
+  if(message instanceof Error) {
+    message = message.message;
+  }
   var msg = util.format.apply(this, arguments);
   console.error("ERROR: " + msg);
   process.exit(1);
