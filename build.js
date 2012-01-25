@@ -94,16 +94,16 @@ function Builder() {
 	if(process.platform == 'win32') {
 		this.cppCompiler = "cl.exe";
 		this.linker = "link.exe";
-		this.nodeDir = process.env["NODE_ROOT"];
+		this.nodeDir = process.env["NODE_HOME"];
 	} else {
-		this.nodeDir = process.env["NODE_ROOT"] || path.join(process.execPath, '..');
+		this.nodeDir = process.env["NODE_HOME"] || path.join(process.execPath, '..');
 	}
 
 	if(this.nodeDir) {
 		this.nodeDir = this.trimQuotes(this.nodeDir);
-		this.failIfNotExists(this.nodeDir, 'Node path "%s" not found, try setting NODE_PATH');
+		this.failIfNotExists(this.nodeDir, 'Node path "%s" not found, try setting NODE_HOME');
 	} else {
-		this.fail("You must specify NODE_PATH.");
+		this.fail("You must specify NODE_HOME.");
 	}
 
   for(var i=0; i<process.argv.length; i++) {
