@@ -13,7 +13,7 @@ function build(builder) {
   if(path.existsSync("/System/Library/Frameworks/JavaVM.framework/")) {
     var jdkIncludeDir = process.env["JDK_INCLUDE_DIR"] || "/System/Library/Frameworks/JavaVM.framework/Headers";
     builder.appendUnique('CXXFLAGS', '-I' + jdkIncludeDir);
-    builder.appendUnique('LINKFLAGS', '-framework JavaVM');
+    builder.appendUnique('LINKFLAGS', ['-framework', 'JavaVM']);
   } else {
     var javaHome = builder.trimQuotes(process.env["JAVA_HOME"]);
 
@@ -96,7 +96,7 @@ function Builder() {
 		this.linker = "link.exe";
 		this.nodeDir = process.env["NODE_HOME"];
 	} else {
-		this.nodeDir = process.env["NODE_HOME"] || path.join(process.execPath, '..');
+		this.nodeDir = process.env["NODE_HOME"] || path.join(process.execPath, '..', '..');
 	}
 
 	if(this.nodeDir) {
@@ -127,8 +127,8 @@ function Builder() {
   	this.nodeLibDir = path.join(this.nodeDir, 'Release');
   } else {
 
-  	this.nodeIncludeDir = path.join(this.nodeDir, '..', 'include', 'node');
-  	this.nodeLibDir = path.join(this.nodeDir, '..', 'lib');
+  	this.nodeIncludeDir = path.join(this.nodeDir, 'include', 'node');
+  	this.nodeLibDir = path.join(this.nodeDir, 'lib');
   }
   this.projectDir = path.resolve('.');
   this.buildDir = path.resolve(this.projectDir, 'build');
@@ -176,9 +176,17 @@ function Builder() {
   	  '-g',
     	'-fPIC'
     ]);
-	  this.appendUnique('LINKFLAGS', [
-	    '-shared'
-	  ]);
+    if (process.platform == 'darwin') {
+      this.appendUnique('LINKFLAGS', [
+        '-bundle',
+        '-undefined',
+        'dynamic_lookup'
+      ]);
+    } else {
+      this.appendUnique('LINKFLAGS', [
+        '-shared'
+      ]);
+    }
 	}
 
   this.appendLinkerSearchDir(this.nodeLibDir);
