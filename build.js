@@ -97,8 +97,11 @@ function Builder() {
 		this.nodeDir = process.env["NODE_PATH"];
 	} else {
 		this.nodeDir = process.env["NODE_PATH"] || path.join(process.execPath, '..');
+		if(this.nodeDir.match(/node_modules$/)) {
+			this.nodeDir = path.join(this.nodeDir, '..');
+		}
 	}
-	
+
 	if(this.nodeDir) {
 		this.nodeDir = this.trimQuotes(this.nodeDir);
 		this.failIfNotExists(this.nodeDir, 'Node path "%s" not found, try setting NODE_PATH');
@@ -126,13 +129,14 @@ function Builder() {
   	this.uvIncludeDir = path.join(this.nodeDir, 'deps/uv/include');
   	this.nodeLibDir = path.join(this.nodeDir, 'Release');
   } else {
+
   	this.nodeIncludeDir = path.join(this.nodeDir, '..', 'include', 'node');
   	this.nodeLibDir = path.join(this.nodeDir, '..', 'lib');
   }
   this.projectDir = path.resolve('.');
   this.buildDir = path.resolve(this.projectDir, 'build');
   this.ouputDir = path.resolve(this.buildDir, 'Release');
-  
+
   this.appendUnique('CXXFLAGS', [
     '-c',
     '-I' + this.nodeIncludeDir
@@ -314,7 +318,7 @@ Builder.prototype._compile = function(curFileIdx, callback) {
   var outFileName = path.join(this.ouputDir, path.relative(this.projectDir, fileName));
   outFileName = outFileName.replace(/\.cpp$/, '.o');
   this.objectFiles.push(outFileName);
-  
+
   this.consoleGreen(util.format(
     "[%d/%d] cxx: %s -> %s\r\n",
     this.currentTask+1,
@@ -368,8 +372,8 @@ Builder.prototype.compile = function(callback) {
 
 Builder.prototype.link = function(callback) {
   var self = this;
-  this.createDir(this.ouputDir);  
-  
+  this.createDir(this.ouputDir);
+
   var outFileName = path.resolve(path.join(this.ouputDir, this.target + ".node"));
   this.consoleYellow(util.format(
     "[%d/%d] cxx_link: %s -> %s\r\n",
@@ -377,7 +381,7 @@ Builder.prototype.link = function(callback) {
     this.totalTasks,
     this.objectFiles.map(function(f) { return path.relative(self.projectDir, f); }).join(' '),
     path.relative(this.projectDir, outFileName)));
-  
+
   var args = this.getLinkerArgs(outFileName);
 
   if(this.verbose) {
@@ -439,4 +443,3 @@ Builder.prototype.trimQuotes = function(str) {
 }
 
 build(new Builder());
-
