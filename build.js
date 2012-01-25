@@ -6,7 +6,6 @@ var fs = require('fs');
 var childProcess = require('child_process');
 
 function build(builder) {
-  builder.appendUnique('CXXFLAGS', ['-Wall']);
   builder.appendUnique('CXXFLAGS', ['-Isrc/']);
   builder.appendUnique('CXXFLAGS', ['-DHAVE_CONFIG_H']);
 
@@ -16,7 +15,7 @@ function build(builder) {
     builder.appendUnique('CXXFLAGS', '-I' + jdkIncludeDir);
     builder.appendUnique('LINKFLAGS', '-framework JavaVM');
   } else {
-    var javaHome = process.env["JAVA_HOME"];
+    var javaHome = builder.trimQuotes(process.env["JAVA_HOME"]);
 
     // JDK Include directory
     var jdkIncludeDir = process.env["JDK_INCLUDE_DIR"];
@@ -28,29 +27,43 @@ function build(builder) {
     builder.appendUnique('CXXFLAGS', '-I' + jdkIncludeDir);
 
     // JDK additional include directory
-    var jdkAdditionalIncludeDir = process.env["JDK_AUX_INCLUDE_DIR"] || path.join(jdkIncludeDir, "linux");
+    var jdkAdditionalIncludeDirGuess;
+    if(process.platform == 'win32') {
+    	jdkAdditionalIncludeDirGuess = path.join(jdkIncludeDir, "win32");
+    } else {
+    	jdkAdditionalIncludeDirGuess = path.join(jdkIncludeDir, "linux");
+    }
+    var jdkAdditionalIncludeDir = process.env["JDK_AUX_INCLUDE_DIR"] || jdkAdditionalIncludeDirGuess;
     builder.failIfNotExists(jdkAdditionalIncludeDir, 'Could not find "%s" check JAVA_HOME or JDK_AUX_INCLUDE_DIR environment variable.');
     builder.appendUnique('CXXFLAGS', '-I' + jdkAdditionalIncludeDir);
 
     // JDK lib directory
-    var jdkLibDirGuess = null;
-    if(javaHome) {
-      if(path.existsSync(path.join(javaHome, "/jre/lib/i386/server/"))) {
-        jdkLibDirGuess = path.join(javaHome, "/jre/lib/i386/server/");
-      } else {
-        jdkLibDirGuess = path.join(javaHome, "/jre/lib/amd64/server/");
-      }
-    }
-    var jdkLibDir = process.env["JDK_LIB_DIR"];
-    if(!jdkLibDirGuess && !jdkLibDir) {
-      builder.fail("You must set JAVA_HOME or JDK_LIB_DIR environment variable");
-    }
-    jdkLibDir = jdkLibDir || jdkLibDirGuess;
-    builder.failIfNotExists(jdkLibDir, 'Could not find "%s" check JAVA_HOME or JDK_LIB_DIR environment variable.');
-    builder.appendUnique('LINKFLAGS', '-L' + jdkLibDir);
-    builder.appendUnique('LINKFLAGS', '-Wl,-rpath,' + jdkLibDir);
+    if(process.platform == 'win32') {
+			var jdkLibDir = process.env["JDK_LIB_DIR"] || path.join(javaHome, "lib");
+	    if(!jdkLibDir) {
+	      builder.fail("You must set JAVA_HOME or JDK_LIB_DIR environment variable");
+	    }
+    	builder.appendLinkerSearchDir(jdkLibDir);
+    } else {
+	    var jdkLibDirGuess = null;
+	    if(javaHome) {
+	      if(path.existsSync(path.join(javaHome, "/jre/lib/i386/server/"))) {
+	        jdkLibDirGuess = path.join(javaHome, "/jre/lib/i386/server/");
+	      } else {
+	        jdkLibDirGuess = path.join(javaHome, "/jre/lib/amd64/server/");
+	      }
+	    }
+	    var jdkLibDir = process.env["JDK_LIB_DIR"];
+	    if(!jdkLibDirGuess && !jdkLibDir) {
+	      builder.fail("You must set JAVA_HOME or JDK_LIB_DIR environment variable");
+	    }
+	    jdkLibDir = jdkLibDir || jdkLibDirGuess;
+	    builder.failIfNotExists(jdkLibDir, 'Could not find "%s" check JAVA_HOME or JDK_LIB_DIR environment variable.');
+	    builder.appendLinkerSearchDir(jdkLibDir);
+	    builder.appendUnique('LINKFLAGS', '-Wl,-rpath,' + jdkLibDir);
+	  }
 
-    builder.appendUnique('LINKFLAGS', '-ljvm');
+    builder.appendLinkerLibrary('jvm');
   }
 
   builder.target = "nodejavabridge_bindings";
@@ -67,39 +80,101 @@ function Builder() {
   this.target = "native_bindings";
   this.sourceFiles = [];
   this.verbose = false;
+  this.showWarnings = false;
   this.cppCompiler = "g++";
   this.linker = "g++";
   this.objectFiles = [];
+
+	if(process.platform == 'win32') {
+		this.cppCompiler = "cl.exe";
+		this.linker = "link.exe";
+		this.nodeDir = process.env["NODE_PATH"];
+	} else {
+		this.nodeDir = process.env["NODE_PATH"] || path.join(process.execPath, '..');
+	}
+	
+	if(this.nodeDir) {
+		this.nodeDir = this.trimQuotes(this.nodeDir);
+		this.failIfNotExists(this.nodeDir, 'Node path "%s" not found, try setting NODE_PATH');
+	} else {
+		this.fail("You must specify NODE_PATH.");
+	}
 
   for(var i=0; i<process.argv.length; i++) {
     var arg = process.argv[i];
     if(arg == '-v' || arg == '--verbose') {
       this.verbose = true;
+    } else if(arg == '-Wall' || arg == '--showWarnings') {
+      this.showWarnings = true;
     }
   }
 
-  this.nodeDir = this.getNodeDir();
-  this.nodeIncludeDir = path.join(this.nodeDir, '..', 'include', 'node');
-  this.nodeLibDir = path.join(this.nodeDir, '..', 'lib');
+	if(this.showWarnings) {
+		builder.appendUnique('CXXFLAGS', ['-Wall']);
+	}
+
+	// process.execPath should equal node.
+	if(process.platform == 'win32') {
+  	this.nodeIncludeDir = path.join(this.nodeDir, 'src');
+  	this.v8IncludeDir = path.join(this.nodeDir, 'deps/v8/include');
+  	this.uvIncludeDir = path.join(this.nodeDir, 'deps/uv/include');
+  	this.nodeLibDir = path.join(this.nodeDir, 'Release');
+  } else {
+  	this.nodeIncludeDir = path.join(this.nodeDir, '..', 'include', 'node');
+  	this.nodeLibDir = path.join(this.nodeDir, '..', 'lib');
+  }
   this.projectDir = path.resolve('.');
   this.buildDir = path.resolve(this.projectDir, 'build');
   this.ouputDir = path.resolve(this.buildDir, 'Release');
   
   this.appendUnique('CXXFLAGS', [
-    '-g',
     '-c',
-    '-fPIC',
-    '-DPIC',
-    '-D_LARGEFILE_SOURCE',
-    '-D_FILE_OFFSET_BITS=64',
-    '-D_GNU_SOURCE',
     '-I' + this.nodeIncludeDir
   ]);
-  
-  this.appendUnique('LINKFLAGS', [
-    '-shared',
-    '-L' + this.nodeLibDir
-  ]);
+
+	if(process.platform == 'win32') {
+	  this.appendUnique('CXXFLAGS', [
+  	  '-nologo',
+  	  '-DWIN32',
+  	  '-D_WINDOWS',
+  	  '-D_WINDLL',
+  	  '-EHsc',
+  	  '-c',
+  	  '-Oi-',
+  	  '-Od',
+  	  '-Gd',
+  	  '-analyze-',
+	    '-I' + this.v8IncludeDir,
+	    '-I' + this.uvIncludeDir
+    ]);
+    this.appendUnique('LINKFLAGS', [
+	    '-nologo',
+	    '-dll',
+			'-MANIFEST:NO',
+			'-SUBSYSTEM:WINDOWS',
+			'-TLBID:1',
+			'-DYNAMICBASE',
+			'-NXCOMPAT',
+			'-MACHINE:X86',
+	  ]);
+	  this.appendLinkerLibrary('node');
+	  this.appendLinkerLibrary('uv');
+	  this.appendLinkerSearchDir(path.join(this.nodeLibDir, 'lib'));
+	} else {
+	  this.appendUnique('CXXFLAGS', [
+	    '-D_LARGEFILE_SOURCE',
+	    '-D_FILE_OFFSET_BITS=64',
+	    '-D_GNU_SOURCE',
+	    '-DPIC',
+  	  '-g',
+    	'-fPIC'
+    ]);
+	  this.appendUnique('LINKFLAGS', [
+	    '-shared'
+	  ]);
+	}
+
+  this.appendLinkerSearchDir(this.nodeLibDir);
 }
 
 Builder.prototype.consoleGreen = function(msg) {
@@ -120,8 +195,24 @@ Builder.prototype.consoleRed = function(msg) {
   process.stdout.write('\u001b[0m');
 }
 
-Builder.prototype.getNodeDir = function() {
-  return path.join(process.execPath, '..');
+Builder.prototype.appendLinkerLibrary = function(lib) {
+	var flag;
+	if(process.platform == 'win32') {
+		flag = lib + '.lib';
+	} else {
+		flag = '-l' + lib;
+	}
+	this.appendUnique('LINKFLAGS', flag);
+}
+
+Builder.prototype.appendLinkerSearchDir = function(dir) {
+	var flag;
+	if(process.platform == 'win32') {
+		flag = '-LIBPATH:' + dir;
+	} else {
+		flag = '-L' + dir;
+	}
+	this.appendUnique('LINKFLAGS', flag);
 }
 
 Builder.prototype.getFlags = function(flagGroupName) {
@@ -164,8 +255,12 @@ Builder.prototype.getCompilerArgs = function(fileName, outFileName) {
   var flags = this.getFlags('CXXFLAGS');
   args = args.concat(flags);
   args.push(fileName);
-  args.push("-o");
-  args.push(outFileName);
+  if(process.platform == 'win32') {
+  	args.push("-Fo" + outFileName);
+  } else {
+  	args.push("-o");
+	  args.push(outFileName);
+  }
   return args;
 }
 
@@ -174,8 +269,12 @@ Builder.prototype.getLinkerArgs = function(outFileName) {
   var args = [];
   var flags = this.getFlags('LINKFLAGS');
   args = args.concat(this.objectFiles);
-  args.push("-o");
-  args.push(outFileName);
+  if(process.platform == 'win32') {
+  	args.push("-out:" + outFileName);
+  } else {
+	  args.push("-o");
+	  args.push(outFileName);
+	}
   args = args.concat(flags);
   return args;
 }
@@ -310,6 +409,7 @@ Builder.prototype.compileAndLink = function(callback) {
 }
 
 Builder.prototype.failIfNotExists = function(dirName, message) {
+	dirName = path.resolve(dirName);
   if(!path.existsSync(dirName)) {
     message = message || "Could not find '%s'.";
     this.fail(message, dirName);
@@ -323,6 +423,10 @@ Builder.prototype.fail = function(message) {
   var msg = util.format.apply(this, arguments);
   this.consoleRed("ERROR: " + msg + '\r\n');
   process.exit(1);
+}
+
+Builder.prototype.trimQuotes = function(str) {
+	return str.replace(/^"/, '').replace(/"$/, '');
 }
 
 build(new Builder());
