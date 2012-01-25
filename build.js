@@ -102,6 +102,24 @@ function Builder() {
   ]);
 }
 
+Builder.prototype.consoleGreen = function(msg) {
+  process.stdout.write('\u001b[32m');
+  process.stdout.write(msg);
+  process.stdout.write('\u001b[0m');
+}
+
+Builder.prototype.consoleYellow = function(msg) {
+  process.stdout.write('\u001b[33m');
+  process.stdout.write(msg);
+  process.stdout.write('\u001b[0m');
+}
+
+Builder.prototype.consoleRed = function(msg) {
+  process.stdout.write('\u001b[31m');
+  process.stdout.write(msg);
+  process.stdout.write('\u001b[0m');
+}
+
 Builder.prototype.getNodeDir = function() {
   return path.join(process.execPath, '..');
 }
@@ -192,8 +210,8 @@ Builder.prototype._compile = function(curFileIdx, callback) {
   outFileName = outFileName.replace(/\.cpp$/, '.o');
   this.objectFiles.push(outFileName);
   
-  console.log(util.format(
-    "[%d/%d] cxx: %s -> %s",
+  this.consoleGreen(util.format(
+    "[%d/%d] cxx: %s -> %s\r\n",
     this.currentTask+1,
     this.totalTasks,
     path.relative(this.projectDir, fileName),
@@ -248,8 +266,8 @@ Builder.prototype.link = function(callback) {
   this.createDir(this.ouputDir);  
   
   var outFileName = path.resolve(path.join(this.ouputDir, this.target + ".node"));
-  console.log(util.format(
-    "[%d/%d] cxx_link: %s -> %s",
+  this.consoleYellow(util.format(
+    "[%d/%d] cxx_link: %s -> %s\r\n",
     this.currentTask+1,
     this.totalTasks,
     this.objectFiles.map(function(f) { return path.relative(self.projectDir, f); }).join(' '),
@@ -303,7 +321,7 @@ Builder.prototype.fail = function(message) {
     message = message.message;
   }
   var msg = util.format.apply(this, arguments);
-  console.error("ERROR: " + msg);
+  this.consoleRed("ERROR: " + msg + '\r\n');
   process.exit(1);
 }
 
