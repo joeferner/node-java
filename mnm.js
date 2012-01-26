@@ -68,4 +68,4 @@ builder.target = "nodejavabridge_bindings";
 builder.appendSourceDir('./src');
 builder.appendUnique('CXXFLAGS', '-Isrc/');
 
-builder.compileAndLink();
+builder.run();

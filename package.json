@@ -14,14 +14,14 @@
   "licenses": [ { "type" : "MIT" } ],
   "repositories": { "type": "git", "url": "https://github.com/nearinfinity/node-java.git" },
   "dependencies": {
-    "mnm": "~0.0.1"
+    "mnm": "~0.0.2"
   },
   "devDependencies": {
     "nodeunit": "~0.6.4"
   },
   "scripts": {
     "test": "nodeunit test",
-    "install": "node build.js"
+    "install": "node mnm.js build"
   },
   "main": "./index.js"
 }
