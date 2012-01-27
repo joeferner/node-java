@@ -70,9 +70,9 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   for(uint32_t i=0; i<classPathArray->Length(); i++) {
     if(i != 0) {
       #ifdef WIN32
-      	classPath << ";";
+        classPath << ";";
       #else
-      	classPath << ":";
+        classPath << ":";
       #endif
     }
     v8::Local<v8::Value> arrayItemValue = classPathArray->Get(i);
