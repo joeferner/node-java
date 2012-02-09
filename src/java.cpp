@@ -34,6 +34,7 @@
   self->Wrap(args.This());
 
   self->handle_->Set(v8::String::New("classpath"), v8::Array::New());
+  self->handle_->Set(v8::String::New("options"), v8::Array::New());
 
   return args.This();
 }
@@ -59,6 +60,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   JavaVM* jvmTemp;
   JavaVMInitArgs args;
 
+  // setup classpath
   std::ostringstream classPath;
   classPath << "-Djava.class.path=";
 
@@ -83,15 +85,33 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     v8::String::AsciiValue arrayItemStr(arrayItem);
     classPath << *arrayItemStr;
   }
-
-  JavaVMOption options[1];
-  options[0].optionString = strdup(classPath.str().c_str());
+  
+  // get other options
+  v8::Local<v8::Value> optionsValue = handle_->Get(v8::String::New("options"));
+  if(!optionsValue->IsArray()) {
+    return ThrowException(v8::Exception::TypeError(v8::String::New("options must be an array")));
+  }
+  v8::Local<v8::Array> optionsArray = v8::Array::Cast(*optionsValue);
+  
+  // create vm options
+  int vmOptionsCount = optionsArray->Length() + 1;
+  JavaVMOption* vmOptions = new JavaVMOption[vmOptionsCount];
+  vmOptions[0].optionString = strdup(classPath.str().c_str());
+  for(uint32_t i=0; i<optionsArray->Length(); i++) {
+    v8::Local<v8::Value> arrayItemValue = optionsArray->Get(i);
+    if(!arrayItemValue->IsString()) {
+      return ThrowException(v8::Exception::TypeError(v8::String::New("options must only contain strings")));
+    }
+    v8::Local<v8::String> arrayItem = arrayItemValue->ToString();
+    v8::String::AsciiValue arrayItemStr(arrayItem);
+    vmOptions[i+1].optionString = strdup(*arrayItemStr);
+  }
 
   JNI_GetDefaultJavaVMInitArgs(&args);
   args.version = JNI_VERSION_1_6;
   args.ignoreUnrecognized = false;
-  args.options = options;
-  args.nOptions = 1;
+  args.options = vmOptions;
+  args.nOptions = vmOptionsCount;
   JNI_CreateJavaVM(&jvmTemp, (void **)env, &args);
   *jvm = jvmTemp;
 
