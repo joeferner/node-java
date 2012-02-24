@@ -77,12 +77,12 @@ __Arguments__
 
 __Example__
 
-  var Test = java.require('Test');
-  Test.someStaticMethodSync(5);
-  console.log(Test.someStaticField);
+    var Test = java.require('Test');
+    Test.someStaticMethodSync(5);
+    console.log(Test.someStaticField);
 
-  var test = new Test();
-  list.instanceMethodSync('item1');
+    var test = new Test();
+    list.instanceMethodSync('item1');
 
 <a name="javaNewInstance" />
 **java.newInstance(className, [args...], callback)**
