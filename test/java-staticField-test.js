@@ -1,10 +1,15 @@
 
-var java = require("./testHelpers").java;
+var java = require("../testHelpers").java;
 
 var nodeunit = require("nodeunit");
 var util = require("util");
 
 exports['Java - Static Field'] = nodeunit.testCase({
+  tearDown: function (callback) {
+    java.setStaticFieldValue("Test", "staticFieldInt", 42);
+    callback();
+  },
+
   "getStaticFieldValue int": function(test) {
     var val = java.getStaticFieldValue("Test", "staticFieldInt");
     test.equal(val, 42);

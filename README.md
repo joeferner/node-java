@@ -40,11 +40,16 @@ java.newInstance("java.util.ArrayList", function(err, list) {
   list.addSync("item1");
   list.addSync("item2");
 });
+
+var ArrayList = java.require('java.util.ArrayList');
+var list = new ArrayList();
+list.addSync('item1');
 ```
 
 # Index
 
 ## java
+ * [require](#javaRequire)
  * [newInstance](#javaNewInstance)
  * [callStaticMethod](#javaCallStaticMethod)
  * [getStaticFieldValue](#javaGetStaticFieldValue)
@@ -60,6 +65,24 @@ java.newInstance("java.util.ArrayList", function(err, list) {
 
 <a name="java"/>
 ## java
+
+<a name="javaRequire" />
+**java.require(className)**
+
+Loads the class given by className such that it acts and feels like a javascript object.
+
+__Arguments__
+
+ * className - The name of the class to create. For subclasses seperate using a '$' (eg. com.nearinfinty.MyClass$SubClass)
+
+__Example__
+
+  var Test = java.require('Test');
+  Test.someStaticMethodSync(5);
+  console.log(Test.someStaticField);
+
+  var test = new Test();
+  list.instanceMethodSync('item1');
 
 <a name="javaNewInstance" />
 **java.newInstance(className, [args...], callback)**

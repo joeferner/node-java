@@ -117,6 +117,20 @@ jvalueType javaGetType(JNIEnv *env, jclass type) {
 jclass javaFindClass(JNIEnv* env, std::string& className) {
   std::string searchClassName = className;
   std::replace(searchClassName.begin(), searchClassName.end(), '.', '/');
+
+// Alternate find class trying to fix Class.forName
+//  jclass threadClazz = env->FindClass("java/lang/Thread");
+//  jmethodID thread_getCurrentThread = env->GetStaticMethodID(threadClazz, "currentThread", "()Ljava/lang/Thread;");
+//  jmethodID thread_getContextClassLoader = env->GetMethodID(threadClazz, "getContextClassLoader", "()Ljava/lang/ClassLoader;");
+//
+//  jclass classLoaderClazz = env->FindClass("java/lang/ClassLoader");
+//  jmethodID classLoader_loadClass = env->GetMethodID(classLoaderClazz, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+//
+//  jobject currentThread = env->CallObjectMethod(threadClazz, thread_getCurrentThread);
+//  jobject classLoader = env->CallObjectMethod(currentThread, thread_getContextClassLoader);
+//  jstring searchClassNameJava = env->NewStringUTF(className.c_str());
+//  jclass clazz = (jclass)env->CallObjectMethod(classLoader, classLoader_loadClass, searchClassNameJava);
+
   jclass clazz = env->FindClass(searchClassName.c_str());
   return clazz;
 }
@@ -340,8 +354,13 @@ jobjectArray javaObjectArrayToClasses(JNIEnv *env, jobjectArray objs) {
   jsize objsLength = env->GetArrayLength(objs);
   jobjectArray results = env->NewObjectArray(objsLength, clazzClazz, NULL);
   for(jsize i=0; i<objsLength; i++) {
-    jclass objClazz = env->GetObjectClass(env->GetObjectArrayElement(objs, i));
-    env->SetObjectArrayElement(results, i, objClazz);
+    jobject elem = env->GetObjectArrayElement(objs, i);
+    if(elem == NULL) {
+      env->SetObjectArrayElement(results, i, NULL);
+    } else {
+      jclass objClazz = env->GetObjectClass(elem);
+      env->SetObjectArrayElement(results, i, objClazz);
+    }
   }
   return results;
 }

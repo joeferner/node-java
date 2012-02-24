@@ -1,4 +1,4 @@
-var java = require("./testHelpers").java;
+var java = require("../testHelpers").java;
 
 var nodeunit = require("nodeunit");
 var util = require("util");

@@ -14,7 +14,7 @@
   "licenses": [ { "type" : "MIT" } ],
   "repositories": { "type": "git", "url": "https://github.com/nearinfinity/node-java.git" },
   "dependencies": {
-    "mnm": "~0.0.2"
+    "mnm": "~0.0.3"
   },
   "devDependencies": {
     "nodeunit": "~0.6.4"

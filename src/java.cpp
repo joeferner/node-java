@@ -19,6 +19,7 @@
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newInstanceSync", newInstanceSync);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "callStaticMethod", callStaticMethod);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "callStaticMethodSync", callStaticMethodSync);
+  NODE_SET_PROTOTYPE_METHOD(s_ct, "findClassSync", findClassSync);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newArray", newArray);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newByte", newByte);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "getStaticFieldValue", getStaticFieldValue);
@@ -279,6 +280,34 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   if(result->IsNativeError()) {
     return ThrowException(result);
   }
+  return scope.Close(result);
+}
+
+/*static*/ v8::Handle<v8::Value> Java::findClassSync(const v8::Arguments& args) {
+  v8::HandleScope scope;
+  Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
+  v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
+  if(!ensureJvmResults->IsUndefined()) {
+    return ensureJvmResults;
+  }
+  JNIEnv* env = self->getJavaEnv();
+
+  int argsStart = 0;
+  int argsEnd = args.Length();
+
+  // arguments
+  ARGS_FRONT_CLASSNAME();
+
+  // find class
+  jclass clazz = javaFindClass(env, className);
+  if(clazz == NULL) {
+    std::ostringstream errStr;
+    errStr << "Could not create class " << className.c_str();
+    return ThrowException(javaExceptionToV8(env, errStr.str()));
+  }
+
+  // run
+  v8::Handle<v8::Value> result = javaToV8(self, env, clazz);
   return scope.Close(result);
 }
 
