@@ -41,7 +41,7 @@ java.newInstance("java.util.ArrayList", function(err, list) {
   list.addSync("item2");
 });
 
-var ArrayList = java.require('java.util.ArrayList');
+var ArrayList = java.import('java.util.ArrayList');
 var list = new ArrayList();
 list.addSync('item1');
 ```
@@ -49,7 +49,7 @@ list.addSync('item1');
 # Index
 
 ## java
- * [require](#javaRequire)
+ * [import](#javaImport)
  * [newInstance](#javaNewInstance)
  * [callStaticMethod](#javaCallStaticMethod)
  * [getStaticFieldValue](#javaGetStaticFieldValue)
@@ -66,8 +66,8 @@ list.addSync('item1');
 <a name="java"/>
 ## java
 
-<a name="javaRequire" />
-**java.require(className)**
+<a name="javaImport" />
+**java.import(className)**
 
 Loads the class given by className such that it acts and feels like a javascript object.
 
@@ -77,7 +77,7 @@ __Arguments__
 
 __Example__
 
-    var Test = java.require('Test');
+    var Test = java.import('Test');
     Test.someStaticMethodSync(5);
     console.log(Test.someStaticField);
 

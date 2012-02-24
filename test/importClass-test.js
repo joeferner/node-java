@@ -4,14 +4,14 @@ var java = require("../testHelpers").java;
 var nodeunit = require("nodeunit");
 var util = require("util");
 
-exports['Require Class'] = nodeunit.testCase({
+exports['Import Class'] = nodeunit.testCase({
   tearDown: function (callback) {
     java.setStaticFieldValue("Test", "staticFieldInt", 42);
     callback();
   },
 
-  "require": function (test) {
-    var Test = java.require('Test');
+  "import": function (test) {
+    var Test = java.import('Test');
     test.equals(42, Test.staticFieldInt);
     Test.staticFieldInt = 200;
     test.equals(200, Test.staticFieldInt);
