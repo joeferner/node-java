@@ -18,7 +18,7 @@ $ npm install java
 ```bash
 $ set PATH=%PATH%;C:\Program Files (x86)\Java\jdk1.6.0_18\jre\bin\client
 $ set JAVA_HOME=C:\Program Files (x86)\Java\jdk1.6.0_18\
-$ set NODE_ROOT=C:\dev\node-v0.6.8-0
+$ set NODE_HOME=C:\dev\node-v0.6.8-0
 $ npm install java
 ```
 
