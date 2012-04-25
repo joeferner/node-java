@@ -3,7 +3,7 @@
   "description": "Bridge API to connect with existing Java APIs.",
   "author": "Joe Ferner <joe.ferner@nearinfinity.com>",
   "keywords": ["java", "jvm", "bridge"],
-  "version": "0.0.2",
+  "version": "0.0.3",
   "engines": { "node" : ">=0.6.0" },
   "maintainers": [
     { "name": "Jeff Kunkle", "email": "jeff.kunkle@nearinfinity.com" },
