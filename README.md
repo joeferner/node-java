@@ -11,7 +11,7 @@ $ npm install java
 
 ## Installation Windows
 
-* [Install node.js from source](https://github.com/joyent/node/wiki/Installation)
+* [Install node.js from source](https://github.com/joyent/node/wiki/Installation) (using: vcbuild.bat release)
 * The directory where jvm.dll exists must be in the PATH. (e.g. C:\Program Files (x86)\Java\jdk1.6.0_18\jre\bin\client)
 * Open a Visual Studio command prompt.
 
