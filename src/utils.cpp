@@ -202,7 +202,27 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
     v8::String::AsciiValue constructorName(obj->GetConstructorName());
     if(strcmp(*constructorName, "JavaObject") == 0) {
       JavaObject* javaObject = node::ObjectWrap::Unwrap<JavaObject>(obj);
-      return javaObject->getObject();
+      jobject jobj = javaObject->getObject();
+      jclass nodeDynamicProxyClass = env->FindClass("node/NodeDynamicProxyClass");
+
+      if(env->IsInstanceOf(jobj, nodeDynamicProxyClass)) {
+        jfieldID ptrField = env->GetFieldID(nodeDynamicProxyClass, "ptr", "I");
+        DynamicProxyData* proxyData = (DynamicProxyData*)(int)env->GetIntField(jobj, ptrField);
+
+        jclass dynamicInterface = javaFindClass(env, proxyData->interfaceName);
+        jclass classClazz = env->FindClass("java/lang/Class");
+        jobjectArray classArray = env->NewObjectArray(1, classClazz, NULL);
+        env->SetObjectArrayElement(classArray, 0, dynamicInterface);
+
+        jmethodID class_getClassLoader = env->GetMethodID(classClazz, "getClassLoader", "()Ljava/lang/ClassLoader;");
+        jobject classLoader = env->CallObjectMethod(dynamicInterface, class_getClassLoader);
+
+        jclass proxyClass = env->FindClass("java/lang/reflect/Proxy");
+        jmethodID proxy_newProxyInstance = env->GetStaticMethodID(proxyClass, "newProxyInstance", "(Ljava/lang/ClassLoader;[Ljava/lang/Class;Ljava/lang/reflect/InvocationHandler;)Ljava/lang/Object;");
+        jobj = env->CallStaticObjectMethod(proxyClass, proxy_newProxyInstance, classLoader, classArray, jobj);
+      }
+
+      return jobj;
     }
   }
 

@@ -21,6 +21,7 @@ private:
   static v8::Handle<v8::Value> New(const v8::Arguments& args);
   static v8::Handle<v8::Value> newInstance(const v8::Arguments& args);
   static v8::Handle<v8::Value> newInstanceSync(const v8::Arguments& args);
+  static v8::Handle<v8::Value> newDynamicProxy(const v8::Arguments& args);
   static v8::Handle<v8::Value> callStaticMethod(const v8::Arguments& args);
   static v8::Handle<v8::Value> callStaticMethodSync(const v8::Arguments& args);
   static v8::Handle<v8::Value> findClassSync(const v8::Arguments& args);

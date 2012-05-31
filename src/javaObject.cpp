@@ -82,7 +82,7 @@ JavaObject::~JavaObject() {
 
   jobject method = javaFindMethod(env, self->m_class, methodNameStr, methodArgs);
   if(method == NULL) {
-    EXCEPTION_CALL_CALLBACK("Could not call method " << methodNameStr);
+    EXCEPTION_CALL_CALLBACK("Could not find method " << methodNameStr);
     return v8::Undefined();
   }
 
@@ -108,7 +108,9 @@ JavaObject::~JavaObject() {
 
   jobject method = javaFindMethod(env, self->m_class, methodNameStr, methodArgs);
   if(method == NULL) {
-    return v8::Undefined();
+    std::ostringstream errStr;
+    errStr << "Could not find method " << methodNameStr;
+    return ThrowException(javaExceptionToV8(env, errStr.str()));
   }
 
   // run

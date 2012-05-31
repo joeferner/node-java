@@ -23,6 +23,12 @@ typedef enum _jvalueType {
   TYPE_ARRAY   = 9
 } jvalueType;
 
+struct DynamicProxyData {
+  Java* java;
+  std::string interfaceName;
+  v8::Persistent<v8::Object> functions;
+};
+
 std::list<jobject> javaReflectionGetMethods(JNIEnv *env, jclass clazz);
 std::list<jobject> javaReflectionGetFields(JNIEnv *env, jclass clazz);
 std::string javaToString(JNIEnv *env, jstring str);
@@ -44,6 +50,15 @@ jobject javaFindMethod(JNIEnv *env, jclass clazz, std::string& methodName, jobje
 jobject javaFindConstructor(JNIEnv *env, jclass clazz, jobjectArray methodArgs);
 
 #define UNUSED_VARIABLE(var) var = var;
+
+#define ARGS_FRONT_OBJECT(ARGNAME) \
+  if(args.Length() < argsStart+1 || !args[argsStart]->IsObject()) {                          \
+    std::ostringstream errStr;                                                               \
+    errStr << "Argument " << (argsStart+1) << " must be an object";                          \
+    return ThrowException(v8::Exception::TypeError(v8::String::New(errStr.str().c_str())));  \
+  }                                                                                          \
+  v8::Local<v8::Object> ARGNAME = v8::Local<v8::Object>::Cast(args[argsStart]);              \
+  argsStart++;
 
 #define ARGS_FRONT_STRING(ARGNAME) \
   if(args.Length() < argsStart+1 || !args[argsStart]->IsString()) {                          \

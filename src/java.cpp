@@ -3,6 +3,7 @@
 #include <string.h>
 #include "javaObject.h"
 #include "methodCallBaton.h"
+#include "node_NodeDynamicProxyClass.h"
 #include <sstream>
 
 /*static*/ v8::Persistent<v8::FunctionTemplate> Java::s_ct;
@@ -17,6 +18,7 @@
 
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newInstance", newInstance);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newInstanceSync", newInstanceSync);
+  NODE_SET_PROTOTYPE_METHOD(s_ct, "newDynamicProxy", newDynamicProxy);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "callStaticMethod", callStaticMethod);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "callStaticMethodSync", callStaticMethodSync);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "findClassSync", findClassSync);
@@ -86,14 +88,14 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     v8::String::AsciiValue arrayItemStr(arrayItem);
     classPath << *arrayItemStr;
   }
-  
+
   // get other options
   v8::Local<v8::Value> optionsValue = handle_->Get(v8::String::New("options"));
   if(!optionsValue->IsArray()) {
     return ThrowException(v8::Exception::TypeError(v8::String::New("options must be an array")));
   }
   v8::Local<v8::Array> optionsArray = v8::Array::Cast(*optionsValue);
-  
+
   // create vm options
   int vmOptionsCount = optionsArray->Length() + 1;
   JavaVMOption* vmOptions = new JavaVMOption[vmOptionsCount];
@@ -190,6 +192,57 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   }
 
   // run
+  v8::Handle<v8::Value> callback = v8::Object::New();
+  NewInstanceBaton* baton = new NewInstanceBaton(self, clazz, method, methodArgs, callback);
+  v8::Handle<v8::Value> result = baton->runSync();
+  delete baton;
+  if(result->IsNativeError()) {
+    return ThrowException(result);
+  }
+  return scope.Close(result);
+}
+
+/*static*/ v8::Handle<v8::Value> Java::newDynamicProxy(const v8::Arguments& args) {
+  v8::HandleScope scope;
+  Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
+  v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
+  if(!ensureJvmResults->IsUndefined()) {
+    return ensureJvmResults;
+  }
+  JNIEnv* env = self->getJavaEnv();
+
+  int argsStart = 0;
+  int argsEnd = args.Length();
+
+  ARGS_FRONT_STRING(interfaceName);
+  ARGS_FRONT_OBJECT(functions);
+
+  DynamicProxyData* dynamicProxyData = new DynamicProxyData();
+  dynamicProxyData->java = self;
+  dynamicProxyData->interfaceName = interfaceName;
+  dynamicProxyData->functions = v8::Persistent<v8::Object>::New(functions);
+
+  // find NodeDynamicProxyClass
+  std::string className = "node.NodeDynamicProxyClass";
+  jclass clazz = javaFindClass(env, className);
+  if(clazz == NULL) {
+    std::ostringstream errStr;
+    errStr << "Could not create class node/NodeDynamicProxyClass";
+    return ThrowException(javaExceptionToV8(env, errStr.str()));
+  }
+
+  // find constructor
+  jclass objectClazz = env->FindClass("java/lang/Integer");
+  jobjectArray methodArgs = env->NewObjectArray(1, objectClazz, NULL);
+  env->SetObjectArrayElement(methodArgs, 0, v8ToJava(env, v8::Integer::New((int)dynamicProxyData)));
+  jobject method = javaFindConstructor(env, clazz, methodArgs);
+  if(method == NULL) {
+    std::ostringstream errStr;
+    errStr << "Could not find constructor";
+    return ThrowException(javaExceptionToV8(env, errStr.str()));
+  }
+
+  // run constructor
   v8::Handle<v8::Value> callback = v8::Object::New();
   NewInstanceBaton* baton = new NewInstanceBaton(self, clazz, method, methodArgs, callback);
   v8::Handle<v8::Value> result = baton->runSync();
@@ -510,4 +563,33 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   }
 
   return v8::Undefined();
+}
+
+JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jobject src, jint ptr, jobject method, jobjectArray args) {
+  v8::HandleScope scope;
+
+  DynamicProxyData* dynamicProxyData = (DynamicProxyData*)ptr;
+  jclass methodClazz = env->FindClass("java/lang/reflect/Method");
+  jmethodID method_getName = env->GetMethodID(methodClazz, "getName", "()Ljava/lang/String;");
+  std::string methodName = javaObjectToString(env, env->CallObjectMethod(method, method_getName));
+
+  v8::Local<v8::Value> fnObj = dynamicProxyData->functions->Get(v8::String::New(methodName.c_str()));
+  if(fnObj->IsUndefined() || fnObj->IsNull()) {
+    printf("ERROR: Could not find method %s", methodName.c_str());
+  }
+  if(!fnObj->IsFunction()) {
+    printf("ERROR: %s is not a function.", methodName.c_str());
+  }
+  v8::Function* fn = v8::Function::Cast(*fnObj);
+
+  v8::Array* v8Args = v8::Array::Cast(*javaArrayToV8(dynamicProxyData->java, env, args));
+  int argc = v8Args->Length();
+  v8::Handle<v8::Value>* argv = new v8::Handle<v8::Value>[argc];
+  for(int i=0; i<argc; i++) {
+    argv[i] = v8Args->Get(i);
+  }
+  v8::Local<v8::Value> result = fn->Call(dynamicProxyData->functions, argc, argv);
+  delete[] argv;
+
+  return v8ToJava(env, result);
 }
