@@ -175,7 +175,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   jobjectArray methodArgs = v8ToJava(env, args, argsStart, argsEnd);
   jobject method = javaFindConstructor(env, clazz, methodArgs);
   if(method == NULL) {
-    EXCEPTION_CALL_CALLBACK("Could not find constructor");
+    EXCEPTION_CALL_CALLBACK("Could not find constructor for class " << className);
     return v8::Undefined();
   }
 
@@ -214,7 +214,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   jobject method = javaFindConstructor(env, clazz, methodArgs);
   if(method == NULL) {
     std::ostringstream errStr;
-    errStr << "Could not find constructor";
+    errStr << "Could not find constructor for class " << className.c_str();
     return ThrowException(javaExceptionToV8(env, errStr.str()));
   }
 
@@ -266,7 +266,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   jobject method = javaFindConstructor(env, clazz, methodArgs);
   if(method == NULL) {
     std::ostringstream errStr;
-    errStr << "Could not find constructor";
+    errStr << "Could not find constructor for class node/NodeDynamicProxyClass";
     return ThrowException(javaExceptionToV8(env, errStr.str()));
   }
 
