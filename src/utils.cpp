@@ -426,3 +426,9 @@ jobject javaFindConstructor(JNIEnv *env, jclass clazz, jobjectArray methodArgs) 
 
   return method;
 }
+
+jobject longToJavaLongObj(JNIEnv *env, long val) {
+  jclass longClass = env->FindClass("java/lang/Long");
+  jmethodID constructor = env->GetMethodID(longClass, "<init>", "(J)V");
+  return env->NewObject(longClass, constructor, val);
+}

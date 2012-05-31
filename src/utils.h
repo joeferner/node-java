@@ -49,6 +49,7 @@ v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, jthrowable ex, const std::s
 v8::Handle<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArray);
 v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj);
 jobjectArray javaObjectArrayToClasses(JNIEnv *env, jobjectArray objs);
+jobject longToJavaLongObj(JNIEnv *env, long l);
 
 jclass javaFindClass(JNIEnv* env, std::string& className);
 jobject javaFindField(JNIEnv* env, jclass clazz, std::string& fieldName);

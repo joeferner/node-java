@@ -7,7 +7,7 @@
 #include <sstream>
 
 std::string nativeBindingLocation;
-int v8ThreadId;
+long v8ThreadId;
 
 /*static*/ v8::Persistent<v8::FunctionTemplate> Java::s_ct;
 
@@ -19,11 +19,11 @@ void my_sleep(int dur) {
 #endif
 }
 
-int my_getThreadId() {
+long my_getThreadId() {
 #ifdef WINDOWS
-  return (int)GetCurrentThreadId();
+  return (long)GetCurrentThreadId();
 #else
-  return (int)pthread_self();
+  return (long)pthread_self();
 #endif
 }
 
@@ -262,7 +262,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   jclass objectClazz = env->FindClass("java/lang/Object");
   jobjectArray methodArgs = env->NewObjectArray(2, objectClazz, NULL);
   env->SetObjectArrayElement(methodArgs, 0, v8ToJava(env, v8::String::New(nativeBindingLocation.c_str())));
-  env->SetObjectArrayElement(methodArgs, 1, v8ToJava(env, v8::Integer::New((int)dynamicProxyData)));
+  env->SetObjectArrayElement(methodArgs, 1, longToJavaLongObj(env, (long)dynamicProxyData));
   jobject method = javaFindConstructor(env, clazz, methodArgs);
   if(method == NULL) {
     std::ostringstream errStr;
@@ -636,7 +636,7 @@ CleanUp:
 }
 
 JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jobject src, jint ptr, jobject method, jobjectArray args) {
-  int myThreadId = my_getThreadId();
+  long myThreadId = my_getThreadId();
 
   DynamicProxyData* dynamicProxyData = (DynamicProxyData*)ptr;
   dynamicProxyData->env = env;
