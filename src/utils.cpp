@@ -155,7 +155,7 @@ jobject javaFindField(JNIEnv* env, jclass clazz, std::string& fieldName) {
 }
 
 jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
-  if(arg->IsNull() || arg->IsUndefined()) {
+  if(arg.IsEmpty() || arg->IsNull() || arg->IsUndefined()) {
     return NULL;
   }
 

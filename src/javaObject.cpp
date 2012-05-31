@@ -87,6 +87,10 @@ JavaObject::~JavaObject() {
   // arguments
   ARGS_BACK_CALLBACK();
 
+  if(!callbackProvided && methodNameStr == "toString") {
+    return methodCallSync(args);
+  }
+
   jobjectArray methodArgs = v8ToJava(env, args, argsStart, argsEnd);
 
   jobject method = javaFindMethod(env, self->m_class, methodNameStr, methodArgs);
