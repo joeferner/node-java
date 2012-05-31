@@ -201,7 +201,7 @@ __Arguments__
 
 __Example__
 
-    var myProxy = java.newDynamicProxy('java.lang.Runnable', {
+    var myProxy = java.newProxy('java.lang.Runnable', {
       run: function () {
         // This is actually run on the v8 thread and not the new java thread
         console.log("hello from thread");
