@@ -210,6 +210,10 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
         DynamicProxyData* proxyData = (DynamicProxyData*)(int)env->GetIntField(jobj, ptrField);
 
         jclass dynamicInterface = javaFindClass(env, proxyData->interfaceName);
+        if(dynamicInterface == NULL) {
+          printf("Could not find interface %s\n", proxyData->interfaceName.c_str());
+          return NULL;
+        }
         jclass classClazz = env->FindClass("java/lang/Class");
         jobjectArray classArray = env->NewObjectArray(1, classClazz, NULL);
         env->SetObjectArrayElement(classArray, 0, dynamicInterface);
@@ -219,6 +223,18 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
 
         jclass proxyClass = env->FindClass("java/lang/reflect/Proxy");
         jmethodID proxy_newProxyInstance = env->GetStaticMethodID(proxyClass, "newProxyInstance", "(Ljava/lang/ClassLoader;[Ljava/lang/Class;Ljava/lang/reflect/InvocationHandler;)Ljava/lang/Object;");
+        if(classLoader == NULL) {
+          printf("Could not create classloader for Proxy\n");
+          return NULL;
+        }
+        if(classArray == NULL) {
+          printf("Could not create class array for Proxy\n");
+          return NULL;
+        }
+        if(jobj == NULL) {
+          printf("Not a valid object to wrap\n");
+          return NULL;
+        }
         jobj = env->CallStaticObjectMethod(proxyClass, proxy_newProxyInstance, classLoader, classArray, jobj);
       }
 
