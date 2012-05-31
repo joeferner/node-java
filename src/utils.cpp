@@ -220,11 +220,17 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
 
         jmethodID class_getClassLoader = env->GetMethodID(classClazz, "getClassLoader", "()Ljava/lang/ClassLoader;");
         jobject classLoader = env->CallObjectMethod(dynamicInterface, class_getClassLoader);
+        if(classLoader == NULL) {
+          jclass objectClazz = env->FindClass("java/lang/Object");
+          jmethodID object_getClass = env->GetMethodID(classClazz, "getClass", "()Ljava/lang/Class;");
+          jobject jobjClass = env->CallObjectMethod(jobj, object_getClass);
+          classLoader = env->CallObjectMethod(jobjClass, class_getClassLoader);
+        }
 
         jclass proxyClass = env->FindClass("java/lang/reflect/Proxy");
         jmethodID proxy_newProxyInstance = env->GetStaticMethodID(proxyClass, "newProxyInstance", "(Ljava/lang/ClassLoader;[Ljava/lang/Class;Ljava/lang/reflect/InvocationHandler;)Ljava/lang/Object;");
         if(classLoader == NULL) {
-          printf("Could not create classloader for Proxy\n");
+          printf("Could not get classloader for Proxy\n");
           return NULL;
         }
         if(classArray == NULL) {

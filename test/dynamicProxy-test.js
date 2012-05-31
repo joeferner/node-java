@@ -66,9 +66,15 @@ exports['Dynamic Proxy'] = nodeunit.testCase({
     var thread = java.newInstanceSync("java.lang.Thread", myProxy);
     thread.startSync();
 
+    var timeout = 50;
+
     function waitForThread() {
       if (callCount === 1) {
         return test.done();
+      }
+      timeout--;
+      if (timeout < 0) {
+        test.done(new Error("Timeout"));
       }
       setTimeout(waitForThread, 100);
     }

@@ -15,5 +15,5 @@ exports['Java Object'] = nodeunit.testCase({
     this.testObj.nonstaticInt = 112;
     test.equal(this.testObj.nonstaticInt, 112);
     test.done();
-  },
+  }
 });

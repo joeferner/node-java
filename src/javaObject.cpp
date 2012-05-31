@@ -99,7 +99,7 @@ JavaObject::~JavaObject() {
   InstanceMethodCallBaton* baton = new InstanceMethodCallBaton(self->m_java, self, method, methodArgs, callback);
   baton->run();
 
-  END_CALLBACK_FUNCTION("\"Method '" << *methodName << "' called without a callback did you mean to use the Sync version?\"");
+  END_CALLBACK_FUNCTION("\"Method '" << methodNameStr << "' called without a callback did you mean to use the Sync version?\"");
 }
 
 /*static*/ v8::Handle<v8::Value> JavaObject::methodCallSync(const v8::Arguments& args) {
