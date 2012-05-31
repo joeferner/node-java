@@ -206,8 +206,8 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
       jclass nodeDynamicProxyClass = env->FindClass("node/NodeDynamicProxyClass");
 
       if(env->IsInstanceOf(jobj, nodeDynamicProxyClass)) {
-        jfieldID ptrField = env->GetFieldID(nodeDynamicProxyClass, "ptr", "I");
-        DynamicProxyData* proxyData = (DynamicProxyData*)(int)env->GetIntField(jobj, ptrField);
+        jfieldID ptrField = env->GetFieldID(nodeDynamicProxyClass, "ptr", "J");
+        DynamicProxyData* proxyData = (DynamicProxyData*)(long)env->GetLongField(jobj, ptrField);
 
         jclass dynamicInterface = javaFindClass(env, proxyData->interfaceName);
         if(dynamicInterface == NULL) {

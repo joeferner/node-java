@@ -635,7 +635,7 @@ CleanUp:
   dynamicProxyData->done = true;
 }
 
-JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jobject src, jint ptr, jobject method, jobjectArray args) {
+JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jobject src, jlong ptr, jobject method, jobjectArray args) {
   long myThreadId = my_getThreadId();
 
   DynamicProxyData* dynamicProxyData = (DynamicProxyData*)ptr;

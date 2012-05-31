@@ -2,10 +2,10 @@ package node;
 
 public class NodeDynamicProxyClass implements java.lang.reflect.InvocationHandler
 {
-  private native Object callJs(int ptr, java.lang.reflect.Method m, Object[] args) throws Throwable;
-  public int ptr;
+  private native Object callJs(long ptr, java.lang.reflect.Method m, Object[] args) throws Throwable;
+  public long ptr;
 
-  public NodeDynamicProxyClass(String path, int ptr) {
+  public NodeDynamicProxyClass(String path, long ptr) {
     try{
       Runtime.getRuntime().load(path);
     }catch(Exception e){

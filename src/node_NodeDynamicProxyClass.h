@@ -13,7 +13,7 @@ extern "C" {
  * Signature: (ILjava/lang/reflect/Method;[Ljava/lang/Object;)Ljava/lang/Object;
  */
 JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs
-  (JNIEnv *, jobject, jint, jobject, jobjectArray);
+  (JNIEnv *, jobject, jlong, jobject, jobjectArray);
 
 #ifdef __cplusplus
 }

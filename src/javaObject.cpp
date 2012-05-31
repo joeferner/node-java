@@ -65,8 +65,8 @@ JavaObject::~JavaObject() {
 
   jclass nodeDynamicProxyClass = env->FindClass("node/NodeDynamicProxyClass");
   if(env->IsInstanceOf(m_obj, nodeDynamicProxyClass)) {
-    jfieldID ptrField = env->GetFieldID(nodeDynamicProxyClass, "ptr", "I");
-    DynamicProxyData* proxyData = (DynamicProxyData*)(int)env->GetIntField(m_obj, ptrField);
+    jfieldID ptrField = env->GetFieldID(nodeDynamicProxyClass, "ptr", "J");
+    DynamicProxyData* proxyData = (DynamicProxyData*)(int)env->GetLongField(m_obj, ptrField);
     delete proxyData;
   }
 
