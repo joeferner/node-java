@@ -8,7 +8,7 @@ exports['Dynamic Proxy'] = nodeunit.testCase({
   "0 Arguments": function (test) {
     var callCount = 0;
 
-    var myProxy = java.newDynamicProxy('RunInterface$Interface0Arg', {
+    var myProxy = java.newProxy('RunInterface$Interface0Arg', {
       run: function () {
         callCount++;
       }
@@ -25,7 +25,7 @@ exports['Dynamic Proxy'] = nodeunit.testCase({
   "1 Arguments": function (test) {
     var runData = '';
 
-    var myProxy = java.newDynamicProxy('RunInterface$Interface1Arg', {
+    var myProxy = java.newProxy('RunInterface$Interface1Arg', {
       run: function (str) {
         runData += str;
       }
@@ -40,7 +40,7 @@ exports['Dynamic Proxy'] = nodeunit.testCase({
   },
 
   "1 Arguments with return data": function (test) {
-    var myProxy = java.newDynamicProxy('RunInterface$InterfaceWithReturn', {
+    var myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {
       run: function (i) {
         return i + 1;
       }
@@ -52,5 +52,27 @@ exports['Dynamic Proxy'] = nodeunit.testCase({
     test.equals(result, 43);
 
     test.done();
+  },
+
+  "thread": function (test) {
+    var callCount = 0;
+
+    var myProxy = java.newProxy('java.lang.Runnable', {
+      run: function () {
+        callCount++;
+      }
+    });
+
+    var thread = java.newInstanceSync("java.lang.Thread", myProxy);
+    thread.startSync();
+
+    function waitForThread() {
+      if (callCount === 1) {
+        return test.done();
+      }
+      setTimeout(waitForThread, 100);
+    }
+
+    waitForThread();
   }
 });

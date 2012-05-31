@@ -59,6 +59,7 @@ list.addSync('item1');
  * [setStaticFieldValue](#javaSetStaticFieldValue)
  * [newArray](#javaNewArray)
  * [newByte](#javaNewByte)
+ * [newProxy](#javaNewProxy)
 
 ## java objects
  * [Call Method](#javaObjectCallMethod)
@@ -187,6 +188,28 @@ __Arguments__
 __Example__
 
     var b = java.newByte(12);
+
+<a name="javaNewProxy" />
+**java.newProxy(interfaceName, functions)**
+
+Creates a new java Proxy for the given interface. Functions passed in will run on the v8 main thread and not a new thread.
+
+__Arguments__
+
+ * interfaceName - The name of the interface to proxy. For subclasses seperate using a '$' (eg. com.nearinfinty.MyClass$SubClass)
+ * functions - A hash of functions matching the function in the interface.
+
+__Example__
+
+    var myProxy = java.newDynamicProxy('java.lang.Runnable', {
+      run: function () {
+        // This is actually run on the v8 thread and not the new java thread
+        console.log("hello from thread");
+      }
+    });
+
+    var thread = java.newInstanceSync("java.lang.Thread", myProxy);
+    thread.start();
 
 <a name="javaObject"/>
 ## java object

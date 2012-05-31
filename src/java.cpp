@@ -6,10 +6,31 @@
 #include "node_NodeDynamicProxyClass.h"
 #include <sstream>
 
+std::string nativeBindingLocation;
+int v8ThreadId;
+
 /*static*/ v8::Persistent<v8::FunctionTemplate> Java::s_ct;
+
+void my_sleep(int dur) {
+#ifdef WINDOWS
+  Sleep(dur);
+#else
+  usleep(dur);
+#endif
+}
+
+int my_getThreadId() {
+#ifdef WINDOWS
+  return (int)GetCurrentThreadId();
+#else
+  return (int)pthread_self();
+#endif
+}
 
 /*static*/ void Java::Init(v8::Handle<v8::Object> target) {
   v8::HandleScope scope;
+
+  v8ThreadId = my_getThreadId();
 
   v8::Local<v8::FunctionTemplate> t = v8::FunctionTemplate::New(New);
   s_ct = v8::Persistent<v8::FunctionTemplate>::New(t);
@@ -18,7 +39,7 @@
 
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newInstance", newInstance);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newInstanceSync", newInstanceSync);
-  NODE_SET_PROTOTYPE_METHOD(s_ct, "newDynamicProxy", newDynamicProxy);
+  NODE_SET_PROTOTYPE_METHOD(s_ct, "newProxy", newProxy);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "callStaticMethod", callStaticMethod);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "callStaticMethodSync", callStaticMethodSync);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "findClassSync", findClassSync);
@@ -38,6 +59,7 @@
 
   self->handle_->Set(v8::String::New("classpath"), v8::Array::New());
   self->handle_->Set(v8::String::New("options"), v8::Array::New());
+  self->handle_->Set(v8::String::New("nativeBindingLocation"), v8::String::New("Not Set"));
 
   return args.This();
 }
@@ -88,6 +110,11 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     v8::String::AsciiValue arrayItemStr(arrayItem);
     classPath << *arrayItemStr;
   }
+
+  // set the native binding location
+  v8::Local<v8::Value> v8NativeBindingLocation = handle_->Get(v8::String::New("nativeBindingLocation"));
+  v8::String::AsciiValue nativeBindingLocationStr(v8NativeBindingLocation);
+  nativeBindingLocation = *nativeBindingLocationStr;
 
   // get other options
   v8::Local<v8::Value> optionsValue = handle_->Get(v8::String::New("options"));
@@ -202,7 +229,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   return scope.Close(result);
 }
 
-/*static*/ v8::Handle<v8::Value> Java::newDynamicProxy(const v8::Arguments& args) {
+/*static*/ v8::Handle<v8::Value> Java::newProxy(const v8::Arguments& args) {
   v8::HandleScope scope;
   Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
   v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
@@ -232,9 +259,10 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   }
 
   // find constructor
-  jclass objectClazz = env->FindClass("java/lang/Integer");
-  jobjectArray methodArgs = env->NewObjectArray(1, objectClazz, NULL);
-  env->SetObjectArrayElement(methodArgs, 0, v8ToJava(env, v8::Integer::New((int)dynamicProxyData)));
+  jclass objectClazz = env->FindClass("java/lang/Object");
+  jobjectArray methodArgs = env->NewObjectArray(2, objectClazz, NULL);
+  env->SetObjectArrayElement(methodArgs, 0, v8ToJava(env, v8::String::New(nativeBindingLocation.c_str())));
+  env->SetObjectArrayElement(methodArgs, 1, v8ToJava(env, v8::Integer::New((int)dynamicProxyData)));
   jobject method = javaFindConstructor(env, clazz, methodArgs);
   if(method == NULL) {
     std::ostringstream errStr;
@@ -565,31 +593,71 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   return v8::Undefined();
 }
 
-JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jobject src, jint ptr, jobject method, jobjectArray args) {
+void EIO_CallJs(uv_work_t* req) {
+}
+
+void EIO_AfterCallJs(uv_work_t* req) {
+  DynamicProxyData* dynamicProxyData = static_cast<DynamicProxyData*>(req->data);
+
+  JNIEnv* env = dynamicProxyData->env;
+
   v8::HandleScope scope;
+  v8::Array* v8Args;
+  v8::Function* fn;
+  v8::Handle<v8::Value>* argv;
+  int argc;
+  int i;
+  v8::Local<v8::Value> v8Result;
 
-  DynamicProxyData* dynamicProxyData = (DynamicProxyData*)ptr;
-  jclass methodClazz = env->FindClass("java/lang/reflect/Method");
-  jmethodID method_getName = env->GetMethodID(methodClazz, "getName", "()Ljava/lang/String;");
-  std::string methodName = javaObjectToString(env, env->CallObjectMethod(method, method_getName));
-
-  v8::Local<v8::Value> fnObj = dynamicProxyData->functions->Get(v8::String::New(methodName.c_str()));
+  v8::Local<v8::Value> fnObj = dynamicProxyData->functions->Get(v8::String::New(dynamicProxyData->methodName.c_str()));
   if(fnObj->IsUndefined() || fnObj->IsNull()) {
-    printf("ERROR: Could not find method %s", methodName.c_str());
+    printf("ERROR: Could not find method %s", dynamicProxyData->methodName.c_str());
+    goto CleanUp;
   }
   if(!fnObj->IsFunction()) {
-    printf("ERROR: %s is not a function.", methodName.c_str());
+    printf("ERROR: %s is not a function.", dynamicProxyData->methodName.c_str());
+    goto CleanUp;
   }
-  v8::Function* fn = v8::Function::Cast(*fnObj);
+  fn = v8::Function::Cast(*fnObj);
 
-  v8::Array* v8Args = v8::Array::Cast(*javaArrayToV8(dynamicProxyData->java, env, args));
-  int argc = v8Args->Length();
-  v8::Handle<v8::Value>* argv = new v8::Handle<v8::Value>[argc];
-  for(int i=0; i<argc; i++) {
+  v8Args = v8::Array::Cast(*javaArrayToV8(dynamicProxyData->java, env, dynamicProxyData->args));
+  argc = v8Args->Length();
+  argv = new v8::Handle<v8::Value>[argc];
+  for(i=0; i<argc; i++) {
     argv[i] = v8Args->Get(i);
   }
-  v8::Local<v8::Value> result = fn->Call(dynamicProxyData->functions, argc, argv);
+  v8Result = fn->Call(dynamicProxyData->functions, argc, argv);
   delete[] argv;
 
-  return v8ToJava(env, result);
+  dynamicProxyData->result = v8ToJava(env, v8Result);
+
+CleanUp:
+  dynamicProxyData->done = true;
+}
+
+JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jobject src, jint ptr, jobject method, jobjectArray args) {
+  int myThreadId = my_getThreadId();
+
+  DynamicProxyData* dynamicProxyData = (DynamicProxyData*)ptr;
+  dynamicProxyData->env = env;
+  dynamicProxyData->args = args;
+  dynamicProxyData->done = false;
+
+  jclass methodClazz = env->FindClass("java/lang/reflect/Method");
+  jmethodID method_getName = env->GetMethodID(methodClazz, "getName", "()Ljava/lang/String;");
+  dynamicProxyData->methodName = javaObjectToString(env, env->CallObjectMethod(method, method_getName));
+
+  uv_work_t* req = new uv_work_t();
+  req->data = dynamicProxyData;
+  if(myThreadId == v8ThreadId) {
+    EIO_AfterCallJs(req);
+  } else {
+    uv_queue_work(uv_default_loop(), req, EIO_CallJs, EIO_AfterCallJs);
+
+    while(!dynamicProxyData->done) {
+      my_sleep(100);
+    }
+  }
+
+  return dynamicProxyData->result;
 }

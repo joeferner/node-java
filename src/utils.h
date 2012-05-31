@@ -8,6 +8,7 @@
 #include <list>
 #include <vector>
 #include <string>
+#include <uv.h>
 
 class Java;
 
@@ -24,9 +25,14 @@ typedef enum _jvalueType {
 } jvalueType;
 
 struct DynamicProxyData {
+  JNIEnv* env;
   Java* java;
   std::string interfaceName;
   v8::Persistent<v8::Object> functions;
+  std::string methodName;
+  jobjectArray args;
+  jobject result;
+  int done;
 };
 
 std::list<jobject> javaReflectionGetMethods(JNIEnv *env, jclass clazz);

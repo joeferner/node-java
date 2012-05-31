@@ -5,15 +5,12 @@ public class NodeDynamicProxyClass implements java.lang.reflect.InvocationHandle
   private native Object callJs(int ptr, java.lang.reflect.Method m, Object[] args) throws Throwable;
   public int ptr;
 
-  static {
+  public NodeDynamicProxyClass(String path, int ptr) {
     try{
-      Runtime.getRuntime().load("/home/jshimty/dev/node-java/build/Release/nodejavabridge_bindings.node");
+      Runtime.getRuntime().load(path);
     }catch(Exception e){
       System.out.println(e.toString());
     }
-  }
-
-  public NodeDynamicProxyClass(int ptr) {
     this.ptr = ptr;
   }
 
