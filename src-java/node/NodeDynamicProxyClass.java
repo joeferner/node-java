@@ -18,4 +18,12 @@ public class NodeDynamicProxyClass implements java.lang.reflect.InvocationHandle
   {
     return callJs(this.ptr, m, args);
   }
+
+  public void ref() {
+
+  }
+
+  public void unref() {
+
+  }
 }

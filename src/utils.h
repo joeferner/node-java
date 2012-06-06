@@ -25,6 +25,7 @@ typedef enum _jvalueType {
 } jvalueType;
 
 struct DynamicProxyData {
+  unsigned int markerStart;
   JNIEnv* env;
   Java* java;
   std::string interfaceName;
@@ -33,7 +34,13 @@ struct DynamicProxyData {
   jobjectArray args;
   jobject result;
   int done;
+  unsigned int markerEnd;
 };
+
+#define DYNAMIC_PROXY_DATA_MARKER_START 0x12345678
+#define DYNAMIC_PROXY_DATA_MARKER_END   0x87654321
+
+int dynamicProxyDataVerify(DynamicProxyData* data);
 
 std::list<jobject> javaReflectionGetMethods(JNIEnv *env, jclass clazz);
 std::list<jobject> javaReflectionGetFields(JNIEnv *env, jclass clazz);

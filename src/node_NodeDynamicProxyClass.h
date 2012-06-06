@@ -10,7 +10,7 @@ extern "C" {
 /*
  * Class:     node_NodeDynamicProxyClass
  * Method:    callJs
- * Signature: (ILjava/lang/reflect/Method;[Ljava/lang/Object;)Ljava/lang/Object;
+ * Signature: (JLjava/lang/reflect/Method;[Ljava/lang/Object;)Ljava/lang/Object;
  */
 JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs
   (JNIEnv *, jobject, jlong, jobject, jobjectArray);

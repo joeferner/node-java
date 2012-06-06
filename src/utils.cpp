@@ -208,6 +208,9 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
       if(env->IsInstanceOf(jobj, nodeDynamicProxyClass)) {
         jfieldID ptrField = env->GetFieldID(nodeDynamicProxyClass, "ptr", "J");
         DynamicProxyData* proxyData = (DynamicProxyData*)(long)env->GetLongField(jobj, ptrField);
+        if(!dynamicProxyDataVerify(proxyData)) {
+          return NULL;
+        }
 
         jclass dynamicInterface = javaFindClass(env, proxyData->interfaceName);
         if(dynamicInterface == NULL) {
@@ -431,4 +434,13 @@ jobject longToJavaLongObj(JNIEnv *env, long val) {
   jclass longClass = env->FindClass("java/lang/Long");
   jmethodID constructor = env->GetMethodID(longClass, "<init>", "(J)V");
   return env->NewObject(longClass, constructor, val);
+}
+
+int dynamicProxyDataVerify(DynamicProxyData* data) {
+  if(data->markerStart == DYNAMIC_PROXY_DATA_MARKER_START && data->markerEnd == DYNAMIC_PROXY_DATA_MARKER_END) {
+    return 1;
+  }
+
+  printf("*** ERROR: Lost reference to the dynamic proxy. You must maintain a reference in javascript land using ref() and unref(). ***\n");
+  return 0;
 }

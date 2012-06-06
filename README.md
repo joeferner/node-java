@@ -194,6 +194,9 @@ __Example__
 
 Creates a new java Proxy for the given interface. Functions passed in will run on the v8 main thread and not a new thread.
 
+The returned object has two methods ref() and unref() which you can use to maintain references to prevent premature
+garbage collection. You must call these methods to ensure the proxy stays around.
+
 __Arguments__
 
  * interfaceName - The name of the interface to proxy. For subclasses seperate using a '$' (eg. com.nearinfinty.MyClass$SubClass)

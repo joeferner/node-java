@@ -67,7 +67,9 @@ JavaObject::~JavaObject() {
   if(env->IsInstanceOf(m_obj, nodeDynamicProxyClass)) {
     jfieldID ptrField = env->GetFieldID(nodeDynamicProxyClass, "ptr", "J");
     DynamicProxyData* proxyData = (DynamicProxyData*)(long)env->GetLongField(m_obj, ptrField);
-    delete proxyData;
+    if(dynamicProxyDataVerify(proxyData)) {
+      delete proxyData;
+    }
   }
 
   m_java->getJavaEnv()->DeleteGlobalRef(m_obj);

@@ -245,6 +245,8 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   ARGS_FRONT_OBJECT(functions);
 
   DynamicProxyData* dynamicProxyData = new DynamicProxyData();
+  dynamicProxyData->markerStart = DYNAMIC_PROXY_DATA_MARKER_START;
+  dynamicProxyData->markerEnd = DYNAMIC_PROXY_DATA_MARKER_END;
   dynamicProxyData->java = self;
   dynamicProxyData->interfaceName = interfaceName;
   dynamicProxyData->functions = v8::Persistent<v8::Object>::New(functions);
@@ -598,6 +600,9 @@ void EIO_CallJs(uv_work_t* req) {
 
 void EIO_AfterCallJs(uv_work_t* req) {
   DynamicProxyData* dynamicProxyData = static_cast<DynamicProxyData*>(req->data);
+  if(!dynamicProxyDataVerify(dynamicProxyData)) {
+    return;
+  }
   dynamicProxyData->result = NULL;
 
   JNIEnv* env = dynamicProxyData->env;
@@ -631,6 +636,9 @@ void EIO_AfterCallJs(uv_work_t* req) {
   }
   v8Result = fn->Call(dynamicProxyData->functions, argc, argv);
   delete[] argv;
+  if(!dynamicProxyDataVerify(dynamicProxyData)) {
+    return;
+  }
 
   javaResult = v8ToJava(env, v8Result);
   if(javaResult == NULL) {
@@ -668,6 +676,9 @@ JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jo
     }
   }
 
+  if(!dynamicProxyDataVerify(dynamicProxyData)) {
+    return NULL;
+  }
   if(dynamicProxyData->result) {
     env->DeleteGlobalRef(dynamicProxyData->result);
   }
