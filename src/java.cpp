@@ -598,6 +598,7 @@ void EIO_CallJs(uv_work_t* req) {
 
 void EIO_AfterCallJs(uv_work_t* req) {
   DynamicProxyData* dynamicProxyData = static_cast<DynamicProxyData*>(req->data);
+  dynamicProxyData->result = NULL;
 
   JNIEnv* env = dynamicProxyData->env;
 
@@ -608,16 +609,18 @@ void EIO_AfterCallJs(uv_work_t* req) {
   int argc;
   int i;
   v8::Local<v8::Value> v8Result;
+  jobject javaResult;
 
   v8::Local<v8::Value> fnObj = dynamicProxyData->functions->Get(v8::String::New(dynamicProxyData->methodName.c_str()));
   if(fnObj->IsUndefined() || fnObj->IsNull()) {
-    printf("ERROR: Could not find method %s", dynamicProxyData->methodName.c_str());
+    printf("ERROR: Could not find method %s\n", dynamicProxyData->methodName.c_str());
     goto CleanUp;
   }
   if(!fnObj->IsFunction()) {
-    printf("ERROR: %s is not a function.", dynamicProxyData->methodName.c_str());
+    printf("ERROR: %s is not a function.\n", dynamicProxyData->methodName.c_str());
     goto CleanUp;
   }
+
   fn = v8::Function::Cast(*fnObj);
 
   v8Args = v8::Array::Cast(*javaArrayToV8(dynamicProxyData->java, env, dynamicProxyData->args));
@@ -629,7 +632,12 @@ void EIO_AfterCallJs(uv_work_t* req) {
   v8Result = fn->Call(dynamicProxyData->functions, argc, argv);
   delete[] argv;
 
-  dynamicProxyData->result = v8ToJava(env, v8Result);
+  javaResult = v8ToJava(env, v8Result);
+  if(javaResult == NULL) {
+    dynamicProxyData->result = NULL;
+  } else {
+    dynamicProxyData->result = env->NewGlobalRef(javaResult);
+  }
 
 CleanUp:
   dynamicProxyData->done = true;
@@ -642,6 +650,7 @@ JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jo
   dynamicProxyData->env = env;
   dynamicProxyData->args = args;
   dynamicProxyData->done = false;
+  dynamicProxyData->result = NULL;
 
   jclass methodClazz = env->FindClass("java/lang/reflect/Method");
   jmethodID method_getName = env->GetMethodID(methodClazz, "getName", "()Ljava/lang/String;");
@@ -659,5 +668,8 @@ JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jo
     }
   }
 
+  if(dynamicProxyData->result) {
+    env->DeleteGlobalRef(dynamicProxyData->result);
+  }
   return dynamicProxyData->result;
 }
