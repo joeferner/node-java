@@ -12,7 +12,7 @@ long v8ThreadId;
 /*static*/ v8::Persistent<v8::FunctionTemplate> Java::s_ct;
 
 void my_sleep(int dur) {
-#ifdef WINDOWS
+#ifdef WIN32
   Sleep(dur);
 #else
   usleep(dur);
@@ -20,7 +20,7 @@ void my_sleep(int dur) {
 }
 
 long my_getThreadId() {
-#ifdef WINDOWS
+#ifdef WIN32
   return (long)GetCurrentThreadId();
 #else
   return (long)pthread_self();
