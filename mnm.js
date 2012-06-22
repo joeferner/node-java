@@ -1,14 +1,17 @@
 #!/usr/bin/env node
 
 var path = require('path');
+var fs = require('fs');
 var Builder = require('mnm');
 var builder = new Builder();
+
+var existsSync = fs.existsSync || path.existsSync;
 
 builder.appendUnique('CXXFLAGS', ['-Isrc/']);
 builder.appendUnique('CXXFLAGS', ['-DHAVE_CONFIG_H']);
 
 // MAC has a built in JVM
-if(path.existsSync("/System/Library/Frameworks/JavaVM.framework/")) {
+if (existsSync("/System/Library/Frameworks/JavaVM.framework/")) {
   var jdkIncludeDir = process.env["JDK_INCLUDE_DIR"] || "/System/Library/Frameworks/JavaVM.framework/Headers";
   builder.appendUnique('CXXFLAGS', '-I' + jdkIncludeDir);
   builder.appendUnique('LINKFLAGS', ['-framework', 'JavaVM']);
@@ -17,7 +20,7 @@ if(path.existsSync("/System/Library/Frameworks/JavaVM.framework/")) {
 
   // JDK Include directory
   var jdkIncludeDir = process.env["JDK_INCLUDE_DIR"];
-  if(!javaHome && !jdkIncludeDir) {
+  if (!javaHome && !jdkIncludeDir) {
     builder.fail("You must set JAVA_HOME or JDK_INCLUDE_DIR environment variable");
   }
   jdkIncludeDir = jdkIncludeDir || path.join(javaHome, "include");
@@ -26,7 +29,7 @@ if(path.existsSync("/System/Library/Frameworks/JavaVM.framework/")) {
 
   // JDK additional include directory
   var jdkAdditionalIncludeDirGuess;
-  if(process.platform == 'win32') {
+  if (process.platform == 'win32') {
     jdkAdditionalIncludeDirGuess = path.join(jdkIncludeDir, "win32");
   } else {
     jdkAdditionalIncludeDirGuess = path.join(jdkIncludeDir, "linux");
@@ -36,23 +39,23 @@ if(path.existsSync("/System/Library/Frameworks/JavaVM.framework/")) {
   builder.appendUnique('CXXFLAGS', '-I' + jdkAdditionalIncludeDir);
 
   // JDK lib directory
-  if(process.platform == 'win32') {
+  if (process.platform == 'win32') {
     var jdkLibDir = process.env["JDK_LIB_DIR"] || path.join(javaHome, "lib");
-    if(!jdkLibDir) {
+    if (!jdkLibDir) {
       builder.fail("You must set JAVA_HOME or JDK_LIB_DIR environment variable");
     }
     builder.appendLinkerSearchDir(jdkLibDir);
   } else {
     var jdkLibDirGuess = null;
-    if(javaHome) {
-      if(path.existsSync(path.join(javaHome, "/jre/lib/i386/server/"))) {
+    if (javaHome) {
+      if (existsSync(path.join(javaHome, "/jre/lib/i386/server/"))) {
         jdkLibDirGuess = path.join(javaHome, "/jre/lib/i386/server/");
       } else {
         jdkLibDirGuess = path.join(javaHome, "/jre/lib/amd64/server/");
       }
     }
     var jdkLibDir = process.env["JDK_LIB_DIR"];
-    if(!jdkLibDirGuess && !jdkLibDir) {
+    if (!jdkLibDirGuess && !jdkLibDir) {
       builder.fail("You must set JAVA_HOME or JDK_LIB_DIR environment variable");
     }
     jdkLibDir = jdkLibDir || jdkLibDirGuess;
