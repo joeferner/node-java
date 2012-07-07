@@ -5,7 +5,7 @@ var fs = require('fs');
 var Builder = require('mnm');
 var builder = new Builder();
 
-var existsSync = fs.existsSync || path.existsSync;
+var existsSync = fs.existsSync || fs.existsSync;
 
 builder.appendUnique('CXXFLAGS', ['-Isrc/']);
 builder.appendUnique('CXXFLAGS', ['-DHAVE_CONFIG_H']);
