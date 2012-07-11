@@ -628,8 +628,12 @@ void EIO_AfterCallJs(uv_work_t* req) {
 
   fn = v8::Function::Cast(*fnObj);
 
-  v8Args = v8::Array::Cast(*javaArrayToV8(dynamicProxyData->java, env, dynamicProxyData->args));
-  argc = v8Args->Length();
+  if(dynamicProxyData->args) {
+    v8Args = v8::Array::Cast(*javaArrayToV8(dynamicProxyData->java, env, dynamicProxyData->args));
+    argc = v8Args->Length();
+  } else {
+    argc = 0;
+  }
   argv = new v8::Handle<v8::Value>[argc];
   for(i=0; i<argc; i++) {
     argv[i] = v8Args->Get(i);
