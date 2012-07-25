@@ -19,12 +19,14 @@
 
 /*static*/ v8::Local<v8::Object> JavaObject::New(Java *java, jobject obj) {
   v8::HandleScope scope;
+
+  JNIEnv *env = java->getJavaEnv();
+  PUSH_LOCAL_JAVA_FRAME();
+
   v8::Local<v8::Function> ctor = s_ct->GetFunction();
   v8::Local<v8::Object> javaObjectObj = ctor->NewInstance();
   JavaObject *self = new JavaObject(java, obj);
   self->Wrap(javaObjectObj);
-
-  JNIEnv *env = self->m_java->getJavaEnv();
 
   std::list<jobject> methods;
   javaReflectionGetMethods(env, self->m_class, &methods);
@@ -61,13 +63,16 @@
     env->DeleteLocalRef(*it);
   }
 
+  POP_LOCAL_JAVA_FRAME();
+
   return scope.Close(javaObjectObj);
 }
 
 JavaObject::JavaObject(Java *java, jobject obj) {
   m_java = java;
-  m_obj = m_java->getJavaEnv()->NewGlobalRef(obj);
-  m_class = m_java->getJavaEnv()->GetObjectClass(obj);
+  JNIEnv *env = m_java->getJavaEnv();
+  m_obj = env->NewGlobalRef(obj);
+  m_class = (jclass)env->NewGlobalRef(env->GetObjectClass(obj));
 }
 
 JavaObject::~JavaObject() {
@@ -82,13 +87,16 @@ JavaObject::~JavaObject() {
     }
   }
 
-  m_java->getJavaEnv()->DeleteGlobalRef(m_obj);
+  env->DeleteGlobalRef(m_obj);
+  env->DeleteGlobalRef(m_class);
 }
 
 /*static*/ v8::Handle<v8::Value> JavaObject::methodCall(const v8::Arguments& args) {
   v8::HandleScope scope;
   JavaObject* self = node::ObjectWrap::Unwrap<JavaObject>(args.This());
   JNIEnv *env = self->m_java->getJavaEnv();
+
+  PUSH_LOCAL_JAVA_FRAME();
 
   v8::String::AsciiValue methodName(args.Data());
   std::string methodNameStr = *methodName;
@@ -100,6 +108,7 @@ JavaObject::~JavaObject() {
   ARGS_BACK_CALLBACK();
 
   if(!callbackProvided && methodNameStr == "toString") {
+    POP_LOCAL_JAVA_FRAME();
     return methodCallSync(args);
   }
 
@@ -108,6 +117,7 @@ JavaObject::~JavaObject() {
   jobject method = javaFindMethod(env, self->m_class, methodNameStr, methodArgs);
   if(method == NULL) {
     EXCEPTION_CALL_CALLBACK("Could not find method " << methodNameStr);
+    POP_LOCAL_JAVA_FRAME();
     return v8::Undefined();
   }
 
@@ -117,6 +127,7 @@ JavaObject::~JavaObject() {
 
   env->DeleteLocalRef(methodArgs);
   env->DeleteLocalRef(method);
+  POP_LOCAL_JAVA_FRAME();
 
   END_CALLBACK_FUNCTION("\"Method '" << methodNameStr << "' called without a callback did you mean to use the Sync version?\"");
 }
@@ -125,6 +136,8 @@ JavaObject::~JavaObject() {
   v8::HandleScope scope;
   JavaObject* self = node::ObjectWrap::Unwrap<JavaObject>(args.This());
   JNIEnv *env = self->m_java->getJavaEnv();
+
+  PUSH_LOCAL_JAVA_FRAME();
 
   v8::String::AsciiValue methodName(args.Data());
   std::string methodNameStr = *methodName;
@@ -138,7 +151,9 @@ JavaObject::~JavaObject() {
   if(method == NULL) {
     std::ostringstream errStr;
     errStr << "Could not find method " << methodNameStr;
-    return ThrowException(javaExceptionToV8(env, errStr.str()));
+    v8::Handle<v8::Value> ex = javaExceptionToV8(env, errStr.str());
+    POP_LOCAL_JAVA_FRAME();
+    return ThrowException(ex);
   }
 
   // run
@@ -146,7 +161,10 @@ JavaObject::~JavaObject() {
   InstanceMethodCallBaton* baton = new InstanceMethodCallBaton(self->m_java, self, method, methodArgs, callback);
   v8::Handle<v8::Value> result = baton->runSync();
   delete baton;
-  return scope.Close(result);;
+
+  POP_LOCAL_JAVA_FRAME();
+
+  return scope.Close(result);
 }
 
 /*static*/ v8::Handle<v8::Value> JavaObject::fieldGetter(v8::Local<v8::String> property, const v8::AccessorInfo& info) {
@@ -154,13 +172,17 @@ JavaObject::~JavaObject() {
   JavaObject* self = node::ObjectWrap::Unwrap<JavaObject>(info.This());
   JNIEnv *env = self->m_java->getJavaEnv();
 
+  PUSH_LOCAL_JAVA_FRAME();
+
   v8::String::AsciiValue propertyCStr(property);
   std::string propertyStr = *propertyCStr;
   jobject field = javaFindField(env, self->m_class, propertyStr);
   if(field == NULL) {
     std::ostringstream errStr;
     errStr << "Could not find field " << propertyStr;
-    return ThrowException(javaExceptionToV8(env, errStr.str()));
+    v8::Handle<v8::Value> ex = javaExceptionToV8(env, errStr.str());
+    POP_LOCAL_JAVA_FRAME();
+    return ThrowException(ex);
   }
 
   jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
@@ -171,13 +193,16 @@ JavaObject::~JavaObject() {
   if(env->ExceptionOccurred()) {
     std::ostringstream errStr;
     errStr << "Could not get field " << propertyStr;
-    return ThrowException(javaExceptionToV8(env, errStr.str()));
+    v8::Handle<v8::Value> ex = javaExceptionToV8(env, errStr.str());
+    POP_LOCAL_JAVA_FRAME();
+    return ThrowException(ex);
   }
 
   v8::Handle<v8::Value> result = javaToV8(self->m_java, env, val);
 
   env->DeleteLocalRef(field);
   env->DeleteLocalRef(val);
+  POP_LOCAL_JAVA_FRAME();
 
   return scope.Close(result);
 }
@@ -187,6 +212,8 @@ JavaObject::~JavaObject() {
   JavaObject* self = node::ObjectWrap::Unwrap<JavaObject>(info.This());
   JNIEnv *env = self->m_java->getJavaEnv();
 
+  PUSH_LOCAL_JAVA_FRAME();
+
   jobject newValue = v8ToJava(env, value);
 
   v8::String::AsciiValue propertyCStr(property);
@@ -195,7 +222,9 @@ JavaObject::~JavaObject() {
   if(field == NULL) {
     std::ostringstream errStr;
     errStr << "Could not find field " << propertyStr;
-    ThrowException(javaExceptionToV8(env, errStr.str()));
+    v8::Handle<v8::Value> ex = javaExceptionToV8(env, errStr.str());
+    POP_LOCAL_JAVA_FRAME();
+    ThrowException(ex);
     return;
   }
 
@@ -209,7 +238,11 @@ JavaObject::~JavaObject() {
   if(env->ExceptionOccurred()) {
     std::ostringstream errStr;
     errStr << "Could not set field " << propertyStr;
-    ThrowException(javaExceptionToV8(env, errStr.str()));
+    v8::Handle<v8::Value> ex = javaExceptionToV8(env, errStr.str());
+    POP_LOCAL_JAVA_FRAME();
+    ThrowException(ex);
     return;
   }
+
+  POP_LOCAL_JAVA_FRAME();
 }

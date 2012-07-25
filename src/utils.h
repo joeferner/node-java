@@ -37,6 +37,8 @@ struct DynamicProxyData {
   unsigned int markerEnd;
 };
 
+#define LOCAL_FRAME_SIZE 500
+
 #define DYNAMIC_PROXY_DATA_MARKER_START 0x12345678
 #define DYNAMIC_PROXY_DATA_MARKER_END   0x87654321
 
@@ -116,5 +118,15 @@ jobject javaFindConstructor(JNIEnv *env, jclass clazz, jobjectArray methodArgs);
     str << MSG;                                              \
     return scope.Close(v8::String::New(str.str().c_str()));  \
   }
+
+#define PUSH_LOCAL_JAVA_FRAME() \
+  env->PushLocalFrame(LOCAL_FRAME_SIZE);
+
+#define POP_LOCAL_JAVA_FRAME() \
+  env->PopLocalFrame(NULL);
+
+#define POP_LOCAL_JAVA_FRAME_AND_RETURN(r) \
+  env->PopLocalFrame(NULL); \
+  return r;
 
 #endif
