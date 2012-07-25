@@ -200,6 +200,7 @@ JavaObject::~JavaObject() {
 
   v8::Handle<v8::Value> result = javaToV8(self->m_java, env, val);
 
+  env->DeleteLocalRef(fieldClazz);
   env->DeleteLocalRef(field);
   env->DeleteLocalRef(val);
   POP_LOCAL_JAVA_FRAME();
