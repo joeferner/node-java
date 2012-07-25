@@ -136,6 +136,8 @@ void InstanceMethodCallBaton::execute(JNIEnv *env) {
 
   jobject result = env->CallObjectMethod(m_method, method_invoke, m_javaObject->getObject(), m_args);
 
+  env->DeleteLocalRef(methodClazz);
+
   jthrowable err = env->ExceptionOccurred();
   if(err) {
     m_error = (jthrowable)env->NewGlobalRef(err);
@@ -145,6 +147,7 @@ void InstanceMethodCallBaton::execute(JNIEnv *env) {
   }
 
   m_result = env->NewGlobalRef(result);
+  env->DeleteLocalRef(result);
 }
 
 NewInstanceBaton::NewInstanceBaton(

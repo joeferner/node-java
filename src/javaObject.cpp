@@ -30,7 +30,8 @@
   jclass methodClazz = env->FindClass("java/lang/reflect/Method");
   jmethodID method_getName = env->GetMethodID(methodClazz, "getName", "()Ljava/lang/String;");
   for(std::list<jobject>::iterator it = methods.begin(); it != methods.end(); it++) {
-    std::string methodNameStr = javaToString(env, (jstring)env->CallObjectMethod(*it, method_getName));
+    jstring methodNameJava = (jstring)env->CallObjectMethod(*it, method_getName);
+    std::string methodNameStr = javaToString(env, methodNameJava);
 
     v8::Handle<v8::String> methodName = v8::String::New(methodNameStr.c_str());
     v8::Local<v8::FunctionTemplate> methodCallTemplate = v8::FunctionTemplate::New(methodCall, methodName);
@@ -39,16 +40,23 @@
     v8::Handle<v8::String> methodNameSync = v8::String::New((methodNameStr + "Sync").c_str());
     v8::Local<v8::FunctionTemplate> methodCallSyncTemplate = v8::FunctionTemplate::New(methodCallSync, methodName);
     javaObjectObj->Set(methodNameSync, methodCallSyncTemplate->GetFunction());
+
+    env->DeleteLocalRef(methodNameJava);
+    env->DeleteLocalRef(*it);
   }
 
-  self->m_fields = javaReflectionGetFields(env, self->m_class);
+  std::list<jobject> fields = javaReflectionGetFields(env, self->m_class);
   jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
   jmethodID field_getName = env->GetMethodID(fieldClazz, "getName", "()Ljava/lang/String;");
-  for(std::list<jobject>::iterator it = self->m_fields.begin(); it != self->m_fields.end(); it++) {
-    std::string fieldNameStr = javaToString(env, (jstring)env->CallObjectMethod(*it, field_getName));
+  for(std::list<jobject>::iterator it = fields.begin(); it != fields.end(); it++) {
+    jstring fieldNameJava = (jstring)env->CallObjectMethod(*it, field_getName);
+    std::string fieldNameStr = javaToString(env, fieldNameJava);
 
     v8::Handle<v8::String> fieldName = v8::String::New(fieldNameStr.c_str());
     javaObjectObj->SetAccessor(fieldName, fieldGetter, fieldSetter);
+
+    env->DeleteLocalRef(fieldNameJava);
+    env->DeleteLocalRef(*it);
   }
 
   return scope.Close(javaObjectObj);
@@ -104,6 +112,9 @@ JavaObject::~JavaObject() {
   // run
   InstanceMethodCallBaton* baton = new InstanceMethodCallBaton(self->m_java, self, method, methodArgs, callback);
   baton->run();
+
+  env->DeleteLocalRef(methodArgs);
+  env->DeleteLocalRef(method);
 
   END_CALLBACK_FUNCTION("\"Method '" << methodNameStr << "' called without a callback did you mean to use the Sync version?\"");
 }

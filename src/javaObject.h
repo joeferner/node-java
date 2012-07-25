@@ -32,7 +32,6 @@ private:
   Java* m_java;
   jobject m_obj;
   jclass m_class;
-  std::list<jobject> m_fields;
 };
 
 #endif
