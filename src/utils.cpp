@@ -8,9 +8,7 @@
 
 #define MODIFIER_STATIC 9
 
-std::list<jobject> javaReflectionGetMethods(JNIEnv *env, jclass clazz) {
-  std::list<jobject> results;
-
+void javaReflectionGetMethods(JNIEnv *env, jclass clazz, std::list<jobject>* methods) {
   jclass clazzclazz = env->GetObjectClass(clazz);
   jmethodID clazz_getMethods = env->GetMethodID(clazzclazz, "getMethods", "()[Ljava/lang/reflect/Method;");
   jclass methodClazz = env->FindClass("java/lang/reflect/Method");
@@ -24,16 +22,12 @@ std::list<jobject> javaReflectionGetMethods(JNIEnv *env, jclass clazz) {
     if((methodModifiers & MODIFIER_STATIC) == MODIFIER_STATIC) {
       continue;
     }
-    results.push_back(method);
+    methods->push_back(method);
   }
   env->DeleteLocalRef(methodObjects);
-
-  return results;
 }
 
-std::list<jobject> javaReflectionGetFields(JNIEnv *env, jclass clazz) {
-  std::list<jobject> results;
-
+void javaReflectionGetFields(JNIEnv *env, jclass clazz, std::list<jobject>* fields) {
   jclass clazzclazz = env->GetObjectClass(clazz);
   jmethodID clazz_getFields = env->GetMethodID(clazzclazz, "getFields", "()[Ljava/lang/reflect/Field;");
   jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
@@ -47,11 +41,9 @@ std::list<jobject> javaReflectionGetFields(JNIEnv *env, jclass clazz) {
     if((fieldModifiers & MODIFIER_STATIC) == MODIFIER_STATIC) {
       continue;
     }
-    results.push_back(field);
+    fields->push_back(field);
   }
   env->DeleteLocalRef(fieldObjects);
-
-  return results;
 }
 
 std::string javaToString(JNIEnv *env, jstring str) {

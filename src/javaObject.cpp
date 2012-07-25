@@ -26,7 +26,8 @@
 
   JNIEnv *env = self->m_java->getJavaEnv();
 
-  std::list<jobject> methods = javaReflectionGetMethods(env, self->m_class);
+  std::list<jobject> methods;
+  javaReflectionGetMethods(env, self->m_class, &methods);
   jclass methodClazz = env->FindClass("java/lang/reflect/Method");
   jmethodID method_getName = env->GetMethodID(methodClazz, "getName", "()Ljava/lang/String;");
   for(std::list<jobject>::iterator it = methods.begin(); it != methods.end(); it++) {
@@ -45,7 +46,8 @@
     env->DeleteLocalRef(*it);
   }
 
-  std::list<jobject> fields = javaReflectionGetFields(env, self->m_class);
+  std::list<jobject> fields;
+  javaReflectionGetFields(env, self->m_class, &fields);
   jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
   jmethodID field_getName = env->GetMethodID(fieldClazz, "getName", "()Ljava/lang/String;");
   for(std::list<jobject>::iterator it = fields.begin(); it != fields.end(); it++) {
@@ -172,7 +174,12 @@ JavaObject::~JavaObject() {
     return ThrowException(javaExceptionToV8(env, errStr.str()));
   }
 
-  return scope.Close(javaToV8(self->m_java, env, val));
+  v8::Handle<v8::Value> result = javaToV8(self->m_java, env, val);
+
+  env->DeleteLocalRef(field);
+  env->DeleteLocalRef(val);
+
+  return scope.Close(result);
 }
 
 /*static*/ void JavaObject::fieldSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::AccessorInfo& info) {
