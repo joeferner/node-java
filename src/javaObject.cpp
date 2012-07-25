@@ -63,6 +63,8 @@
     env->DeleteLocalRef(*it);
   }
 
+  env->DeleteLocalRef(obj);
+
   POP_LOCAL_JAVA_FRAME();
 
   return scope.Close(javaObjectObj);

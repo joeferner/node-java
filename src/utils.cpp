@@ -142,7 +142,9 @@ jobject javaFindField(JNIEnv* env, jclass clazz, std::string& fieldName) {
   jsize fieldCount = env->GetArrayLength(fieldObjects);
   for(jsize i=0; i<fieldCount; i++) {
     jobject field = env->GetObjectArrayElement(fieldObjects, i);
-    std::string itFieldName = javaToString(env, (jstring)env->CallObjectMethod(field, field_getName));
+    jstring fieldNameJava = (jstring)env->CallObjectMethod(field, field_getName);
+    std::string itFieldName = javaToString(env, fieldNameJava);
+    env->DeleteLocalRef(fieldNameJava);
     if(strcmp(itFieldName.c_str(), fieldName.c_str()) == 0) {
       result = field;
       break;
