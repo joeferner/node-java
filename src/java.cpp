@@ -1,6 +1,7 @@
 
 #include "java.h"
 #include <string.h>
+#include <unistd.h>
 #include "javaObject.h"
 #include "methodCallBaton.h"
 #include "node_NodeDynamicProxyClass.h"
