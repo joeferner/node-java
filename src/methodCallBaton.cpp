@@ -83,7 +83,7 @@ void NewInstanceBaton::execute(JNIEnv *env) {
   jclass constructorClazz = env->FindClass("java/lang/reflect/Constructor");
   jmethodID constructor_newInstance = env->GetMethodID(constructorClazz, "newInstance", "([Ljava/lang/Object;)Ljava/lang/Object;");
 
-  //printf("invoke: %s\n", javaObjectToString(env, m_method).c_str());
+  //printf("invoke: %s\n", javaMethodCallToString(env, m_method, constructor_newInstance, m_args).c_str());
 
   jobject result = env->CallObjectMethod(m_method, constructor_newInstance, m_args);
   jthrowable err = env->ExceptionOccurred();

@@ -65,6 +65,31 @@ std::string javaObjectToString(JNIEnv *env, jobject obj) {
   return javaToString(env, result);
 }
 
+std::string javaMethodCallToString(JNIEnv *env, jobject obj, jmethodID methodId, jarray args) {
+  char temp[100];
+
+  std::ostringstream result;
+  sprintf(temp, "0x%08X", (int)env);
+  result << temp;
+  result << ": ";
+  result << javaObjectToString(env, obj);
+  result << ": ";
+  sprintf(temp, "0x%08X", (int)methodId);
+  result << temp;
+  result << ": (";
+  jsize arraySize = env->GetArrayLength(args);
+  for(int i=0; i<arraySize; i++) {
+    if(i != 0) {
+      result << ", ";
+    }
+    jobject arg = env->GetObjectArrayElement((jobjectArray)args, i);
+    result << javaObjectToString(env, arg);
+  }
+  result << ")";
+
+  return result.str();
+}
+
 JNIEnv* javaAttachCurrentThread(JavaVM* jvm) {
   JNIEnv* env;
   JavaVMAttachArgs attachArgs;
