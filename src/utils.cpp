@@ -97,6 +97,8 @@ jvalueType javaGetType(JNIEnv *env, jclass type) {
       return TYPE_INT;
     } else if(strcmp(typeStr, "double") == 0 || strcmp(typeStr, "class java.lang.Double") == 0) {
       return TYPE_DOUBLE;
+    } else if(strcmp(typeStr, "float") == 0 || strcmp(typeStr, "class java.lang.Float") == 0) {
+      return TYPE_FLOAT;
     } else if(strcmp(typeStr, "long") == 0 || strcmp(typeStr, "class java.lang.Long") == 0) {
       return TYPE_LONG;
     } else if(strcmp(typeStr, "boolean") == 0 || strcmp(typeStr, "class java.lang.Boolean") == 0) {
@@ -387,6 +389,13 @@ v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj) {
         jclass doubleClazz = env->FindClass("java/lang/Double");
         jmethodID double_doubleValue = env->GetMethodID(doubleClazz, "doubleValue", "()D");
         jdouble result = env->CallDoubleMethod(obj, double_doubleValue);
+        POP_LOCAL_JAVA_FRAME_AND_RETURN(scope.Close(v8::Number::New(result)));
+      }
+    case TYPE_FLOAT:
+      {
+        jclass floatClazz = env->FindClass("java/lang/Float");
+        jmethodID float_floatValue = env->GetMethodID(floatClazz, "floatValue", "()F");
+        jfloat result = env->CallFloatMethod(obj, float_floatValue);
         POP_LOCAL_JAVA_FRAME_AND_RETURN(scope.Close(v8::Number::New(result)));
       }
     case TYPE_STRING:

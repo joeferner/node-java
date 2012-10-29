@@ -21,7 +21,8 @@ typedef enum _jvalueType {
   TYPE_BOOLEAN = 6,
   TYPE_BYTE    = 7,
   TYPE_DOUBLE  = 8,
-  TYPE_ARRAY   = 9
+  TYPE_FLOAT   = 9,
+  TYPE_ARRAY   = 10
 } jvalueType;
 
 struct DynamicProxyData {
