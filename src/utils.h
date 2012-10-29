@@ -131,4 +131,8 @@ jobject javaFindConstructor(JNIEnv *env, jclass clazz, jobjectArray methodArgs);
   env->PopLocalFrame(NULL); \
   return r;
 
+#define POP_LOCAL_JAVA_FRAME_AND_RETURN_JAVA(r) \
+  env->PopLocalFrame(r); \
+  return r;
+
 #endif

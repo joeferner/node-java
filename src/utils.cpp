@@ -20,12 +20,10 @@ void javaReflectionGetMethods(JNIEnv *env, jclass clazz, std::list<jobject>* met
     jobject method = env->GetObjectArrayElement(methodObjects, i);
     jint methodModifiers = env->CallIntMethod(method, method_getModifiers);
     if((methodModifiers & MODIFIER_STATIC) == MODIFIER_STATIC) {
-      env->DeleteLocalRef(method);
       continue;
     }
     methods->push_back(method);
   }
-  env->DeleteLocalRef(methodObjects);
 }
 
 void javaReflectionGetFields(JNIEnv *env, jclass clazz, std::list<jobject>* fields) {
@@ -40,12 +38,10 @@ void javaReflectionGetFields(JNIEnv *env, jclass clazz, std::list<jobject>* fiel
     jobject field = env->GetObjectArrayElement(fieldObjects, i);
     jint fieldModifiers = env->CallIntMethod(field, field_getModifiers);
     if((fieldModifiers & MODIFIER_STATIC) == MODIFIER_STATIC) {
-      env->DeleteLocalRef(field);
       continue;
     }
     fields->push_back(field);
   }
-  env->DeleteLocalRef(fieldObjects);
 }
 
 std::string javaToString(JNIEnv *env, jstring str) {
@@ -171,17 +167,12 @@ jobject javaFindField(JNIEnv* env, jclass clazz, std::string& fieldName) {
     jobject field = env->GetObjectArrayElement(fieldObjects, i);
     jstring fieldNameJava = (jstring)env->CallObjectMethod(field, field_getName);
     std::string itFieldName = javaToString(env, fieldNameJava);
-    env->DeleteLocalRef(fieldNameJava);
     if(strcmp(itFieldName.c_str(), fieldName.c_str()) == 0) {
       result = field;
       break;
     }
-    env->DeleteLocalRef(field);
   }
 
-  env->DeleteLocalRef(fieldObjects);
-  env->DeleteLocalRef(clazzclazz);
-  env->DeleteLocalRef(fieldClazz);
   return result;
 }
 
@@ -295,9 +286,7 @@ jobjectArray v8ToJava(JNIEnv* env, const v8::Arguments& args, int start, int end
   for(int i=start; i<end; i++) {
     jobject val = v8ToJava(env, args[i]);
     env->SetObjectArrayElement(results, i - start, val);
-    env->DeleteLocalRef(val);
   }
-  env->DeleteLocalRef(clazz);
 
   return results;
 }
@@ -436,6 +425,8 @@ v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj) {
 }
 
 jobjectArray javaObjectArrayToClasses(JNIEnv *env, jobjectArray objs) {
+  PUSH_LOCAL_JAVA_FRAME();
+
   jclass clazzClazz = env->FindClass("java/lang/Class");
   jsize objsLength = env->GetArrayLength(objs);
   jobjectArray results = env->NewObjectArray(objsLength, clazzClazz, NULL);
@@ -446,15 +437,15 @@ jobjectArray javaObjectArrayToClasses(JNIEnv *env, jobjectArray objs) {
     } else {
       jclass objClazz = env->GetObjectClass(elem);
       env->SetObjectArrayElement(results, i, objClazz);
-      env->DeleteLocalRef(objClazz);
     }
-    env->DeleteLocalRef(elem);
   }
-  env->DeleteLocalRef(clazzClazz);
-  return results;
+
+  POP_LOCAL_JAVA_FRAME_AND_RETURN_JAVA(results);
 }
 
 jobject javaFindMethod(JNIEnv *env, jclass clazz, std::string& methodName, jobjectArray methodArgs) {
+  PUSH_LOCAL_JAVA_FRAME();
+
   jclass methodUtilsClazz = env->FindClass("com/nearinfinity/org/apache/commons/lang3/reflect/MethodUtils");
   jmethodID methodUtils_getMatchingAccessibleMethod = env->GetStaticMethodID(methodUtilsClazz, "getMatchingAccessibleMethod", "(Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;");
   const char *methodNameCStr = methodName.c_str();
@@ -462,11 +453,7 @@ jobject javaFindMethod(JNIEnv *env, jclass clazz, std::string& methodName, jobje
   jobjectArray methodArgClasses = javaObjectArrayToClasses(env, methodArgs);
   jobject method = env->CallStaticObjectMethod(methodUtilsClazz, methodUtils_getMatchingAccessibleMethod, clazz, methodNameJavaStr, methodArgClasses);
 
-  env->DeleteLocalRef(methodUtilsClazz);
-  env->DeleteLocalRef(methodNameJavaStr);
-  env->DeleteLocalRef(methodArgClasses);
-
-  return method;
+  POP_LOCAL_JAVA_FRAME_AND_RETURN_JAVA(method);
 }
 
 jobject javaFindConstructor(JNIEnv *env, jclass clazz, jobjectArray methodArgs) {

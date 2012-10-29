@@ -43,9 +43,6 @@
     v8::Handle<v8::String> methodNameSync = v8::String::New((methodNameStr + "Sync").c_str());
     v8::Local<v8::FunctionTemplate> methodCallSyncTemplate = v8::FunctionTemplate::New(methodCallSync, methodName);
     javaObjectObj->Set(methodNameSync, methodCallSyncTemplate->GetFunction());
-
-    env->DeleteLocalRef(methodNameJava);
-    env->DeleteLocalRef(*it);
   }
 
   std::list<jobject> fields;
@@ -58,12 +55,7 @@
 
     v8::Handle<v8::String> fieldName = v8::String::New(fieldNameStr.c_str());
     javaObjectObj->SetAccessor(fieldName, fieldGetter, fieldSetter);
-
-    env->DeleteLocalRef(fieldNameJava);
-    env->DeleteLocalRef(*it);
   }
-
-  env->DeleteLocalRef(obj);
 
   POP_LOCAL_JAVA_FRAME();
 
@@ -127,8 +119,6 @@ JavaObject::~JavaObject() {
   InstanceMethodCallBaton* baton = new InstanceMethodCallBaton(self->m_java, self, method, methodArgs, callback);
   baton->run();
 
-  env->DeleteLocalRef(methodArgs);
-  env->DeleteLocalRef(method);
   POP_LOCAL_JAVA_FRAME();
 
   END_CALLBACK_FUNCTION("\"Method '" << methodNameStr << "' called without a callback did you mean to use the Sync version?\"");
@@ -202,9 +192,6 @@ JavaObject::~JavaObject() {
 
   v8::Handle<v8::Value> result = javaToV8(self->m_java, env, val);
 
-  env->DeleteLocalRef(fieldClazz);
-  env->DeleteLocalRef(field);
-  env->DeleteLocalRef(val);
   POP_LOCAL_JAVA_FRAME();
 
   return scope.Close(result);

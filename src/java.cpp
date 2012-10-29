@@ -535,10 +535,6 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     POP_LOCAL_JAVA_FRAME_AND_RETURN(ThrowException(javaExceptionToV8(env, errStr.str())));
   }
 
-  env->DeleteLocalRef(clazz);
-  env->DeleteLocalRef(field);
-  env->DeleteLocalRef(fieldClazz);
-
   POP_LOCAL_JAVA_FRAME_AND_RETURN(scope.Close(javaToV8(self, env, val)));
 }
 

@@ -123,6 +123,8 @@ void StaticMethodCallBaton::execute(JNIEnv *env) {
 }
 
 void InstanceMethodCallBaton::execute(JNIEnv *env) {
+  PUSH_LOCAL_JAVA_FRAME();
+
   jclass methodClazz = env->FindClass("java/lang/reflect/Method");
   jmethodID method_invoke = env->GetMethodID(methodClazz, "invoke", "(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;");
 
@@ -136,18 +138,17 @@ void InstanceMethodCallBaton::execute(JNIEnv *env) {
 
   jobject result = env->CallObjectMethod(m_method, method_invoke, m_javaObject->getObject(), m_args);
 
-  env->DeleteLocalRef(methodClazz);
-
   jthrowable err = env->ExceptionOccurred();
   if(err) {
     m_error = (jthrowable)env->NewGlobalRef(err);
     m_errorString = "Error running instance method";
     env->ExceptionClear();
+    POP_LOCAL_JAVA_FRAME();
     return;
   }
 
   m_result = env->NewGlobalRef(result);
-  env->DeleteLocalRef(result);
+  POP_LOCAL_JAVA_FRAME();
 }
 
 NewInstanceBaton::NewInstanceBaton(
