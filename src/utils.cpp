@@ -86,14 +86,29 @@ std::string javaMethodCallToString(JNIEnv *env, jobject obj, jmethodID methodId,
   return result.str();
 }
 
-JNIEnv* javaAttachCurrentThread(JavaVM* jvm) {
+JNIEnv* javaAttachCurrentThread(JavaVM* jvm, jobject classLoader) {
   JNIEnv* env;
   JavaVMAttachArgs attachArgs;
   attachArgs.version = JNI_VERSION_1_4;
   attachArgs.name = NULL;
   attachArgs.group = NULL;
   jvm->AttachCurrentThread((void**)&env, &attachArgs);
+
+  jclass threadClazz = env->FindClass("java/lang/Thread");
+  jmethodID thread_currentThread = env->GetStaticMethodID(threadClazz, "currentThread", "()Ljava/lang/Thread;");
+  jmethodID thread_setContextClassLoader = env->GetMethodID(threadClazz, "setContextClassLoader", "(Ljava/lang/ClassLoader;)V");
+  jobject currentThread = env->CallStaticObjectMethod(threadClazz, thread_currentThread);
+  env->CallObjectMethod(currentThread, thread_setContextClassLoader, classLoader);
+
   return env;
+}
+
+jobject getSystemClassLoader(JNIEnv *env) {
+  jclass threadClazz = env->FindClass("java/lang/Thread");
+  jmethodID thread_currentThread = env->GetStaticMethodID(threadClazz, "currentThread", "()Ljava/lang/Thread;");
+  jmethodID thread_getContextClassLoader = env->GetMethodID(threadClazz, "getContextClassLoader", "()Ljava/lang/ClassLoader;");
+  jobject currentThread = env->CallStaticObjectMethod(threadClazz, thread_currentThread);
+  return env->CallObjectMethod(currentThread, thread_getContextClassLoader);
 }
 
 void javaDetachCurrentThread(JavaVM* jvm) {

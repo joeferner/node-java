@@ -50,8 +50,9 @@ void javaReflectionGetFields(JNIEnv *env, jclass clazz, std::list<jobject>* fiel
 std::string javaToString(JNIEnv *env, jstring str);
 std::string javaObjectToString(JNIEnv *env, jobject obj);
 std::string javaMethodCallToString(JNIEnv *env, jobject obj, jmethodID methodId, jarray args);
-JNIEnv* javaAttachCurrentThread(JavaVM* jvm);
+JNIEnv* javaAttachCurrentThread(JavaVM* jvm, jobject classLoader);
 void javaDetachCurrentThread(JavaVM* jvm);
+jobject getSystemClassLoader(JNIEnv *env);
 jvalueType javaGetType(JNIEnv *env, jclass type);
 jobjectArray v8ToJava(JNIEnv* env, const v8::Arguments& args, int start, int end);
 jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg);

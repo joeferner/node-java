@@ -38,6 +38,7 @@ long my_getThreadId() {
   s_ct->InstanceTemplate()->SetInternalFieldCount(1);
   s_ct->SetClassName(v8::String::NewSymbol("Java"));
 
+  NODE_SET_PROTOTYPE_METHOD(s_ct, "getClassLoader", getClassLoader);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newInstance", newInstance);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newInstanceSync", newInstanceSync);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newProxy", newProxy);
@@ -146,7 +147,29 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   JNI_CreateJavaVM(&jvmTemp, (void **)env, &args);
   *jvm = jvmTemp;
 
+  m_classLoader = getSystemClassLoader(*env);
+
   return v8::Undefined();
+}
+
+/*static*/ v8::Handle<v8::Value> Java::getClassLoader(const v8::Arguments& args) {
+  v8::HandleScope scope;
+  Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
+  v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
+  if(!ensureJvmResults->IsUndefined()) {
+    return ensureJvmResults;
+  }
+  JNIEnv* env = self->getJavaEnv();
+
+  jclass classClazz = env->FindClass("java/lang/ClassLoader");
+  printf("%d\n", (int)classClazz);
+  jmethodID class_getClassLoader = env->GetStaticMethodID(classClazz, "getSystemClassLoader", "()Ljava/lang/ClassLoader;");
+  printf("%d\n", (int)class_getClassLoader);
+  jobject classLoader = env->CallStaticObjectMethod(classClazz, class_getClassLoader);
+  printf("%d\n", (int)classLoader);
+
+  jobject result = env->NewGlobalRef(classLoader);
+  return scope.Close(javaToV8(self, env, result));
 }
 
 /*static*/ v8::Handle<v8::Value> Java::newInstance(const v8::Arguments& args) {

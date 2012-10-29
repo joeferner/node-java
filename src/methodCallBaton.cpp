@@ -35,7 +35,7 @@ v8::Handle<v8::Value> MethodCallBaton::runSync() {
 
 /*static*/ void MethodCallBaton::EIO_MethodCall(uv_work_t* req) {
   MethodCallBaton* self = static_cast<MethodCallBaton*>(req->data);
-  JNIEnv *env = javaAttachCurrentThread(self->m_java->getJvm());
+  JNIEnv *env = javaAttachCurrentThread(self->m_java->getJvm(), self->m_java->getClassLoader());
   self->execute(env);
   javaDetachCurrentThread(self->m_java->getJvm());
 }
@@ -148,7 +148,7 @@ void InstanceMethodCallBaton::execute(JNIEnv *env) {
   }
 
   m_result = env->NewGlobalRef(result);
-  POP_LOCAL_JAVA_FRAME();
+  //todo: stack: POP_LOCAL_JAVA_FRAME();
 }
 
 NewInstanceBaton::NewInstanceBaton(
