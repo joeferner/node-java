@@ -65,12 +65,12 @@ std::string javaMethodCallToString(JNIEnv *env, jobject obj, jmethodID methodId,
   char temp[100];
 
   std::ostringstream result;
-  sprintf(temp, "0x%08X", (int)env);
+  sprintf(temp, "%p", env);
   result << temp;
   result << ": ";
   result << javaObjectToString(env, obj);
   result << ": ";
-  sprintf(temp, "0x%08X", (int)methodId);
+  sprintf(temp, "%p", methodId);
   result << temp;
   result << ": (";
   jsize arraySize = env->GetArrayLength(args);

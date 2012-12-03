@@ -162,11 +162,8 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   JNIEnv* env = self->getJavaEnv();
 
   jclass classClazz = env->FindClass("java/lang/ClassLoader");
-  printf("%d\n", (int)classClazz);
   jmethodID class_getClassLoader = env->GetStaticMethodID(classClazz, "getSystemClassLoader", "()Ljava/lang/ClassLoader;");
-  printf("%d\n", (int)class_getClassLoader);
   jobject classLoader = env->CallStaticObjectMethod(classClazz, class_getClassLoader);
-  printf("%d\n", (int)classLoader);
 
   jobject result = env->NewGlobalRef(classLoader);
   return scope.Close(javaToV8(self, env, result));
