@@ -670,8 +670,10 @@ void EIO_AfterCallJs(uv_work_t* req) {
   javaResult = v8ToJava(env, v8Result);
   if(javaResult == NULL) {
     dynamicProxyData->result = NULL;
+    dynamicProxyData->resultGlobalRef = NULL;
   } else {
-    dynamicProxyData->result = env->NewGlobalRef(javaResult);
+    dynamicProxyData->result = javaResult;
+    dynamicProxyData->resultGlobalRef = env->NewGlobalRef(javaResult);
   }
 
 CleanUp:
@@ -686,6 +688,7 @@ JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jo
   dynamicProxyData->args = args;
   dynamicProxyData->done = false;
   dynamicProxyData->result = NULL;
+  dynamicProxyData->resultGlobalRef = NULL;
 
   jclass methodClazz = env->FindClass("java/lang/reflect/Method");
   jmethodID method_getName = env->GetMethodID(methodClazz, "getName", "()Ljava/lang/String;");
@@ -707,7 +710,7 @@ JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jo
     return NULL;
   }
   if(dynamicProxyData->result) {
-    env->DeleteGlobalRef(dynamicProxyData->result);
+    env->DeleteGlobalRef(dynamicProxyData->resultGlobalRef);
   }
   return dynamicProxyData->result;
 }

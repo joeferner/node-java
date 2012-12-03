@@ -16,7 +16,13 @@ public class NodeDynamicProxyClass implements java.lang.reflect.InvocationHandle
 
   public Object invoke(Object proxy, java.lang.reflect.Method m, Object[] args) throws Throwable
   {
-    return callJs(this.ptr, m, args);
+    Object result = callJs(this.ptr, m, args);
+    //if(result == null) {
+    //  System.out.println("invoke: null");
+    //} else {
+    //  System.out.println("invoke: " + result + " class: " + result.getClass() + " to string: " + result.toString());
+    //}
+    return result;
   }
 
   public void ref() {
