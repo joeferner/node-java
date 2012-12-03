@@ -228,7 +228,7 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
   }
 
   if(arg->IsString()) {
-    v8::String::AsciiValue val(arg->ToString());
+    v8::String::Utf8Value val(arg->ToString());
     return env->NewStringUTF(*val);
   }
 
