@@ -51,6 +51,25 @@ std::string javaToString(JNIEnv *env, jstring str) {
   return results;
 }
 
+std::string javaArrayToString(JNIEnv *env, jobjectArray arr) {
+  if(arr == NULL) {
+    return "(null)";
+  }
+
+  std::ostringstream result;
+  result << "[";
+  jsize count = env->GetArrayLength(arr);
+  for(jsize i=0; i<count; i++) {
+    if(i != 0) {
+      result << ", ";
+    }
+    jobject obj = env->GetObjectArrayElement(arr, i);
+    result << javaObjectToString(env, obj);
+  }
+  result << "]";
+  return result.str();
+}
+
 std::string javaObjectToString(JNIEnv *env, jobject obj) {
   if(obj == NULL) {
     return "(null)";
@@ -476,7 +495,6 @@ jobject javaFindConstructor(JNIEnv *env, jclass clazz, jobjectArray methodArgs) 
   jmethodID constructorUtils_getMatchingAccessibleConstructor = env->GetStaticMethodID(constructorUtilsClazz, "getMatchingAccessibleConstructor", "(Ljava/lang/Class;[Ljava/lang/Class;)Ljava/lang/reflect/Constructor;");
   jobjectArray methodArgClasses = javaObjectArrayToClasses(env, methodArgs);
   jobject method = env->CallStaticObjectMethod(constructorUtilsClazz, constructorUtils_getMatchingAccessibleConstructor, clazz, methodArgClasses);
-
   return method;
 }
 

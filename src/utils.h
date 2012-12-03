@@ -49,6 +49,7 @@ void javaReflectionGetMethods(JNIEnv *env, jclass clazz, std::list<jobject>* met
 void javaReflectionGetFields(JNIEnv *env, jclass clazz, std::list<jobject>* fields);
 std::string javaToString(JNIEnv *env, jstring str);
 std::string javaObjectToString(JNIEnv *env, jobject obj);
+std::string javaArrayToString(JNIEnv *env, jobjectArray arr);
 std::string javaMethodCallToString(JNIEnv *env, jobject obj, jmethodID methodId, jarray args);
 JNIEnv* javaAttachCurrentThread(JavaVM* jvm, jobject classLoader);
 void javaDetachCurrentThread(JavaVM* jvm);
