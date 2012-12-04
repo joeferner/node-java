@@ -117,9 +117,11 @@ exports['Java - Call Static Method'] = nodeunit.testCase({
     test.done();
   },
 
-  "callStaticMethodSync exception thrown from method (new exception)": function(test) {
+  "callMethodSync exception thrown from method": function(test) {
+    var ex = java.newInstanceSync("java.lang.Exception", "my exception");
+    var myTest = java.newInstanceSync("Test");
     try {
-      java.callStaticMethodSync("Test", "staticMethodThrowsNew");
+      myTest.methodThrowsSync(ex);
       test.fail("should throw");
     } catch(err) {
       test.ok(err.toString().match(/my exception/));

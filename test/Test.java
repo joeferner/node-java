@@ -18,7 +18,7 @@ public class Test {
   public static String staticMethod() { return "staticMethod called"; }
   public static int staticMethod(int i) { return i + 1; }
   public static void staticMethodThrows(Exception ex) throws Exception { throw ex; }
-  public static void staticMethodThrowsNew() throws Exception { throw new Exception("my exception"); }
+  public void methodThrows(Exception ex) throws Exception { throw ex; }
 
   public static int staticMethodOverload(String a) { return 1; }
   public static int staticMethodOverload(int a) { return 2; }

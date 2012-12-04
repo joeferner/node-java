@@ -156,6 +156,10 @@ JavaObject::~JavaObject() {
 
   POP_LOCAL_JAVA_FRAME();
 
+  if(result->IsNativeError()) {
+    return ThrowException(result);
+  }
+
   return scope.Close(result);
 }
 
