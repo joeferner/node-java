@@ -1,4 +1,7 @@
 {
+  "variables": {
+    "arch%": "i386" # linux JVM architecture. See $(JAVA_HOME)jre/lib/<@(arch)/server/
+  },
   "targets": [
     {
       "target_name": "nodejavabridge_bindings",
@@ -23,9 +26,26 @@
             ]
           }
         ],
-        ['OS!="win"',
+        ['OS=="linux"',
           {
-
+            "include_dirs": [
+              "$(JAVA_HOME)/include/linux",
+            ],
+            "libraries": [
+              "-L$(JAVA_HOME)jre/lib/i386/server/",
+              "-Wl,-rpath,$(JAVA_HOME)jre/lib/<@(arch)/server/",
+              "-ljvm"
+            ]
+          }
+        ],
+        ['OS=="mac"',
+          {
+            "include_dirs": [
+              "/System/Library/Frameworks/JavaVM.framework/Headers",
+            ],
+            "libraries": [
+              "-framework JavaVM"
+            ]
           }
         ]
       ]
