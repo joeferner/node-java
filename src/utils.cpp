@@ -281,7 +281,7 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
         jobject classLoader = env->CallObjectMethod(dynamicInterface, class_getClassLoader);
         if(classLoader == NULL) {
           jclass objectClazz = env->FindClass("java/lang/Object");
-          jmethodID object_getClass = env->GetMethodID(classClazz, "getClass", "()Ljava/lang/Class;");
+          jmethodID object_getClass = env->GetMethodID(objectClazz, "getClass", "()Ljava/lang/Class;");
           jobject jobjClass = env->CallObjectMethod(jobj, object_getClass);
           classLoader = env->CallObjectMethod(jobjClass, class_getClassLoader);
         }
