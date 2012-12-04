@@ -1,7 +1,10 @@
 
 #include "java.h"
 #include <string.h>
-#include <unistd.h>
+#ifdef WIN32
+#else
+  #include <unistd.h>
+#endif
 #include "javaObject.h"
 #include "methodCallBaton.h"
 #include "node_NodeDynamicProxyClass.h"
