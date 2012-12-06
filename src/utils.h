@@ -44,7 +44,7 @@ struct DynamicProxyData {
 
 int dynamicProxyDataVerify(DynamicProxyData* data);
 
-void javaReflectionGetMethods(JNIEnv *env, jclass clazz, std::list<jobject>* methods);
+void javaReflectionGetMethods(JNIEnv *env, jclass clazz, std::list<jobject>* methods, bool includeStatic);
 void javaReflectionGetFields(JNIEnv *env, jclass clazz, std::list<jobject>* fields);
 std::string javaToString(JNIEnv *env, jstring str);
 std::string javaObjectToString(JNIEnv *env, jobject obj);

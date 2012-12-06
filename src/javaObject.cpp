@@ -29,7 +29,7 @@
   self->Wrap(javaObjectObj);
 
   std::list<jobject> methods;
-  javaReflectionGetMethods(env, self->m_class, &methods);
+  javaReflectionGetMethods(env, self->m_class, &methods, false);
   jclass methodClazz = env->FindClass("java/lang/reflect/Method");
   jmethodID method_getName = env->GetMethodID(methodClazz, "getName", "()Ljava/lang/String;");
   for(std::list<jobject>::iterator it = methods.begin(); it != methods.end(); it++) {
