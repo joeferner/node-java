@@ -8,7 +8,7 @@
 
 #define MODIFIER_STATIC 9
 
-void javaReflectionGetMethods(JNIEnv *env, jclass clazz, std::list<jobject>* methods) {
+void javaReflectionGetMethods(JNIEnv *env, jclass clazz, std::list<jobject>* methods, bool includeStatic) {
   jclass clazzclazz = env->GetObjectClass(clazz);
   jmethodID clazz_getMethods = env->GetMethodID(clazzclazz, "getMethods", "()[Ljava/lang/reflect/Method;");
   jclass methodClazz = env->FindClass("java/lang/reflect/Method");
@@ -19,7 +19,8 @@ void javaReflectionGetMethods(JNIEnv *env, jclass clazz, std::list<jobject>* met
   for(jsize i=0; i<methodCount; i++) {
     jobject method = env->GetObjectArrayElement(methodObjects, i);
     jint methodModifiers = env->CallIntMethod(method, method_getModifiers);
-    if((methodModifiers & MODIFIER_STATIC) == MODIFIER_STATIC) {
+    if(!includeStatic && (methodModifiers & MODIFIER_STATIC) == MODIFIER_STATIC) {
+      env->DeleteLocalRef(method);
       continue;
     }
     methods->push_back(method);
