@@ -127,6 +127,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   // create vm options
   int vmOptionsCount = optionsArray->Length() + 1;
   JavaVMOption* vmOptions = new JavaVMOption[vmOptionsCount];
+  //printf("classPath: %s\n", classPath.str().c_str());
   vmOptions[0].optionString = strdup(classPath.str().c_str());
   for(uint32_t i=0; i<optionsArray->Length(); i++) {
     v8::Local<v8::Value> arrayItemValue = optionsArray->Get(i);
