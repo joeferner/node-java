@@ -244,7 +244,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   }
 
   // run
-  v8::Handle<v8::Value> callback = v8::Object::New();
+  v8::Handle<v8::Value> callback = v8::Undefined();
   NewInstanceBaton* baton = new NewInstanceBaton(self, clazz, method, methodArgs, callback);
   v8::Handle<v8::Value> result = baton->runSync();
   delete baton;
@@ -298,7 +298,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   }
 
   // run constructor
-  v8::Handle<v8::Value> callback = v8::Object::New();
+  v8::Handle<v8::Value> callback = v8::Undefined();
   NewInstanceBaton* baton = new NewInstanceBaton(self, clazz, method, methodArgs, callback);
   v8::Handle<v8::Value> result = baton->runSync();
   delete baton;
@@ -421,7 +421,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   }
 
   // run
-  v8::Handle<v8::Value> callback = v8::Object::New();
+  v8::Handle<v8::Value> callback = v8::Undefined();
   StaticMethodCallBaton* baton = new StaticMethodCallBaton(self, clazz, method, methodArgs, callback);
   v8::Handle<v8::Value> result = baton->runSync();
   delete baton;
