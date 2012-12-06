@@ -16,6 +16,11 @@ MethodCallBaton::MethodCallBaton(Java* java, jobject method, jarray args, v8::Ha
 
 MethodCallBaton::~MethodCallBaton() {
   JNIEnv *env = m_java->getJavaEnv();
+
+  if(m_result) {
+    env->DeleteGlobalRef(m_result);
+  }
+
   env->DeleteGlobalRef(m_args);
   env->DeleteGlobalRef(m_method);
   m_callback.Dispose();
@@ -60,10 +65,6 @@ void MethodCallBaton::after(JNIEnv *env) {
       argv[1] = result;
     }
     v8::Function::Cast(*m_callback)->Call(v8::Context::GetCurrent()->Global(), 2, argv);
-  }
-
-  if(m_result) {
-    env->DeleteGlobalRef(m_result);
   }
 }
 
@@ -146,8 +147,12 @@ void InstanceMethodCallBaton::execute(JNIEnv *env) {
     return;
   }
 
-  m_result = env->NewGlobalRef(result);
-  env->DeleteLocalRef(result);
+  if(result == NULL) {
+    m_result = NULL;
+  } else {
+    m_result = env->NewGlobalRef(result);
+    env->DeleteLocalRef(result);
+  }
 }
 
 NewInstanceBaton::NewInstanceBaton(
