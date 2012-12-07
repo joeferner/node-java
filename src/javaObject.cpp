@@ -3,18 +3,11 @@
 #include "java.h"
 #include "utils.h"
 #include <sstream>
+#include <algorithm>
 
-/*static*/ v8::Persistent<v8::FunctionTemplate> JavaObject::s_ct;
+std::map<std::string, v8::Persistent<v8::FunctionTemplate> > sFunctionTemplates;
 
 /*static*/ void JavaObject::Init(v8::Handle<v8::Object> target) {
-  v8::HandleScope scope;
-
-  v8::Local<v8::FunctionTemplate> t = v8::FunctionTemplate::New();
-  s_ct = v8::Persistent<v8::FunctionTemplate>::New(t);
-  s_ct->InstanceTemplate()->SetInternalFieldCount(1);
-  s_ct->SetClassName(v8::String::NewSymbol("JavaObject"));
-
-  target->Set(v8::String::NewSymbol("JavaObject"), s_ct->GetFunction());
 }
 
 /*static*/ v8::Local<v8::Object> JavaObject::New(Java *java, jobject obj) {
@@ -23,39 +16,70 @@
   JNIEnv *env = java->getJavaEnv();
   PUSH_LOCAL_JAVA_FRAME();
 
-  v8::Local<v8::Function> ctor = s_ct->GetFunction();
+  jclass objClazz = env->GetObjectClass(obj);
+  jclass classClazz = env->FindClass("java/lang/Class");
+  jmethodID class_getName = env->GetMethodID(classClazz, "getName", "()Ljava/lang/String;");
+  jobject classNameJava = env->CallObjectMethod(objClazz, class_getName);
+  std::string className = javaObjectToString(env, classNameJava);
+  std::replace(className.begin(), className.end(), '.', '_');
+  std::replace(className.begin(), className.end(), '$', '_');
+  std::replace(className.begin(), className.end(), '[', 'a');
+  className = "nodeJava_" + className;
+
+  v8::Persistent<v8::FunctionTemplate> persistentFuncTemplate;
+  if(sFunctionTemplates.find(className) != sFunctionTemplates.end()) {
+    //printf("existing className: %s\n", className.c_str());
+    persistentFuncTemplate = sFunctionTemplates[className];
+  } else {
+    //printf("create className: %s\n", className.c_str());
+
+    v8::Local<v8::FunctionTemplate> funcTemplate = v8::FunctionTemplate::New();
+    funcTemplate->InstanceTemplate()->SetInternalFieldCount(1);
+    funcTemplate->SetClassName(v8::String::NewSymbol(className.c_str()));
+
+    std::list<jobject> methods;
+    javaReflectionGetMethods(env, objClazz, &methods, false);
+    jclass methodClazz = env->FindClass("java/lang/reflect/Method");
+    jmethodID method_getName = env->GetMethodID(methodClazz, "getName", "()Ljava/lang/String;");
+    for(std::list<jobject>::iterator it = methods.begin(); it != methods.end(); it++) {
+      jstring methodNameJava = (jstring)env->CallObjectMethod(*it, method_getName);
+      std::string methodNameStr = javaToString(env, methodNameJava);
+
+      v8::Handle<v8::String> methodName = v8::String::New(methodNameStr.c_str());
+      v8::Local<v8::FunctionTemplate> methodCallTemplate = v8::FunctionTemplate::New(methodCall, methodName);
+      funcTemplate->PrototypeTemplate()->Set(methodName, methodCallTemplate->GetFunction());
+
+      v8::Handle<v8::String> methodNameSync = v8::String::New((methodNameStr + "Sync").c_str());
+      v8::Local<v8::FunctionTemplate> methodCallSyncTemplate = v8::FunctionTemplate::New(methodCallSync, methodName);
+      funcTemplate->PrototypeTemplate()->Set(methodNameSync, methodCallSyncTemplate->GetFunction());
+
+      env->DeleteLocalRef(methodNameJava);
+      env->DeleteLocalRef(*it);
+    }
+
+    std::list<jobject> fields;
+    javaReflectionGetFields(env, objClazz, &fields);
+    jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
+    jmethodID field_getName = env->GetMethodID(fieldClazz, "getName", "()Ljava/lang/String;");
+    for(std::list<jobject>::iterator it = fields.begin(); it != fields.end(); it++) {
+      jstring fieldNameJava = (jstring)env->CallObjectMethod(*it, field_getName);
+      std::string fieldNameStr = javaToString(env, fieldNameJava);
+
+      v8::Handle<v8::String> fieldName = v8::String::New(fieldNameStr.c_str());
+      funcTemplate->PrototypeTemplate()->SetAccessor(fieldName, fieldGetter, fieldSetter);
+
+      env->DeleteLocalRef(fieldNameJava);
+      env->DeleteLocalRef(*it);
+    }
+
+    sFunctionTemplates[className] = persistentFuncTemplate = v8::Persistent<v8::FunctionTemplate>::New(funcTemplate);
+  }
+
+  v8::Local<v8::Function> ctor = persistentFuncTemplate->GetFunction();
   v8::Local<v8::Object> javaObjectObj = ctor->NewInstance();
+  javaObjectObj->SetHiddenValue(v8::String::New("__isJavaObject"), v8::Boolean::New(true));
   JavaObject *self = new JavaObject(java, obj);
   self->Wrap(javaObjectObj);
-
-  std::list<jobject> methods;
-  javaReflectionGetMethods(env, self->m_class, &methods, false);
-  jclass methodClazz = env->FindClass("java/lang/reflect/Method");
-  jmethodID method_getName = env->GetMethodID(methodClazz, "getName", "()Ljava/lang/String;");
-  for(std::list<jobject>::iterator it = methods.begin(); it != methods.end(); it++) {
-    jstring methodNameJava = (jstring)env->CallObjectMethod(*it, method_getName);
-    std::string methodNameStr = javaToString(env, methodNameJava);
-
-    v8::Handle<v8::String> methodName = v8::String::New(methodNameStr.c_str());
-    v8::Local<v8::FunctionTemplate> methodCallTemplate = v8::FunctionTemplate::New(methodCall, methodName);
-    javaObjectObj->Set(methodName, methodCallTemplate->GetFunction());
-
-    v8::Handle<v8::String> methodNameSync = v8::String::New((methodNameStr + "Sync").c_str());
-    v8::Local<v8::FunctionTemplate> methodCallSyncTemplate = v8::FunctionTemplate::New(methodCallSync, methodName);
-    javaObjectObj->Set(methodNameSync, methodCallSyncTemplate->GetFunction());
-  }
-
-  std::list<jobject> fields;
-  javaReflectionGetFields(env, self->m_class, &fields);
-  jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
-  jmethodID field_getName = env->GetMethodID(fieldClazz, "getName", "()Ljava/lang/String;");
-  for(std::list<jobject>::iterator it = fields.begin(); it != fields.end(); it++) {
-    jstring fieldNameJava = (jstring)env->CallObjectMethod(*it, field_getName);
-    std::string fieldNameStr = javaToString(env, fieldNameJava);
-
-    v8::Handle<v8::String> fieldName = v8::String::New(fieldNameStr.c_str());
-    javaObjectObj->SetAccessor(fieldName, fieldGetter, fieldSetter);
-  }
 
   POP_LOCAL_JAVA_FRAME();
 
