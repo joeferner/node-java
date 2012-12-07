@@ -1,5 +1,6 @@
 {
   "variables": {
+    #"arch%": "amd64"
     "arch%": "i386" # linux JVM architecture. See $(JAVA_HOME)jre/lib/<@(arch)/server/
   },
   "targets": [
@@ -32,7 +33,7 @@
               "$(JAVA_HOME)/include/linux",
             ],
             "libraries": [
-              "-L$(JAVA_HOME)jre/lib/i386/server/",
+              "-L$(JAVA_HOME)jre/lib/<@(arch)/server/",
               "-Wl,-rpath,$(JAVA_HOME)jre/lib/<@(arch)/server/",
               "-ljvm"
             ]
