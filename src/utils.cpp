@@ -203,8 +203,8 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
 
   if(arg->IsObject()) {
     v8::Local<v8::Object> obj = v8::Object::Cast(*arg);
-    v8::String::AsciiValue constructorName(obj->GetConstructorName());
-    if(strcmp(*constructorName, "JavaObject") == 0) {
+    v8::Local<v8::Value> isJavaObject = obj->GetHiddenValue(v8::String::New("__isJavaObject"));
+    if(!isJavaObject.IsEmpty() && isJavaObject->IsBoolean()) {
       JavaObject* javaObject = node::ObjectWrap::Unwrap<JavaObject>(obj);
       jobject jobj = javaObject->getObject();
       jclass nodeDynamicProxyClass = env->FindClass("node/NodeDynamicProxyClass");
@@ -229,7 +229,7 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
         jobject classLoader = env->CallObjectMethod(dynamicInterface, class_getClassLoader);
         if(classLoader == NULL) {
           jclass objectClazz = env->FindClass("java/lang/Object");
-          jmethodID object_getClass = env->GetMethodID(classClazz, "getClass", "()Ljava/lang/Class;");
+          jmethodID object_getClass = env->GetMethodID(objectClazz, "getClass", "()Ljava/lang/Class;");
           jobject jobjClass = env->CallObjectMethod(jobj, object_getClass);
           classLoader = env->CallObjectMethod(jobjClass, class_getClassLoader);
         }
@@ -257,7 +257,7 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
 
   // TODO: handle other arg types
   v8::String::AsciiValue typeStr(arg);
-  printf("Unhandled type: %s\n", *typeStr);
+  printf("v8ToJava: Unhandled type: %s\n", *typeStr);
   return NULL;
 }
 
@@ -394,7 +394,7 @@ v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj) {
     case TYPE_OBJECT:
       POP_LOCAL_JAVA_FRAME_AND_RETURN(scope.Close(JavaObject::New(java, obj)));
     default:
-      printf("unhandled type: 0x%03x\n", resultType);
+      printf("javaToV8: unhandled type: 0x%03x\n", resultType);
       POP_LOCAL_JAVA_FRAME_AND_RETURN(scope.Close(JavaObject::New(java, obj)));
   }
 

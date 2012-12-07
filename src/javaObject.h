@@ -6,6 +6,7 @@
 #include <node.h>
 #include <jni.h>
 #include <list>
+#include <map>
 #include "methodCallBaton.h"
 
 class Java;
@@ -28,7 +29,6 @@ private:
   static v8::Handle<v8::Value> fieldGetter(v8::Local<v8::String> property, const v8::AccessorInfo& info);
   static void fieldSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::AccessorInfo& info);
 
-  static v8::Persistent<v8::FunctionTemplate> s_ct;
   Java* m_java;
   jobject m_obj;
   jclass m_class;
