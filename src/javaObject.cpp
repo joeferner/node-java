@@ -52,9 +52,6 @@ std::map<std::string, v8::Persistent<v8::FunctionTemplate> > sFunctionTemplates;
       v8::Handle<v8::String> methodNameSync = v8::String::New((methodNameStr + "Sync").c_str());
       v8::Local<v8::FunctionTemplate> methodCallSyncTemplate = v8::FunctionTemplate::New(methodCallSync, methodName);
       funcTemplate->PrototypeTemplate()->Set(methodNameSync, methodCallSyncTemplate->GetFunction());
-
-      env->DeleteLocalRef(methodNameJava);
-      env->DeleteLocalRef(*it);
     }
 
     std::list<jobject> fields;
@@ -67,9 +64,6 @@ std::map<std::string, v8::Persistent<v8::FunctionTemplate> > sFunctionTemplates;
 
       v8::Handle<v8::String> fieldName = v8::String::New(fieldNameStr.c_str());
       funcTemplate->PrototypeTemplate()->SetAccessor(fieldName, fieldGetter, fieldSetter);
-
-      env->DeleteLocalRef(fieldNameJava);
-      env->DeleteLocalRef(*it);
     }
 
     sFunctionTemplates[className] = persistentFuncTemplate = v8::Persistent<v8::FunctionTemplate>::New(funcTemplate);
