@@ -26,7 +26,7 @@ setTimeout(function() {
   console.log('start heap diff');
   var hd = new memwatch.HeapDiff();
   var loopStart = new Date();
-  for (var loopCount = 0; loopCount < 1000; loopCount++) {
+  for (var loopCount = 0; loopCount < 500000; loopCount++) {
     console.log('loopCount:', loopCount);
     doLoop();
   }
