@@ -1,7 +1,11 @@
 {
   "variables": {
-    #"arch%": "amd64"
-    "arch%": "i386" # linux JVM architecture. See $(JAVA_HOME)jre/lib/<@(arch)/server/
+    "arch%": "amd64", # linux JVM architecture. See $(JAVA_HOME)jre/lib/<@(arch)/server/
+    'conditions': [
+      ['target_arch=="ia32"', {
+        'arch%': "i386"
+      }]
+    ]
   },
   "targets": [
     {
