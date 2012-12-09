@@ -47,6 +47,7 @@ struct DynamicProxyData {
 int dynamicProxyDataVerify(DynamicProxyData* data);
 
 void javaReflectionGetMethods(JNIEnv *env, jclass clazz, std::list<jobject>* methods, bool includeStatic);
+void javaReflectionGetConstructors(JNIEnv *env, jclass clazz, std::list<jobject>* methods);
 void javaReflectionGetFields(JNIEnv *env, jclass clazz, std::list<jobject>* fields);
 std::string javaToString(JNIEnv *env, jstring str);
 std::string javaObjectToString(JNIEnv *env, jobject obj);
@@ -69,6 +70,8 @@ jclass javaFindClass(JNIEnv* env, std::string& className);
 jobject javaFindField(JNIEnv* env, jclass clazz, std::string& fieldName);
 jobject javaFindMethod(JNIEnv *env, jclass clazz, std::string& methodName, jobjectArray methodArgs);
 jobject javaFindConstructor(JNIEnv *env, jclass clazz, jobjectArray methodArgs);
+
+std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string methodName, bool constructor, const v8::Arguments& args, int argStart, int argEnd);
 
 #define UNUSED_VARIABLE(var) var = var;
 

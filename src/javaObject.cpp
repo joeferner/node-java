@@ -14,6 +14,8 @@
   v8::HandleScope scope;
 
   JNIEnv *env = java->getJavaEnv();
+  obj = env->NewGlobalRef(obj);
+
   PUSH_LOCAL_JAVA_FRAME();
 
   jclass objClazz = env->GetObjectClass(obj);
@@ -83,7 +85,7 @@
 JavaObject::JavaObject(Java *java, jobject obj) {
   m_java = java;
   JNIEnv *env = m_java->getJavaEnv();
-  m_obj = env->NewGlobalRef(obj);
+  m_obj = obj;
   m_class = (jclass)env->NewGlobalRef(env->GetObjectClass(obj));
 }
 
@@ -128,7 +130,8 @@ JavaObject::~JavaObject() {
 
   jobject method = javaFindMethod(env, self->m_class, methodNameStr, methodArgs);
   if(method == NULL) {
-    EXCEPTION_CALL_CALLBACK("Could not find method " << methodNameStr);
+    std::string msg = methodNotFoundToString(env, self->m_class, methodNameStr, false, args, argsStart, argsEnd);
+    EXCEPTION_CALL_CALLBACK(msg);
     POP_LOCAL_JAVA_FRAME();
     return v8::Undefined();
   }
@@ -159,9 +162,8 @@ JavaObject::~JavaObject() {
 
   jobject method = javaFindMethod(env, self->m_class, methodNameStr, methodArgs);
   if(method == NULL) {
-    std::ostringstream errStr;
-    errStr << "Could not find method " << methodNameStr;
-    v8::Handle<v8::Value> ex = javaExceptionToV8(env, errStr.str());
+    std::string msg = methodNotFoundToString(env, self->m_class, methodNameStr, false, args, argsStart, argsEnd);
+    v8::Handle<v8::Value> ex = javaExceptionToV8(env, msg);
     POP_LOCAL_JAVA_FRAME();
     return ThrowException(ex);
   }

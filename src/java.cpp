@@ -200,7 +200,8 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   jobjectArray methodArgs = v8ToJava(env, args, argsStart, argsEnd);
   jobject method = javaFindConstructor(env, clazz, methodArgs);
   if(method == NULL) {
-    EXCEPTION_CALL_CALLBACK("Could not find constructor for class " << className);
+    std::string msg = methodNotFoundToString(env, clazz, className, true, args, argsStart, argsEnd);
+    EXCEPTION_CALL_CALLBACK(msg);
     return v8::Undefined();
   }
 
@@ -238,9 +239,8 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   jobjectArray methodArgs = v8ToJava(env, args, argsStart, argsEnd);
   jobject method = javaFindConstructor(env, clazz, methodArgs);
   if(method == NULL) {
-    std::ostringstream errStr;
-    errStr << "Could not find constructor for class " << className.c_str();
-    return ThrowException(javaExceptionToV8(env, errStr.str()));
+    std::string msg = methodNotFoundToString(env, clazz, className, true, args, argsStart, argsEnd);
+    return ThrowException(javaExceptionToV8(env, msg));
   }
 
   // run
@@ -308,46 +308,6 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   return scope.Close(result);
 }
 
-/*static*/ std::string Java::methodNotFoundToString(JNIEnv *env, jclass clazz, std::string methodName, const v8::Arguments& args, int argStart, int argEnd) {
-  std::ostringstream startOfMessage;
-  std::ostringstream msg;
-
-  startOfMessage << "Could not find method \"" << methodName.c_str() << "(";
-  for(int i=argStart; i<argEnd; i++) {
-    jobject val = v8ToJava(env, args[i]);
-    if(i != argStart) {
-      startOfMessage << ", ";
-    }
-    startOfMessage << javaObjectToString(env, val);
-  }
-  startOfMessage << ")\" on class \""<< javaObjectToString(env, clazz).c_str() << "\".";
-
-  msg << startOfMessage.str() << " Possible matches:\n";
-
-  jclass methodClazz = env->FindClass("java/lang/reflect/Method");
-  jmethodID method_getName = env->GetMethodID(methodClazz, "getName", "()Ljava/lang/String;");
-
-  std::list<jobject> methods;
-  javaReflectionGetMethods(env, clazz, &methods, true);
-  int count = 0;
-  for(std::list<jobject>::iterator it = methods.begin(); it != methods.end(); it++) {
-    jstring methodNameTestJava = (jstring)env->CallObjectMethod(*it, method_getName);
-    std::string methodNameTest = javaToString(env, methodNameTestJava);
-    if(methodNameTest == methodName) {
-      msg << "  " << javaObjectToString(env, *it).c_str() << "\n";
-      count++;
-    }
-  }
-
-  if(count == 0) {
-    std::ostringstream noMethodsMsg;
-    noMethodsMsg << startOfMessage.str() << " No methods with that name.";
-    return noMethodsMsg.str();
-  }
-
-  return msg.str();
-}
-
 /*static*/ v8::Handle<v8::Value> Java::callStaticMethod(const v8::Arguments& args) {
   v8::HandleScope scope;
   Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
@@ -376,7 +336,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   jobjectArray methodArgs = v8ToJava(env, args, argsStart, argsEnd);
   jobject method = javaFindMethod(env, clazz, methodName, methodArgs);
   if(method == NULL) {
-    std::string msg = methodNotFoundToString(env, clazz, methodName, args, argsStart, argsEnd);
+    std::string msg = methodNotFoundToString(env, clazz, methodName, false, args, argsStart, argsEnd);
     EXCEPTION_CALL_CALLBACK(msg);
     return v8::Undefined();
   }
@@ -416,7 +376,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   jobjectArray methodArgs = v8ToJava(env, args, argsStart, argsEnd);
   jobject method = javaFindMethod(env, clazz, methodName, methodArgs);
   if(method == NULL) {
-    std::string msg = methodNotFoundToString(env, clazz, methodName, args, argsStart, argsEnd);
+    std::string msg = methodNotFoundToString(env, clazz, methodName, false, args, argsStart, argsEnd);
     return ThrowException(javaExceptionToV8(env, msg));
   }
 

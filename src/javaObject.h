@@ -17,6 +17,7 @@ public:
   static v8::Local<v8::Object> New(Java* java, jobject obj);
 
   jobject getObject() { return m_obj; }
+  jclass getClass() { return m_class; }
 
   void Ref() { node::ObjectWrap::Ref(); }
   void Unref() { node::ObjectWrap::Unref(); }

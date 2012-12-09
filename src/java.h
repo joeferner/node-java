@@ -31,7 +31,6 @@ private:
   static v8::Handle<v8::Value> newByte(const v8::Arguments& args);
   static v8::Handle<v8::Value> getStaticFieldValue(const v8::Arguments& args);
   static v8::Handle<v8::Value> setStaticFieldValue(const v8::Arguments& args);
-  static std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string methodName, const v8::Arguments& args, int argStart, int argEnd);
   v8::Handle<v8::Value> ensureJvm();
 
   static v8::Persistent<v8::FunctionTemplate> s_ct;

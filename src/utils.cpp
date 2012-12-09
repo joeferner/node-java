@@ -9,7 +9,7 @@
 #define MODIFIER_STATIC 9
 
 void javaReflectionGetMethods(JNIEnv *env, jclass clazz, std::list<jobject>* methods, bool includeStatic) {
-  jclass clazzclazz = env->GetObjectClass(clazz);
+  jclass clazzclazz = env->FindClass("java/lang/Class");
   jmethodID clazz_getMethods = env->GetMethodID(clazzclazz, "getMethods", "()[Ljava/lang/reflect/Method;");
   jclass methodClazz = env->FindClass("java/lang/reflect/Method");
   jmethodID method_getModifiers = env->GetMethodID(methodClazz, "getModifiers", "()I");
@@ -20,15 +20,26 @@ void javaReflectionGetMethods(JNIEnv *env, jclass clazz, std::list<jobject>* met
     jobject method = env->GetObjectArrayElement(methodObjects, i);
     jint methodModifiers = env->CallIntMethod(method, method_getModifiers);
     if(!includeStatic && (methodModifiers & MODIFIER_STATIC) == MODIFIER_STATIC) {
-      env->DeleteLocalRef(method);
       continue;
     }
     methods->push_back(method);
   }
 }
 
+void javaReflectionGetConstructors(JNIEnv *env, jclass clazz, std::list<jobject>* methods) {
+  jclass clazzclazz = env->FindClass("java/lang/Class");
+  jmethodID clazz_getConstructors = env->GetMethodID(clazzclazz, "getConstructors", "()[Ljava/lang/reflect/Constructor;");
+
+  jobjectArray constructorObjects = (jobjectArray)env->CallObjectMethod(clazz, clazz_getConstructors);
+  jsize constructorCount = env->GetArrayLength(constructorObjects);
+  for(jsize i=0; i<constructorCount; i++) {
+    jobject constructor = env->GetObjectArrayElement(constructorObjects, i);
+    methods->push_back(constructor);
+  }
+}
+
 void javaReflectionGetFields(JNIEnv *env, jclass clazz, std::list<jobject>* fields) {
-  jclass clazzclazz = env->GetObjectClass(clazz);
+  jclass clazzclazz = env->FindClass("java/lang/Class");
   jmethodID clazz_getFields = env->GetMethodID(clazzclazz, "getFields", "()[Ljava/lang/reflect/Field;");
   jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
   jmethodID field_getModifiers = env->GetMethodID(fieldClazz, "getModifiers", "()I");
@@ -260,8 +271,8 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
     if(!isJavaObject.IsEmpty() && isJavaObject->IsBoolean()) {
       JavaObject* javaObject = node::ObjectWrap::Unwrap<JavaObject>(obj);
       jobject jobj = javaObject->getObject();
-      jclass nodeDynamicProxyClass = env->FindClass("node/NodeDynamicProxyClass");
 
+      jclass nodeDynamicProxyClass = env->FindClass("node/NodeDynamicProxyClass");
       if(env->IsInstanceOf(jobj, nodeDynamicProxyClass)) {
         jfieldID ptrField = env->GetFieldID(nodeDynamicProxyClass, "ptr", "J");
         DynamicProxyData* proxyData = (DynamicProxyData*)(long)env->GetLongField(jobj, ptrField);
@@ -512,4 +523,60 @@ int dynamicProxyDataVerify(DynamicProxyData* data) {
 
   printf("*** ERROR: Lost reference to the dynamic proxy. You must maintain a reference in javascript land using ref() and unref(). ***\n");
   return 0;
+}
+
+std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string methodName, bool constructor, const v8::Arguments& args, int argStart, int argEnd) {
+  std::ostringstream startOfMessage;
+  std::ostringstream msg;
+
+  jclass classClazz = env->FindClass("java/lang/Class");
+  jmethodID class_getName = env->GetMethodID(classClazz, "getName", "()Ljava/lang/String;");
+
+  startOfMessage << "Could not find method \"" << methodName.c_str() << "(";
+  for(int i=argStart; i<argEnd; i++) {
+    jobject val = v8ToJava(env, args[i]);
+    if(i != argStart) {
+      startOfMessage << ", ";
+    }
+    if(val == NULL) {
+      startOfMessage << "(null)";
+    } else {
+      jclass argClass = env->GetObjectClass(val);
+      jstring argClassNameJava = (jstring)env->CallObjectMethod(argClass, class_getName);
+      std::string argClassName = javaToString(env, argClassNameJava);
+      startOfMessage << argClassName;
+    }
+  }
+
+  startOfMessage << ")\" on class \""<< javaObjectToString(env, clazz).c_str() << "\".";
+
+  msg << startOfMessage.str() << " Possible matches:\n";
+
+  jclass memberClazz = env->FindClass("java/lang/reflect/Member");
+  jmethodID member_getName = env->GetMethodID(memberClazz, "getName", "()Ljava/lang/String;");
+
+  std::list<jobject> methods;
+  if(constructor) {
+    javaReflectionGetConstructors(env, clazz, &methods);
+  } else {
+    javaReflectionGetMethods(env, clazz, &methods, true);
+  }
+
+  int count = 0;
+  for(std::list<jobject>::iterator it = methods.begin(); it != methods.end(); it++) {
+    jstring methodNameTestJava = (jstring)env->CallObjectMethod(*it, member_getName);
+    std::string methodNameTest = javaToString(env, methodNameTestJava);
+    if(methodNameTest == methodName) {
+      msg << "  " << javaObjectToString(env, *it).c_str() << "\n";
+      count++;
+    }
+  }
+
+  if(count == 0) {
+    std::ostringstream noMethodsMsg;
+    noMethodsMsg << startOfMessage.str() << " No methods with that name.";
+    return noMethodsMsg.str();
+  }
+
+  return msg.str();
 }
