@@ -65,7 +65,7 @@
       std::string fieldNameStr = javaToString(env, fieldNameJava);
 
       v8::Handle<v8::String> fieldName = v8::String::New(fieldNameStr.c_str());
-      funcTemplate->PrototypeTemplate()->SetAccessor(fieldName, fieldGetter, fieldSetter);
+      funcTemplate->InstanceTemplate()->SetAccessor(fieldName, fieldGetter, fieldSetter);
     }
 
     sFunctionTemplates[className] = persistentFuncTemplate = v8::Persistent<v8::FunctionTemplate>::New(funcTemplate);
@@ -227,7 +227,6 @@ JavaObject::~JavaObject() {
   JNIEnv *env = self->m_java->getJavaEnv();
 
   PUSH_LOCAL_JAVA_FRAME();
-
   jobject newValue = v8ToJava(env, value);
 
   v8::String::AsciiValue propertyCStr(property);
