@@ -9,7 +9,7 @@ $ export JAVA_HOME=/usr/local/share/jdk1.6.0_30
 $ npm install java
 ```
 
-NOTE: If you see an error such as "No rule to make target `/opt/jdk1.7.0_09/jre/lib/amd64/server/libjvm.so', needed by `build/depsVerified'.  Stop."
+NOTE: If you see an error such as "No rule to make target '/opt/jdk1.7.0_09/jre/lib/amd64/server/libjvm.so', needed by 'build/depsVerified'.  Stop."
       this means that your JAVA_HOME is not set correctly and you need to verify the location of libjvm.so or jvm.lib.
 
 ## Installation Mac
