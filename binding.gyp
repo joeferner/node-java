@@ -33,7 +33,7 @@
                   '$(JAVA_HOME)/include/win32/jni_md.h'
                 ],
                 'outputs': ['./build/depsVerified'],
-                'action': [],
+                'action': ['python', 'touch.py'],
                 'message': 'Verify Deps'
               }
             ],
