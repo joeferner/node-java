@@ -2,27 +2,15 @@
 
 Bridge API to connect with existing Java APIs.
 
-## Installation Linux
+## Installation Linux/Windows
 
 ```bash
 $ export JAVA_HOME=/usr/local/share/jdk1.6.0_30
 $ npm install java
 ```
 
-## Installation Windows
-
-* [Install node.js from source](https://github.com/joyent/node/wiki/Installation) (using: vcbuild.bat release)
-* The directory where jvm.dll exists must be in the PATH. (e.g. C:\Program Files (x86)\Java\jdk1.6.0_18\jre\bin\client).
-  This path cannot have quotes.
-* Open a Visual Studio command prompt.
-* Your Java must be the same architecture as node. By default on windows this is 32-bit.
-
-```bash
-$ set PATH=%PATH%;C:\Program Files (x86)\Java\jdk1.6.0_18\jre\bin\client
-$ set JAVA_HOME=C:\Program Files (x86)\Java\jdk1.6.0_18\
-$ set NODE_HOME=C:\dev\node-v0.6.8-0
-$ npm install java
-```
+NOTE: If you see an error such as "No rule to make target `/opt/jdk1.7.0_09/jre/lib/amd64/server/libjvm.so', needed by `build/depsVerified'.  Stop."
+      this means that your JAVA_HOME is not set correctly and you need to verify the location of libjvm.so or jvm.lib.
 
 ## Installation Mac
 

@@ -23,6 +23,17 @@
       'conditions': [
         ['OS=="win"',
           {
+            'actions': [
+              {
+                'action_name': 'verifyDeps',
+                'inputs': [
+                  '$(JAVA_HOME)/lib/jvm.lib'
+                ],
+                'outputs': ['./build/depsVerified'],
+                'action': [],
+                'message': 'Verify Deps'
+              }
+            ],
             "include_dirs": [
               "$(JAVA_HOME)/include/win32",
             ],
@@ -33,12 +44,23 @@
         ],
         ['OS=="linux"',
           {
+            'actions': [
+              {
+                'action_name': 'verifyDeps',
+                'inputs': [
+                  '$(JAVA_HOME)jre/lib/<(arch)/server/libjvm.so'
+                ],
+                'outputs': ['./build/depsVerified'],
+                'action': [],
+                'message': 'Verify Deps'
+              }
+            ],
             "include_dirs": [
               "$(JAVA_HOME)/include/linux",
             ],
             "libraries": [
-              "-L$(JAVA_HOME)jre/lib/<@(arch)/server/",
-              "-Wl,-rpath,$(JAVA_HOME)jre/lib/<@(arch)/server/",
+              "-L$(JAVA_HOME)jre/lib/<(arch)/server/",
+              "-Wl,-rpath,$(JAVA_HOME)jre/lib/<(arch)/server/",
               "-ljvm"
             ]
           }
