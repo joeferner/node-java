@@ -39,8 +39,6 @@ struct DynamicProxyData {
   unsigned int markerEnd;
 };
 
-#define LOCAL_FRAME_SIZE 500
-
 #define DYNAMIC_PROXY_DATA_MARKER_START 0x12345678
 #define DYNAMIC_PROXY_DATA_MARKER_END   0x87654321
 
@@ -127,18 +125,8 @@ std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string method
     return scope.Close(v8::String::New(str.str().c_str()));  \
   }
 
-#define PUSH_LOCAL_JAVA_FRAME() \
-  env->PushLocalFrame(LOCAL_FRAME_SIZE);
-
-#define POP_LOCAL_JAVA_FRAME() \
-  env->PopLocalFrame(NULL);
-
-#define POP_LOCAL_JAVA_FRAME_AND_RETURN(r) \
-  env->PopLocalFrame(NULL); \
-  return r;
-
-#define POP_LOCAL_JAVA_FRAME_AND_RETURN_JAVA(r) \
-  env->PopLocalFrame(r); \
-  return r;
+#ifndef UNUSED_VARIABLE
+  #define UNUSED_VARIABLE(a) a = a;
+#endif
 
 #endif

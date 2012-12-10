@@ -13,6 +13,7 @@
       "sources": [
         "src/java.cpp",
         "src/javaObject.cpp",
+        "src/javaScope.cpp",
         "src/methodCallBaton.cpp",
         "src/nodeJavaBridge.cpp",
         "src/utils.cpp"

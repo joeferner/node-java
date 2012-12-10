@@ -6,6 +6,7 @@
   #include <unistd.h>
 #endif
 #include "javaObject.h"
+#include "javaScope.h"
 #include "methodCallBaton.h"
 #include "node_NodeDynamicProxyClass.h"
 #include <sstream>
@@ -265,6 +266,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
 
   int argsStart = 0;
   int argsEnd = args.Length();
+  UNUSED_VARIABLE(argsEnd);
 
   ARGS_FRONT_STRING(interfaceName);
   ARGS_FRONT_OBJECT(functions);
@@ -402,6 +404,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
 
   int argsStart = 0;
   int argsEnd = args.Length();
+  UNUSED_VARIABLE(argsEnd);
 
   // arguments
   ARGS_FRONT_CLASSNAME();
@@ -522,7 +525,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     return ensureJvmResults;
   }
   JNIEnv* env = self->getJavaEnv();
-  PUSH_LOCAL_JAVA_FRAME();
+  JavaScope javaScope(env);
 
   int argsStart = 0;
   int argsEnd = args.Length();
@@ -537,7 +540,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   if(clazz == NULL) {
     std::ostringstream errStr;
     errStr << "Could not create class " << className.c_str();
-    POP_LOCAL_JAVA_FRAME_AND_RETURN(ThrowException(javaExceptionToV8(env, errStr.str())));
+    return ThrowException(javaExceptionToV8(env, errStr.str()));
   }
 
   // get the field
@@ -545,7 +548,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   if(field == NULL) {
     std::ostringstream errStr;
     errStr << "Could not find field " << fieldName.c_str() << " on class " << className.c_str();
-    POP_LOCAL_JAVA_FRAME_AND_RETURN(ThrowException(javaExceptionToV8(env, errStr.str())));
+    return ThrowException(javaExceptionToV8(env, errStr.str()));
   }
 
   jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
@@ -556,10 +559,10 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   if(env->ExceptionOccurred()) {
     std::ostringstream errStr;
     errStr << "Could not get field " << fieldName.c_str() << " on class " << className.c_str();
-    POP_LOCAL_JAVA_FRAME_AND_RETURN(ThrowException(javaExceptionToV8(env, errStr.str())));
+    return ThrowException(javaExceptionToV8(env, errStr.str()));
   }
 
-  POP_LOCAL_JAVA_FRAME_AND_RETURN(scope.Close(javaToV8(self, env, val)));
+  return scope.Close(javaToV8(self, env, val));
 }
 
 /*static*/ v8::Handle<v8::Value> Java::setStaticFieldValue(const v8::Arguments& args) {
@@ -570,7 +573,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     return ensureJvmResults;
   }
   JNIEnv* env = self->getJavaEnv();
-  PUSH_LOCAL_JAVA_FRAME();
+  JavaScope javaScope(env);
 
   int argsStart = 0;
   int argsEnd = args.Length();
@@ -583,7 +586,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   if(args.Length() < argsStart+1) {
     std::ostringstream errStr;
     errStr << "setStaticFieldValue requires " << (argsStart+1) << " arguments";
-    POP_LOCAL_JAVA_FRAME_AND_RETURN(ThrowException(v8::Exception::TypeError(v8::String::New(errStr.str().c_str()))));
+    return ThrowException(v8::Exception::TypeError(v8::String::New(errStr.str().c_str())));
   }
   jobject newValue = v8ToJava(env, args[argsStart]);
   argsStart++;
@@ -595,7 +598,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   if(clazz == NULL) {
     std::ostringstream errStr;
     errStr << "Could not create class " << className.c_str();
-    POP_LOCAL_JAVA_FRAME_AND_RETURN(ThrowException(javaExceptionToV8(env, errStr.str())));
+    return ThrowException(javaExceptionToV8(env, errStr.str()));
   }
 
   // get the field
@@ -603,7 +606,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   if(field == NULL) {
     std::ostringstream errStr;
     errStr << "Could not find field " << fieldName.c_str() << " on class " << className.c_str();
-    POP_LOCAL_JAVA_FRAME_AND_RETURN(ThrowException(javaExceptionToV8(env, errStr.str())));
+    return ThrowException(javaExceptionToV8(env, errStr.str()));
   }
 
   jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
@@ -616,10 +619,10 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   if(env->ExceptionOccurred()) {
     std::ostringstream errStr;
     errStr << "Could not set field " << fieldName.c_str() << " on class " << className.c_str();
-    POP_LOCAL_JAVA_FRAME_AND_RETURN(ThrowException(javaExceptionToV8(env, errStr.str())));
+    return ThrowException(javaExceptionToV8(env, errStr.str()));
   }
 
-  POP_LOCAL_JAVA_FRAME_AND_RETURN(v8::Undefined());
+  return v8::Undefined();
 }
 
 void EIO_CallJs(uv_work_t* req) {

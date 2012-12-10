@@ -1,6 +1,7 @@
 
 #include "javaObject.h"
 #include "java.h"
+#include "javaScope.h"
 #include "utils.h"
 #include <sstream>
 #include <algorithm>
@@ -15,8 +16,7 @@
 
   JNIEnv *env = java->getJavaEnv();
   obj = env->NewGlobalRef(obj);
-
-  PUSH_LOCAL_JAVA_FRAME();
+  JavaScope javaScope(env);
 
   jclass objClazz = env->GetObjectClass(obj);
   jclass classClazz = env->FindClass("java/lang/Class");
@@ -77,8 +77,6 @@
   JavaObject *self = new JavaObject(java, obj);
   self->Wrap(javaObjectObj);
 
-  POP_LOCAL_JAVA_FRAME();
-
   return scope.Close(javaObjectObj);
 }
 
@@ -109,8 +107,7 @@ JavaObject::~JavaObject() {
   v8::HandleScope scope;
   JavaObject* self = node::ObjectWrap::Unwrap<JavaObject>(args.This());
   JNIEnv *env = self->m_java->getJavaEnv();
-
-  PUSH_LOCAL_JAVA_FRAME();
+  JavaScope javaScope(env);
 
   v8::String::AsciiValue methodName(args.Data());
   std::string methodNameStr = *methodName;
@@ -122,7 +119,6 @@ JavaObject::~JavaObject() {
   ARGS_BACK_CALLBACK();
 
   if(!callbackProvided && methodNameStr == "toString") {
-    POP_LOCAL_JAVA_FRAME();
     return methodCallSync(args);
   }
 
@@ -132,15 +128,12 @@ JavaObject::~JavaObject() {
   if(method == NULL) {
     std::string msg = methodNotFoundToString(env, self->m_class, methodNameStr, false, args, argsStart, argsEnd);
     EXCEPTION_CALL_CALLBACK(msg);
-    POP_LOCAL_JAVA_FRAME();
     return v8::Undefined();
   }
 
   // run
   InstanceMethodCallBaton* baton = new InstanceMethodCallBaton(self->m_java, self, method, methodArgs, callback);
   baton->run();
-
-  POP_LOCAL_JAVA_FRAME();
 
   END_CALLBACK_FUNCTION("\"Method '" << methodNameStr << "' called without a callback did you mean to use the Sync version?\"");
 }
@@ -149,8 +142,7 @@ JavaObject::~JavaObject() {
   v8::HandleScope scope;
   JavaObject* self = node::ObjectWrap::Unwrap<JavaObject>(args.This());
   JNIEnv *env = self->m_java->getJavaEnv();
-
-  PUSH_LOCAL_JAVA_FRAME();
+  JavaScope javaScope(env);
 
   v8::String::AsciiValue methodName(args.Data());
   std::string methodNameStr = *methodName;
@@ -164,7 +156,6 @@ JavaObject::~JavaObject() {
   if(method == NULL) {
     std::string msg = methodNotFoundToString(env, self->m_class, methodNameStr, false, args, argsStart, argsEnd);
     v8::Handle<v8::Value> ex = javaExceptionToV8(env, msg);
-    POP_LOCAL_JAVA_FRAME();
     return ThrowException(ex);
   }
 
@@ -173,8 +164,6 @@ JavaObject::~JavaObject() {
   InstanceMethodCallBaton* baton = new InstanceMethodCallBaton(self->m_java, self, method, methodArgs, callback);
   v8::Handle<v8::Value> result = baton->runSync();
   delete baton;
-
-  POP_LOCAL_JAVA_FRAME();
 
   if(result->IsNativeError()) {
     return ThrowException(result);
@@ -187,8 +176,7 @@ JavaObject::~JavaObject() {
   v8::HandleScope scope;
   JavaObject* self = node::ObjectWrap::Unwrap<JavaObject>(info.This());
   JNIEnv *env = self->m_java->getJavaEnv();
-
-  PUSH_LOCAL_JAVA_FRAME();
+  JavaScope javaScope(env);
 
   v8::String::AsciiValue propertyCStr(property);
   std::string propertyStr = *propertyCStr;
@@ -197,7 +185,6 @@ JavaObject::~JavaObject() {
     std::ostringstream errStr;
     errStr << "Could not find field " << propertyStr;
     v8::Handle<v8::Value> ex = javaExceptionToV8(env, errStr.str());
-    POP_LOCAL_JAVA_FRAME();
     return ThrowException(ex);
   }
 
@@ -210,13 +197,10 @@ JavaObject::~JavaObject() {
     std::ostringstream errStr;
     errStr << "Could not get field " << propertyStr;
     v8::Handle<v8::Value> ex = javaExceptionToV8(env, errStr.str());
-    POP_LOCAL_JAVA_FRAME();
     return ThrowException(ex);
   }
 
   v8::Handle<v8::Value> result = javaToV8(self->m_java, env, val);
-
-  POP_LOCAL_JAVA_FRAME();
 
   return scope.Close(result);
 }
@@ -225,8 +209,8 @@ JavaObject::~JavaObject() {
   v8::HandleScope scope;
   JavaObject* self = node::ObjectWrap::Unwrap<JavaObject>(info.This());
   JNIEnv *env = self->m_java->getJavaEnv();
+  JavaScope javaScope(env);
 
-  PUSH_LOCAL_JAVA_FRAME();
   jobject newValue = v8ToJava(env, value);
 
   v8::String::AsciiValue propertyCStr(property);
@@ -236,7 +220,6 @@ JavaObject::~JavaObject() {
     std::ostringstream errStr;
     errStr << "Could not find field " << propertyStr;
     v8::Handle<v8::Value> ex = javaExceptionToV8(env, errStr.str());
-    POP_LOCAL_JAVA_FRAME();
     ThrowException(ex);
     return;
   }
@@ -252,10 +235,7 @@ JavaObject::~JavaObject() {
     std::ostringstream errStr;
     errStr << "Could not set field " << propertyStr;
     v8::Handle<v8::Value> ex = javaExceptionToV8(env, errStr.str());
-    POP_LOCAL_JAVA_FRAME();
     ThrowException(ex);
     return;
   }
-
-  POP_LOCAL_JAVA_FRAME();
 }
