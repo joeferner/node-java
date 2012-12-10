@@ -165,6 +165,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     return ensureJvmResults;
   }
   JNIEnv* env = self->getJavaEnv();
+  JavaScope javaScope(env);
 
   jclass classClazz = env->FindClass("java/lang/ClassLoader");
   jmethodID class_getClassLoader = env->GetStaticMethodID(classClazz, "getSystemClassLoader", "()Ljava/lang/ClassLoader;");
@@ -182,6 +183,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     return ensureJvmResults;
   }
   JNIEnv* env = self->getJavaEnv();
+  JavaScope javaScope(env);
 
   int argsStart = 0;
   int argsEnd = args.Length();
@@ -221,6 +223,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     return ensureJvmResults;
   }
   JNIEnv* env = self->getJavaEnv();
+  JavaScope javaScope(env);
 
   int argsStart = 0;
   int argsEnd = args.Length();
@@ -263,6 +266,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     return ensureJvmResults;
   }
   JNIEnv* env = self->getJavaEnv();
+  JavaScope javaScope(env);
 
   int argsStart = 0;
   int argsEnd = args.Length();
@@ -318,6 +322,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     return ensureJvmResults;
   }
   JNIEnv* env = self->getJavaEnv();
+  JavaScope javaScope(env);
 
   int argsStart = 0;
   int argsEnd = args.Length();
@@ -358,6 +363,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     return ensureJvmResults;
   }
   JNIEnv* env = self->getJavaEnv();
+  JavaScope javaScope(env);
 
   int argsStart = 0;
   int argsEnd = args.Length();
@@ -401,6 +407,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     return ensureJvmResults;
   }
   JNIEnv* env = self->getJavaEnv();
+  JavaScope javaScope(env);
 
   int argsStart = 0;
   int argsEnd = args.Length();
@@ -430,6 +437,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     return ensureJvmResults;
   }
   JNIEnv* env = self->getJavaEnv();
+  JavaScope javaScope(env);
 
   int argsStart = 0;
   int argsEnd = args.Length();
@@ -498,6 +506,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     return ensureJvmResults;
   }
   JNIEnv* env = self->getJavaEnv();
+  JavaScope javaScope(env);
 
   if(args.Length() != 1) {
     return ThrowException(v8::Exception::TypeError(v8::String::New("newByte only takes 1 argument")));

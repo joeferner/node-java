@@ -2,6 +2,7 @@
 #include "methodCallBaton.h"
 #include "java.h"
 #include "javaObject.h"
+#include "javaScope.h"
 
 MethodCallBaton::MethodCallBaton(Java* java, jobject method, jarray args, v8::Handle<v8::Value>& callback) {
   JNIEnv *env = java->getJavaEnv();
@@ -41,7 +42,11 @@ v8::Handle<v8::Value> MethodCallBaton::runSync() {
 /*static*/ void MethodCallBaton::EIO_MethodCall(uv_work_t* req) {
   MethodCallBaton* self = static_cast<MethodCallBaton*>(req->data);
   JNIEnv *env = javaAttachCurrentThread(self->m_java->getJvm(), self->m_java->getClassLoader());
-  self->execute(env);
+  // scope the java scope to after/before attaching to thread.
+  {
+    JavaScope javaScope(env);
+    self->execute(env);
+  }
   javaDetachCurrentThread(self->m_java->getJvm());
 }
 
