@@ -29,7 +29,8 @@
                 'action_name': 'verifyDeps',
                 'inputs': [
                   '$(JAVA_HOME)/lib/jvm.lib',
-                  '$(JAVA_HOME)/include/jni.h'
+                  '$(JAVA_HOME)/include/jni.h',
+                  '$(JAVA_HOME)/include/win32/jni_md.h'
                 ],
                 'outputs': ['./build/depsVerified'],
                 'action': [],
@@ -51,7 +52,8 @@
                 'action_name': 'verifyDeps',
                 'inputs': [
                   '$(JAVA_HOME)jre/lib/<(arch)/server/libjvm.so',
-                  '$(JAVA_HOME)/include/jni.h'
+                  '$(JAVA_HOME)/include/jni.h',
+                  '$(JAVA_HOME)/include/linux/jni_md.h'
                 ],
                 'outputs': ['./build/depsVerified'],
                 'action': [],
