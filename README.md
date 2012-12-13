@@ -13,6 +13,8 @@ Notes:
 * node-gyp requires python 2.x not python 3.x. See https://github.com/TooTallNate/node-gyp/issues/155 for more details.
 * If you see an error such as "No rule to make target '/opt/jdk1.7.0_09/jre/lib/amd64/server/libjvm.so', needed by 'build/depsVerified'.  Stop."
       this means that your JAVA_HOME is not set correctly and you need to verify the location of libjvm.so or jvm.lib.
+* The directory where jvm.dll exists must be in the PATH. (e.g. C:\Program Files (x86)\Java\jdk1.6.0_18\jre\bin\client).
+      This path cannot have quotes.
 
 
 ## Installation Mac
