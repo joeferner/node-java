@@ -32,7 +32,9 @@
   "dependencies": {
   },
   "devDependencies": {
-    "nodeunit": "~0.6.4"
+    "nodeunit": "~0.6.4",
+    "memwatch": "~0.2.0",
+    "async": "~0.1.22"
   },
   "scripts": {
     "test": "nodeunit test"
