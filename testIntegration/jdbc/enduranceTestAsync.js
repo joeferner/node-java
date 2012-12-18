@@ -7,8 +7,9 @@ var memwatch = require('memwatch');
 var async = require('async');
 
 // 1 - 23,305ms
+// 5 - 9,338ms
 // 10 - 8,846ms
-var concurrency = 10;
+var concurrency = 5;
 
 //var dbServerName = '192.168.13.190';
 //var dbPort = 1433;
@@ -38,7 +39,7 @@ setTimeout(function() {
   java.findClassSync(dbConnectionClass);
 
   var loopIterations = [];
-  for(var i=0; i<5000; i++) {
+  for (var i = 0; i < 5000; i++) {
     loopIterations.push(i);
   }
 
@@ -69,8 +70,6 @@ setTimeout(function() {
 
 function doLoop(callback) {
   var conn;
-  var columnCount;
-  var rs;
 
   return DriverManager.getConnection(dbConnectString, dbUserId, dbPassword, getConnectionComplete);
 
@@ -81,18 +80,28 @@ function doLoop(callback) {
     conn = _conn;
 
     //console.log("connected");
-    var statement = conn.createStatementSync();
     var queryString = "select * from Person";
-    return statement.executeQuery(queryString, executeQueryComplete);
+    return executeQuery(conn, queryString, function(row, callback) {
+      //console.log("row", row);
+      return callback();
+    }, function(err) {
+      if (err) {
+        return callback(err);
+      }
+      //console.log("query complete");
+      return callback();
+    });
   }
+}
 
-  function executeQueryComplete(err, _rs) {
+function executeQuery(conn, sql, rowCallback, completeCallback) {
+  var statement = conn.createStatementSync();
+  return statement.executeQuery(sql, function(err, rs) {
     if (err) {
-      return callback(err);
+      return completeCallback(err);
     }
-    rs = _rs;
 
-    columnCount = rs.getMetaDataSync().getColumnCountSync();
+    var columnCount = rs.getMetaDataSync().getColumnCountSync();
 
     var rsComplete = false;
     async.until(
@@ -106,36 +115,19 @@ function doLoop(callback) {
             rsComplete = true;
             return callback();
           }
-          return printRow(callback);
+          var row = [];
+          for (var i = 1; i <= columnCount; i++) {
+            row.push(rs.getObjectSync(i));
+          }
+          return rowCallback(row, callback);
         });
       },
       function(err) {
         if (err) {
-          return callback(err);
+          return completeCallback(err);
         }
-        return conn.close(callback);
+        return conn.close(completeCallback);
       }
     );
-  }
-
-  function printRow(callback) {
-    for (var i = 1; i <= columnCount; i++) {
-      var obj = rs.getObjectSync(i);
-      if (obj) {
-        if (obj.hasOwnProperty('getClassSync')) {
-          if (obj.getClassSync().toString() == 'class java.math.BigDecimal') {
-            //console.log(obj.doubleValueSync());
-            continue;
-          }
-          if (obj.getClassSync().toString() == 'class java.sql.Timestamp') {
-            //console.log(obj.getTimeSync());
-            continue;
-          }
-          //console.log("class:", obj.getClassSync().toString());
-        }
-        //console.log(obj);
-      }
-    }
-    return callback();
-  }
+  });
 }
