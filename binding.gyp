@@ -1,6 +1,6 @@
 {
   "variables": {
-    "arch%": "amd64", # linux JVM architecture. See $(JAVA_HOME)jre/lib/<@(arch)/server/
+    "arch%": "amd64", # linux JVM architecture. See $(JAVA_HOME)/jre/lib/<@(arch)/server/
     'conditions': [
       ['target_arch=="ia32"', {
         'arch%': "i386"
@@ -51,7 +51,7 @@
               {
                 'action_name': 'verifyDeps',
                 'inputs': [
-                  '$(JAVA_HOME)jre/lib/<(arch)/server/libjvm.so',
+                  '$(JAVA_HOME)/jre/lib/<(arch)/server/libjvm.so',
                   '$(JAVA_HOME)/include/jni.h',
                   '$(JAVA_HOME)/include/linux/jni_md.h'
                 ],
@@ -64,8 +64,8 @@
               "$(JAVA_HOME)/include/linux",
             ],
             "libraries": [
-              "-L$(JAVA_HOME)jre/lib/<(arch)/server/",
-              "-Wl,-rpath,$(JAVA_HOME)jre/lib/<(arch)/server/",
+              "-L$(JAVA_HOME)/jre/lib/<(arch)/server/",
+              "-Wl,-rpath,$(JAVA_HOME)/jre/lib/<(arch)/server/",
               "-ljvm"
             ]
           }
