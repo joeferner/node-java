@@ -24,6 +24,8 @@ public class Test {
   public static int staticMethodOverload(int a) { return 2; }
   public static int staticMethodOverload(SuperClass a) { return a.getVal(); }
 
+  public static String staticMethodCharArrayToString(char[] a) { return new String(a); }
+
   public static class SuperClass {
     public int getVal() { return 3; }
   }

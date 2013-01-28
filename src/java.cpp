@@ -470,6 +470,19 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     }
   }
 
+  else if(strcmp(className.c_str(), "char") == 0) {
+    results = env->NewCharArray(arrayObj->Length());
+    for(uint32_t i=0; i<arrayObj->Length(); i++) {
+      v8::Local<v8::Value> item = arrayObj->Get(i);
+      jobject val = v8ToJava(env, item);
+      jclass stringClazz = env->FindClass("java/lang/String");
+      jmethodID string_charAt = env->GetMethodID(stringClazz, "charAt", "(I)C");
+      jchar itemValues[1];
+      itemValues[0] = env->CallCharMethod(val, string_charAt, 0);
+      env->SetCharArrayRegion((jcharArray)results, i, 1, itemValues);
+    }
+  }
+
   else
   {
     jclass clazz = javaFindClass(env, className);

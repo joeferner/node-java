@@ -127,5 +127,14 @@ exports['Java - Call Static Method'] = nodeunit.testCase({
       test.ok(err.toString().match(/my exception/));
     }
     test.done();
+  },
+
+  "char array": function(test) {
+    var charArray = java.newArray("char", "hello world\n".split(''));
+    java.callStaticMethod("Test", "staticMethodCharArrayToString", charArray, function(err, result) {
+      test.ok(result);
+      test.equal(result, "hello world\n");
+      test.done();
+    });
   }
 });
