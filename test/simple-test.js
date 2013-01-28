@@ -87,7 +87,8 @@ exports['Simple'] = nodeunit.testCase({
   },
 
   "passing objects to methods": function(test) {
-    var data = java.newArray("byte", toAsciiArray("hello world\n"));
+    var dataArray = "hello world\n".split('').map(function(c) { return java.newByte(c.charCodeAt(0)); });
+    var data = java.newArray("byte", dataArray);
     //console.log("data", data.toStringSync());
     var stream = java.newInstanceSync("java.io.ByteArrayInputStream", data);
     //console.log("stream", stream);
@@ -101,11 +102,3 @@ exports['Simple'] = nodeunit.testCase({
   }
 });
 
-function toAsciiArray(str) {
-  var results = [];
-  for(var i=0; i<str.length; i++) {
-    var b = java.newByte(str.charCodeAt(i));
-    results.push(b);
-  }
-  return results;
-}

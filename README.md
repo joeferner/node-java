@@ -44,6 +44,18 @@ var list = new ArrayList();
 list.addSync('item1');
 ```
 
+### Create a char array
+
+```javascript
+var charArray = java.newArray("char", "hello world\n".split(''));
+```
+
+### Create a byte array
+
+```javascript
+var byteArray = java.newArray("byte", "hello world\n".split('').map(function(c) { return java.newByte(str.charCodeAt(c)); });
+```
+
 # Index
 
 ## java
