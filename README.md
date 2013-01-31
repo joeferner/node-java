@@ -65,8 +65,8 @@ var byteArray = java.newArray(
 ### v0.2.0
 
 * java.lang.Long and long primitives are no longer auto converted to JavaScript numbers due to the lack of 
-  precision \([See Issue #37](/nearinfinity/node-java/issues/37)\) and 
-  lack of autoboxing support from Apache Commons Lang MethodUtils#getMatchingAccessibleMethod \([See Issue #40](/nearinfinity/node-java/issues/40)\).
+  precision \([See Issue #37](https://github.com/nearinfinity/node-java/issues/37)\) and 
+  lack of autoboxing support from Apache Commons Lang MethodUtils#getMatchingAccessibleMethod \([See Issue #40](https://github.com/nearinfinity/node-java/issues/40)\).
 
 # Index
 
