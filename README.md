@@ -60,6 +60,14 @@ var byteArray = java.newArray(
     .map(function(c) { return java.newByte(str.charCodeAt(c)); });
 ```
 
+# Release Notes
+
+### v0.2.0
+
+* java.lang.Long and long primitives are no longer auto converted to JavaScript numbers due to the lack of 
+  precision \([See Issue #37](/nearinfinity/node-java/issues/37)\) and 
+  lack of autoboxing support from Apache Commons Lang MethodUtils#getMatchingAccessibleMethod \([See Issue #40](/nearinfinity/node-java/issues/40)\).
+
 # Index
 
 ## java
