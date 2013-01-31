@@ -1,4 +1,3 @@
-
 var java = require("../testHelpers").java;
 
 var nodeunit = require("nodeunit");
@@ -22,6 +21,9 @@ exports['Java - Call Static Method'] = nodeunit.testCase({
 
   "callStaticMethod with args": function(test) {
     java.callStaticMethod("Test", "staticMethod", 42, function(err, result) {
+      if (err) {
+        return test.done(err);
+      }
       test.ok(result);
       test.equal(result, 43);
       test.done();
@@ -111,7 +113,7 @@ exports['Java - Call Static Method'] = nodeunit.testCase({
     try {
       java.callStaticMethodSync("Test", "staticMethodThrows", ex);
       test.fail("should throw");
-    } catch(err) {
+    } catch (err) {
       test.ok(err.toString().match(/my exception/));
     }
     test.done();
@@ -123,7 +125,7 @@ exports['Java - Call Static Method'] = nodeunit.testCase({
     try {
       myTest.methodThrowsSync(ex);
       test.fail("should throw");
-    } catch(err) {
+    } catch (err) {
       test.ok(err.toString().match(/my exception/));
     }
     test.done();
@@ -132,8 +134,34 @@ exports['Java - Call Static Method'] = nodeunit.testCase({
   "char array": function(test) {
     var charArray = java.newArray("char", "hello world\n".split(''));
     java.callStaticMethod("Test", "staticMethodCharArrayToString", charArray, function(err, result) {
+      if (err) {
+        return test.done(err);
+      }
       test.ok(result);
       test.equal(result, "hello world\n");
+      test.done();
+    });
+  },
+
+  "java.lang.Long calls (java Long)": function(test) {
+    var javaLong = java.newInstanceSync("java.lang.Long", 5);
+    java.callStaticMethod("Test", "staticMethodLongToString", javaLong, function(err, result) {
+      if (err) {
+        return test.done(err);
+      }
+      test.ok(result);
+      test.equal(result, "5");
+      test.done();
+    });
+  },
+
+  "Call method that returns a long": function(test) {
+    java.callStaticMethod("Test", "staticMethodReturnLong", function(err, result) {
+      if (err) {
+        return test.done(err);
+      }
+      test.ok(result);
+      test.equal(result.toStringSync(), "9223372036854775807");
       test.done();
     });
   }

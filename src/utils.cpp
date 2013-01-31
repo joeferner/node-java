@@ -429,13 +429,14 @@ v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj) {
         jbyte result = env->CallByteMethod(obj, byte_byteValue);
         return scope.Close(v8::Number::New(result));
       }
-    case TYPE_LONG:
-      {
-        jclass longClazz = env->FindClass("java/lang/Long");
-        jmethodID long_longValue = env->GetMethodID(longClazz, "longValue", "()J");
-        jlong result = env->CallLongMethod(obj, long_longValue);
-        return scope.Close(v8::Number::New(result));
-      }
+// Removed to support long return types and long parameters.
+//    case TYPE_LONG:
+//      {
+//        jclass longClazz = env->FindClass("java/lang/Long");
+//        jmethodID long_longValue = env->GetMethodID(longClazz, "longValue", "()J");
+//        jlong result = env->CallLongMethod(obj, long_longValue);
+//        return scope.Close(v8::Number::New(result));
+//      }
     case TYPE_INT:
       {
         jclass integerClazz = env->FindClass("java/lang/Integer");
