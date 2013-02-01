@@ -12,6 +12,9 @@
 
 class Java;
 
+#define V8_HIDDEN_MARKER_JAVA_LONG   "__isJavaLong"
+#define V8_HIDDEN_MARKER_JAVA_OBJECT "__isJavaObject"
+
 typedef enum _jvalueType {
   TYPE_VOID    = 1,
   TYPE_INT     = 2,
