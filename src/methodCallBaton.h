@@ -5,6 +5,7 @@
 #include "utils.h"
 #include <v8.h>
 #include <node.h>
+#include <node_version.h>
 #include <jni.h>
 #include <list>
 
@@ -17,7 +18,11 @@ public:
   virtual ~MethodCallBaton();
 
   static void EIO_MethodCall(uv_work_t* req);
+#if NODE_MINOR_VERSION >= 10
+  static void EIO_AfterMethodCall(uv_work_t* req, int status);
+#else
   static void EIO_AfterMethodCall(uv_work_t* req);
+#endif
   void run();
   v8::Handle<v8::Value> runSync();
 

@@ -50,7 +50,11 @@ v8::Handle<v8::Value> MethodCallBaton::runSync() {
   javaDetachCurrentThread(self->m_java->getJvm());
 }
 
+#if NODE_MINOR_VERSION >= 10
+/*static*/ void MethodCallBaton::EIO_AfterMethodCall(uv_work_t* req, int status) {
+#else
 /*static*/ void MethodCallBaton::EIO_AfterMethodCall(uv_work_t* req) {
+#endif
   MethodCallBaton* self = static_cast<MethodCallBaton*>(req->data);
   JNIEnv *env = self->m_java->getJavaEnv();
   self->after(env);

@@ -9,6 +9,7 @@
 #include "javaScope.h"
 #include "methodCallBaton.h"
 #include "node_NodeDynamicProxyClass.h"
+#include <node_version.h>
 #include <sstream>
 
 std::string nativeBindingLocation;
@@ -650,7 +651,11 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
 void EIO_CallJs(uv_work_t* req) {
 }
 
+#if NODE_MINOR_VERSION >= 10
+void EIO_AfterCallJs(uv_work_t* req, int status) {
+#else
 void EIO_AfterCallJs(uv_work_t* req) {
+#endif
   DynamicProxyData* dynamicProxyData = static_cast<DynamicProxyData*>(req->data);
   if(!dynamicProxyDataVerify(dynamicProxyData)) {
     return;
@@ -726,7 +731,11 @@ JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jo
   uv_work_t* req = new uv_work_t();
   req->data = dynamicProxyData;
   if(myThreadId == v8ThreadId) {
+#if NODE_MINOR_VERSION >= 10
+    EIO_AfterCallJs(req, 0);
+#else
     EIO_AfterCallJs(req);
+#endif
   } else {
     uv_queue_work(uv_default_loop(), req, EIO_CallJs, EIO_AfterCallJs);
 
