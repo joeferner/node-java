@@ -143,6 +143,14 @@ exports['Java - Call Static Method'] = nodeunit.testCase({
     });
   },
 
+  "java.lang.Long addition": function(test) {
+    var javaLong = java.newInstanceSync("java.lang.Long", 5);
+    test.equal(javaLong.toString(), '5');
+    var result = javaLong + 1;
+    test.equal(result, 6);
+    test.done();
+  },
+
   "java.lang.Long calls (java Long)": function(test) {
     var javaLong = java.newInstanceSync("java.lang.Long", 5);
     java.callStaticMethod("Test", "staticMethodLongToString", javaLong, function(err, result) {
@@ -161,7 +169,7 @@ exports['Java - Call Static Method'] = nodeunit.testCase({
         return test.done(err);
       }
       test.ok(result);
-      test.equal(result.toStringSync(), "9223372036854775807");
+      test.equal(result.longValue, "9223372036854775807");
       test.done();
     });
   }

@@ -73,7 +73,7 @@
 
   v8::Local<v8::Function> ctor = persistentFuncTemplate->GetFunction();
   v8::Local<v8::Object> javaObjectObj = ctor->NewInstance();
-  javaObjectObj->SetHiddenValue(v8::String::New("__isJavaObject"), v8::Boolean::New(true));
+  javaObjectObj->SetHiddenValue(v8::String::New(V8_HIDDEN_MARKER_JAVA_OBJECT), v8::Boolean::New(true));
   JavaObject *self = new JavaObject(java, obj);
   self->Wrap(javaObjectObj);
 

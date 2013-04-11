@@ -8,6 +8,9 @@
 
 #define MODIFIER_STATIC 9
 
+jobject v8ToJava_javaObject(JNIEnv* env, v8::Local<v8::Object> obj);
+jobject v8ToJava_javaLong(JNIEnv* env, v8::Local<v8::Object> obj);
+
 void javaReflectionGetMethods(JNIEnv *env, jclass clazz, std::list<jobject>* methods, bool includeStatic) {
   jclass clazzclazz = env->FindClass("java/lang/Class");
   jmethodID clazz_getMethods = env->GetMethodID(clazzclazz, "getMethods", "()[Ljava/lang/reflect/Method;");
@@ -267,55 +270,15 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
 
   if(arg->IsObject()) {
     v8::Local<v8::Object> obj = v8::Object::Cast(*arg);
-    v8::Local<v8::Value> isJavaObject = obj->GetHiddenValue(v8::String::New("__isJavaObject"));
+
+    v8::Local<v8::Value> isJavaObject = obj->GetHiddenValue(v8::String::New(V8_HIDDEN_MARKER_JAVA_OBJECT));
     if(!isJavaObject.IsEmpty() && isJavaObject->IsBoolean()) {
-      JavaObject* javaObject = node::ObjectWrap::Unwrap<JavaObject>(obj);
-      jobject jobj = javaObject->getObject();
+      return v8ToJava_javaObject(env, obj);
+    }
 
-      jclass nodeDynamicProxyClass = env->FindClass("node/NodeDynamicProxyClass");
-      if(env->IsInstanceOf(jobj, nodeDynamicProxyClass)) {
-        jfieldID ptrField = env->GetFieldID(nodeDynamicProxyClass, "ptr", "J");
-        DynamicProxyData* proxyData = (DynamicProxyData*)(long)env->GetLongField(jobj, ptrField);
-        if(!dynamicProxyDataVerify(proxyData)) {
-          return NULL;
-        }
-
-        jclass dynamicInterface = javaFindClass(env, proxyData->interfaceName);
-        if(dynamicInterface == NULL) {
-          printf("Could not find interface %s\n", proxyData->interfaceName.c_str());
-          return NULL;
-        }
-        jclass classClazz = env->FindClass("java/lang/Class");
-        jobjectArray classArray = env->NewObjectArray(1, classClazz, NULL);
-        env->SetObjectArrayElement(classArray, 0, dynamicInterface);
-
-        jmethodID class_getClassLoader = env->GetMethodID(classClazz, "getClassLoader", "()Ljava/lang/ClassLoader;");
-        jobject classLoader = env->CallObjectMethod(dynamicInterface, class_getClassLoader);
-        if(classLoader == NULL) {
-          jclass objectClazz = env->FindClass("java/lang/Object");
-          jmethodID object_getClass = env->GetMethodID(objectClazz, "getClass", "()Ljava/lang/Class;");
-          jobject jobjClass = env->CallObjectMethod(jobj, object_getClass);
-          classLoader = env->CallObjectMethod(jobjClass, class_getClassLoader);
-        }
-
-        jclass proxyClass = env->FindClass("java/lang/reflect/Proxy");
-        jmethodID proxy_newProxyInstance = env->GetStaticMethodID(proxyClass, "newProxyInstance", "(Ljava/lang/ClassLoader;[Ljava/lang/Class;Ljava/lang/reflect/InvocationHandler;)Ljava/lang/Object;");
-        if(classLoader == NULL) {
-          printf("Could not get classloader for Proxy\n");
-          return NULL;
-        }
-        if(classArray == NULL) {
-          printf("Could not create class array for Proxy\n");
-          return NULL;
-        }
-        if(jobj == NULL) {
-          printf("Not a valid object to wrap\n");
-          return NULL;
-        }
-        jobj = env->CallStaticObjectMethod(proxyClass, proxy_newProxyInstance, classLoader, classArray, jobj);
-      }
-
-      return jobj;
+    v8::Local<v8::Value> isJavaLong = obj->GetHiddenValue(v8::String::New(V8_HIDDEN_MARKER_JAVA_LONG));
+    if(!isJavaLong.IsEmpty() && isJavaLong->IsBoolean()) {
+      return v8ToJava_javaLong(env, obj);
     }
   }
 
@@ -323,6 +286,64 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
   v8::String::AsciiValue typeStr(arg);
   printf("v8ToJava: Unhandled type: %s\n", *typeStr);
   return NULL;
+}
+
+jobject v8ToJava_javaObject(JNIEnv* env, v8::Local<v8::Object> obj) {
+  JavaObject* javaObject = node::ObjectWrap::Unwrap<JavaObject>(obj);
+  jobject jobj = javaObject->getObject();
+
+  jclass nodeDynamicProxyClass = env->FindClass("node/NodeDynamicProxyClass");
+  if(env->IsInstanceOf(jobj, nodeDynamicProxyClass)) {
+    jfieldID ptrField = env->GetFieldID(nodeDynamicProxyClass, "ptr", "J");
+    DynamicProxyData* proxyData = (DynamicProxyData*)(long)env->GetLongField(jobj, ptrField);
+    if(!dynamicProxyDataVerify(proxyData)) {
+      return NULL;
+    }
+
+    jclass dynamicInterface = javaFindClass(env, proxyData->interfaceName);
+    if(dynamicInterface == NULL) {
+      printf("Could not find interface %s\n", proxyData->interfaceName.c_str());
+      return NULL;
+    }
+    jclass classClazz = env->FindClass("java/lang/Class");
+    jobjectArray classArray = env->NewObjectArray(1, classClazz, NULL);
+    env->SetObjectArrayElement(classArray, 0, dynamicInterface);
+
+    jmethodID class_getClassLoader = env->GetMethodID(classClazz, "getClassLoader", "()Ljava/lang/ClassLoader;");
+    jobject classLoader = env->CallObjectMethod(dynamicInterface, class_getClassLoader);
+    if(classLoader == NULL) {
+      jclass objectClazz = env->FindClass("java/lang/Object");
+      jmethodID object_getClass = env->GetMethodID(objectClazz, "getClass", "()Ljava/lang/Class;");
+      jobject jobjClass = env->CallObjectMethod(jobj, object_getClass);
+      classLoader = env->CallObjectMethod(jobjClass, class_getClassLoader);
+    }
+
+    jclass proxyClass = env->FindClass("java/lang/reflect/Proxy");
+    jmethodID proxy_newProxyInstance = env->GetStaticMethodID(proxyClass, "newProxyInstance", "(Ljava/lang/ClassLoader;[Ljava/lang/Class;Ljava/lang/reflect/InvocationHandler;)Ljava/lang/Object;");
+    if(classLoader == NULL) {
+      printf("Could not get classloader for Proxy\n");
+      return NULL;
+    }
+    if(classArray == NULL) {
+      printf("Could not create class array for Proxy\n");
+      return NULL;
+    }
+    if(jobj == NULL) {
+      printf("Not a valid object to wrap\n");
+      return NULL;
+    }
+    jobj = env->CallStaticObjectMethod(proxyClass, proxy_newProxyInstance, classLoader, classArray, jobj);
+  }
+
+  return jobj;
+}
+
+jobject v8ToJava_javaLong(JNIEnv* env, v8::Local<v8::Object> obj) {
+  jobject longValue = v8ToJava(env, obj->Get(v8::String::New("longValue")));
+  jclass longClazz = env->FindClass("java/lang/Long");
+  jmethodID long_constructor = env->GetMethodID(longClazz, "<init>", "(Ljava/lang/String;)V");
+  jobject jobj = env->NewObject(longClazz, long_constructor, longValue);
+  return jobj;
 }
 
 jobjectArray v8ToJava(JNIEnv* env, const v8::Arguments& args, int start, int end) {
@@ -509,14 +530,18 @@ v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj) {
         jbyte result = env->CallByteMethod(obj, byte_byteValue);
         return scope.Close(v8::Number::New(result));
       }
-// Removed to support long return types and long parameters.
-//    case TYPE_LONG:
-//      {
-//        jclass longClazz = env->FindClass("java/lang/Long");
-//        jmethodID long_longValue = env->GetMethodID(longClazz, "longValue", "()J");
-//        jlong result = env->CallLongMethod(obj, long_longValue);
-//        return scope.Close(v8::Number::New(result));
-//      }
+    case TYPE_LONG:
+      {
+        jclass longClazz = env->FindClass("java/lang/Long");
+        jmethodID long_longValue = env->GetMethodID(longClazz, "longValue", "()J");
+        jlong result = env->CallLongMethod(obj, long_longValue);
+        std::string strValue = javaObjectToString(env, obj);
+        v8::Local<v8::Value> v8Result = v8::NumberObject::New(result);
+        v8::NumberObject* v8ResultNumberObject = v8::NumberObject::Cast(*v8Result);
+        v8ResultNumberObject->Set(v8::String::New("longValue"), v8::String::New(strValue.c_str()));
+        v8ResultNumberObject->SetHiddenValue(v8::String::New(V8_HIDDEN_MARKER_JAVA_LONG), v8::Boolean::New(true));
+        return scope.Close(v8Result);
+      }
     case TYPE_INT:
       {
         jclass integerClazz = env->FindClass("java/lang/Integer");

@@ -60,13 +60,27 @@ var byteArray = java.newArray(
     .map(function(c) { return java.newByte(str.charCodeAt(c)); });
 ```
 
+### Using java.lang.Long and long
+
+JavaScript only supports 32-bit integers. Because of this java longs must be treated specially.
+When getting a long result the value may be truncated. If you need the original value there is
+a property off of the result called "longValue" which contains the un-truncated value as a string.
+If you are calling a method that takes a long you must create it using [java.newInstance](#javaNewInstance).
+
+```javascript
+var javaLong = java.newInstanceSync("java.lang.Long", 5);
+console.log('Possibly truncated long value: ' + javaLong);
+console.log('Original long value (as a string): ' + javaLong.longValue);
+java.callStaticMethodSync("Test", "staticMethodThatTakesALong", javaLong);
+```
+
 # Release Notes
 
 ### v0.2.0
 
-* java.lang.Long and long primitives are no longer auto converted to JavaScript numbers due to the lack of 
-  precision \([See Issue #37](https://github.com/nearinfinity/node-java/issues/37)\) and 
-  lack of autoboxing support from Apache Commons Lang MethodUtils#getMatchingAccessibleMethod \([See Issue #40](https://github.com/nearinfinity/node-java/issues/40)\).
+* java.lang.Long and long primitives are handled better. See
+  \([Issue #37](https://github.com/nearinfinity/node-java/issues/37)\) and
+  \([Issue #40](https://github.com/nearinfinity/node-java/issues/40)\).
 
 # Index
 

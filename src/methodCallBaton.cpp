@@ -50,7 +50,11 @@ v8::Handle<v8::Value> MethodCallBaton::runSync() {
   javaDetachCurrentThread(self->m_java->getJvm());
 }
 
+#if NODE_MINOR_VERSION >= 10
+/*static*/ void MethodCallBaton::EIO_AfterMethodCall(uv_work_t* req, int status) {
+#else
 /*static*/ void MethodCallBaton::EIO_AfterMethodCall(uv_work_t* req) {
+#endif
   MethodCallBaton* self = static_cast<MethodCallBaton*>(req->data);
   JNIEnv *env = self->m_java->getJavaEnv();
   self->after(env);
@@ -78,7 +82,6 @@ v8::Handle<v8::Value> MethodCallBaton::resultsToV8(JNIEnv *env) {
 
   if(m_error) {
     v8::Handle<v8::Value> err = javaExceptionToV8(env, m_error, m_errorString);
-    env->DeleteGlobalRef(m_error);
     return scope.Close(err);
   }
 
@@ -92,9 +95,8 @@ void NewInstanceBaton::execute(JNIEnv *env) {
   //printf("invoke: %s\n", javaMethodCallToString(env, m_method, constructor_newInstance, m_args).c_str());
 
   jobject result = env->CallObjectMethod(m_method, constructor_newInstance, m_args);
-  jthrowable err = env->ExceptionOccurred();
-  if(err) {
-    m_error = (jthrowable)env->NewGlobalRef(err);
+  if(env->ExceptionCheck()) {
+    m_error = env->ExceptionOccurred();
     m_errorString = "Error creating class";
     env->ExceptionClear();
     return;
@@ -117,9 +119,8 @@ void StaticMethodCallBaton::execute(JNIEnv *env) {
 
   jobject result = env->CallObjectMethod(m_method, method_invoke, NULL, m_args);
 
-  jthrowable err = env->ExceptionOccurred();
-  if(err) {
-    m_error = (jthrowable)env->NewGlobalRef(err);
+  if(env->ExceptionCheck()) {
+    m_error = env->ExceptionOccurred();
     m_errorString = "Error running static method";
     env->ExceptionClear();
     return;
@@ -142,9 +143,8 @@ void InstanceMethodCallBaton::execute(JNIEnv *env) {
 
   jobject result = env->CallObjectMethod(m_method, method_invoke, m_javaObject->getObject(), m_args);
 
-  jthrowable err = env->ExceptionOccurred();
-  if(err) {
-    m_error = (jthrowable)env->NewGlobalRef(err);
+  if(env->ExceptionCheck()) {
+    m_error = env->ExceptionOccurred();
     m_errorString = "Error running instance method";
     env->ExceptionClear();
     return;

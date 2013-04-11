@@ -4,6 +4,12 @@
     'conditions': [
       ['target_arch=="ia32"', {
         'arch%': "i386"
+      }],
+      ['OS=="win"', {
+        'javahome%': "<!(echo %JAVA_HOME%)"
+      }],
+      ['OS=="linux" or OS=="mac"', {
+        'javahome%': "<!(echo $JAVA_HOME)"
       }]
     ]
   },
@@ -19,7 +25,7 @@
         "src/utils.cpp"
       ],
       "include_dirs": [
-        "$(JAVA_HOME)/include",
+        "<(javahome)/include",
       ],
       'conditions': [
         ['OS=="win"',
@@ -28,9 +34,9 @@
               {
                 'action_name': 'verifyDeps',
                 'inputs': [
-                  '$(JAVA_HOME)/lib/jvm.lib',
-                  '$(JAVA_HOME)/include/jni.h',
-                  '$(JAVA_HOME)/include/win32/jni_md.h'
+                  '<(javahome)/lib/jvm.lib',
+                  '<(javahome)/include/jni.h',
+                  '<(javahome)/include/win32/jni_md.h'
                 ],
                 'outputs': ['./build/depsVerified'],
                 'action': ['python', 'touch.py'],
@@ -38,10 +44,10 @@
               }
             ],
             "include_dirs": [
-              "$(JAVA_HOME)/include/win32",
+              "<(javahome)/include/win32",
             ],
             "libraries": [
-              "-l$(JAVA_HOME)/lib/jvm.lib"
+              "-l<(javahome)/lib/jvm.lib"
             ]
           }
         ],
@@ -51,9 +57,9 @@
               {
                 'action_name': 'verifyDeps',
                 'inputs': [
-                  '$(JAVA_HOME)/jre/lib/<(arch)/server/libjvm.so',
-                  '$(JAVA_HOME)/include/jni.h',
-                  '$(JAVA_HOME)/include/linux/jni_md.h'
+                  '<(javahome)/jre/lib/<(arch)/server/libjvm.so',
+                  '<(javahome)/include/jni.h',
+                  '<(javahome)/include/linux/jni_md.h'
                 ],
                 'outputs': ['./build/depsVerified'],
                 'action': [],
@@ -61,11 +67,11 @@
               }
             ],
             "include_dirs": [
-              "$(JAVA_HOME)/include/linux",
+              "<(javahome)/include/linux",
             ],
             "libraries": [
-              "-L$(JAVA_HOME)/jre/lib/<(arch)/server/",
-              "-Wl,-rpath,$(JAVA_HOME)/jre/lib/<(arch)/server/",
+              "-L<(javahome)/jre/lib/<(arch)/server/",
+              "-Wl,-rpath,<(javahome)/jre/lib/<(arch)/server/",
               "-ljvm"
             ]
           }
