@@ -54,6 +54,7 @@ std::string javaMethodCallToString(JNIEnv *env, jobject obj, jmethodID methodId,
 JNIEnv* javaAttachCurrentThread(JavaVM* jvm, jobject classLoader);
 void javaDetachCurrentThread(JavaVM* jvm);
 jobject getSystemClassLoader(JNIEnv *env);
+jvalueType javaGetArrayComponentType(JNIEnv *env, jobjectArray array);
 jvalueType javaGetType(JNIEnv *env, jclass type);
 jobjectArray v8ToJava(JNIEnv* env, const v8::Arguments& args, int start, int end);
 jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg);
@@ -62,7 +63,7 @@ v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, jthrowable ex, const std::s
 v8::Handle<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArray);
 v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj);
 jobjectArray javaObjectArrayToClasses(JNIEnv *env, jobjectArray objs);
-jobject longToJavaLongObj(JNIEnv *env, long l);
+jobject longToJavaLongObj(JNIEnv *env, jlong l);
 
 jclass javaFindClass(JNIEnv* env, std::string& className);
 jobject javaFindField(JNIEnv* env, jclass clazz, std::string& fieldName);

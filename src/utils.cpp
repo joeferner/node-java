@@ -373,6 +373,20 @@ v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, const std::string& alternat
   return scope.Close(javaExceptionToV8(env, ex, alternateMessage));
 }
 
+jvalueType javaGetArrayComponentType(JNIEnv *env, jobjectArray array) {
+  jclass objectClazz = env->FindClass("java/lang/Object");
+  jclass clazzclazz = env->FindClass("java/lang/Class");
+
+  jmethodID object_getClass = env->GetMethodID(objectClazz, "getClass", "()Ljava/lang/Class;");
+  jobject arrayClass = env->CallObjectMethod(array, object_getClass);
+
+  jmethodID class_getComponentType = env->GetMethodID(clazzclazz, "getComponentType", "()Ljava/lang/Class;");
+  jobject arrayComponentTypeClass = env->CallObjectMethod(arrayClass, class_getComponentType);
+
+  jvalueType arrayComponentType = javaGetType(env, (jclass)arrayComponentTypeClass);
+  return arrayComponentType;
+}
+
 v8::Handle<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArray) {
   v8::HandleScope scope;
 
@@ -380,16 +394,82 @@ v8::Handle<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArr
     return v8::Null();
   }
 
-  //printf("javaArrayToV8: %d %s\n", javaObjectToString(env, objArray).c_str());
+  jvalueType arrayComponentType = javaGetArrayComponentType(env, objArray);
+  //printf("javaArrayToV8: %d %s\n", arrayComponentType, javaObjectToString(env, objArray).c_str());
 
   jsize arraySize = env->GetArrayLength(objArray);
   //printf("array size: %d\n", arraySize);
 
   v8::Handle<v8::Array> result = v8::Array::New(arraySize);
-  for(jsize i=0; i<arraySize; i++) {
-    jobject obj = env->GetObjectArrayElement(objArray, i);
-    v8::Handle<v8::Value> item = javaToV8(java, env, obj);
-    result->Set(i, item);
+  switch(arrayComponentType) {
+  case TYPE_INT:
+    {
+      jint* elems = env->GetIntArrayElements((jintArray)objArray, 0);
+      for(jsize i=0; i<arraySize; i++) {
+        result->Set(i, v8::Integer::New(elems[i]));
+      }
+      env->ReleaseIntArrayElements((jintArray)objArray, elems, 0);
+    }
+    break;
+
+  case TYPE_BYTE:
+    {
+      jbyte* elems = env->GetByteArrayElements((jbyteArray)objArray, 0);
+      for(jsize i=0; i<arraySize; i++) {
+        result->Set(i, v8::Number::New(elems[i]));
+      }
+      env->ReleaseByteArrayElements((jbyteArray)objArray, elems, 0);
+    }
+    break;
+
+  case TYPE_BOOLEAN:
+    {
+      jboolean* elems = env->GetBooleanArrayElements((jbooleanArray)objArray, 0);
+      for(jsize i=0; i<arraySize; i++) {
+        result->Set(i, v8::Boolean::New(elems[i]));
+      }
+      env->ReleaseBooleanArrayElements((jbooleanArray)objArray, elems, 0);
+    }
+    break;
+
+  case TYPE_DOUBLE:
+    {
+      jdouble* elems = env->GetDoubleArrayElements((jdoubleArray)objArray, 0);
+      for(jsize i=0; i<arraySize; i++) {
+        result->Set(i, v8::Number::New(elems[i]));
+      }
+      env->ReleaseDoubleArrayElements((jdoubleArray)objArray, elems, 0);
+    }
+    break;
+
+  case TYPE_FLOAT:
+    {
+      jfloat* elems = env->GetFloatArrayElements((jfloatArray)objArray, 0);
+      for(jsize i=0; i<arraySize; i++) {
+        result->Set(i, v8::Number::New(elems[i]));
+      }
+      env->ReleaseFloatArrayElements((jfloatArray)objArray, elems, 0);
+    }
+    break;
+
+  case TYPE_LONG:
+    {
+      jlong* elems = env->GetLongArrayElements((jlongArray)objArray, 0);
+      for(jsize i=0; i<arraySize; i++) {
+        jobject obj = longToJavaLongObj(env, elems[i]);
+        result->Set(i, JavaObject::New(java, obj));
+      }
+      env->ReleaseLongArrayElements((jlongArray)objArray, elems, 0);
+    }
+    break;
+
+  default:
+    for(jsize i=0; i<arraySize; i++) {
+        jobject obj = env->GetObjectArrayElement(objArray, i);
+        v8::Handle<v8::Value> item = javaToV8(java, env, obj);
+        result->Set(i, item);
+    }
+    break;
   }
 
   return scope.Close(result);
@@ -506,10 +586,11 @@ jobject javaFindConstructor(JNIEnv *env, jclass clazz, jobjectArray methodArgs) 
   return method;
 }
 
-jobject longToJavaLongObj(JNIEnv *env, long val) {
+jobject longToJavaLongObj(JNIEnv *env, jlong val) {
   jclass longClass = env->FindClass("java/lang/Long");
   jmethodID constructor = env->GetMethodID(longClass, "<init>", "(J)V");
-  return env->NewObject(longClass, constructor, val);
+  jobject result = env->NewObject(longClass, constructor, val);
+  return result;
 }
 
 int dynamicProxyDataVerify(DynamicProxyData* data) {

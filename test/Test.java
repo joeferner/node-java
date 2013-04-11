@@ -35,4 +35,64 @@ public class Test {
   public static class SubClass extends SuperClass {
     public int getVal() { return 4; }
   }
+
+  public static int[] getArrayOfInts() {
+    int arr[] = new int[5];
+    arr[0] = 1;
+    arr[1] = 2;
+    arr[2] = 3;
+    arr[3] = 4;
+    arr[4] = 5;
+    return arr;
+  }
+
+  public static byte[] getArrayOfBytes() {
+    byte arr[] = new byte[5];
+    arr[0] = 1;
+    arr[1] = 2;
+    arr[2] = 3;
+    arr[3] = 4;
+    arr[4] = 5;
+    return arr;
+  }
+
+  public static boolean[] getArrayOfBools() {
+    boolean arr[] = new boolean[5];
+    arr[0] = true;
+    arr[1] = true;
+    arr[2] = false;
+    arr[3] = true;
+    arr[4] = false;
+    return arr;
+  }
+
+  public static double[] getArrayOfDoubles() {
+    double arr[] = new double[5];
+    arr[0] = 1;
+    arr[1] = 2;
+    arr[2] = 3;
+    arr[3] = 4;
+    arr[4] = 5;
+    return arr;
+  }
+
+  public static float[] getArrayOfFloats() {
+    float arr[] = new float[5];
+    arr[0] = 1;
+    arr[1] = 2;
+    arr[2] = 3;
+    arr[3] = 4;
+    arr[4] = 5;
+    return arr;
+  }
+
+  public static long[] getArrayOfLongs() {
+    long arr[] = new long[5];
+    arr[0] = Long.MAX_VALUE;
+    arr[1] = Long.MIN_VALUE;
+    arr[2] = 3;
+    arr[3] = 4;
+    arr[4] = 5;
+    return arr;
+  }
 }

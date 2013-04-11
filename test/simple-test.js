@@ -99,6 +99,46 @@ exports['Simple'] = nodeunit.testCase({
     console.log("bufferedReader.readLineSync", str);
     test.equal(str, "hello world");
     test.done();
+  },
+
+  "method returning an array of ints sync": function(test) {
+    var arr = java.callStaticMethodSync("Test", "getArrayOfInts");
+    console.log(arr);
+    test.done();
+  },
+
+  "method returning an array of bytes sync": function(test) {
+    var arr = java.callStaticMethodSync("Test", "getArrayOfBytes");
+    console.log(arr);
+    test.done();
+  },
+
+  "method returning an array of bools sync": function(test) {
+    var arr = java.callStaticMethodSync("Test", "getArrayOfBools");
+    console.log(arr);
+    test.done();
+  },
+
+  "method returning an array of doubles sync": function(test) {
+    var arr = java.callStaticMethodSync("Test", "getArrayOfDoubles");
+    console.log(arr);
+    test.done();
+  },
+
+  "method returning an array of floats sync": function(test) {
+    var arr = java.callStaticMethodSync("Test", "getArrayOfFloats");
+    console.log(arr);
+    test.done();
+  },
+
+  "method returning an array of longs sync": function(test) {
+    var arr = java.callStaticMethodSync("Test", "getArrayOfLongs");
+    arr = arr.map(function(l) {
+      return l.toStringSync();
+    });
+    console.log(arr);
+    test.done();
   }
+
 });
 
