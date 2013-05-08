@@ -30,7 +30,7 @@ MethodCallBaton::~MethodCallBaton() {
 void MethodCallBaton::run() {
   uv_work_t* req = new uv_work_t();
   req->data = this;
-  uv_queue_work(uv_default_loop(), req, MethodCallBaton::EIO_MethodCall, MethodCallBaton::EIO_AfterMethodCall);
+  uv_queue_work(uv_default_loop(), req, MethodCallBaton::EIO_MethodCall, (uv_after_work_cb)MethodCallBaton::EIO_AfterMethodCall);
 }
 
 v8::Handle<v8::Value> MethodCallBaton::runSync() {
