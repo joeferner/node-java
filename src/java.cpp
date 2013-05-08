@@ -737,7 +737,7 @@ JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jo
     EIO_AfterCallJs(req);
 #endif
   } else {
-    uv_queue_work(uv_default_loop(), req, EIO_CallJs, EIO_AfterCallJs);
+    uv_queue_work(uv_default_loop(), req, EIO_CallJs, (uv_after_work_cb)EIO_AfterCallJs);
 
     while(!dynamicProxyData->done) {
       my_sleep(100);
