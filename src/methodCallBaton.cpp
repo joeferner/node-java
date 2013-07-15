@@ -63,6 +63,8 @@ v8::Handle<v8::Value> MethodCallBaton::runSync() {
 }
 
 void MethodCallBaton::after(JNIEnv *env) {
+  v8::HandleScope scope;
+
   if(m_callback->IsFunction()) {
     v8::Handle<v8::Value> result = resultsToV8(env);
     v8::Handle<v8::Value> argv[2];
