@@ -138,6 +138,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   for(uint32_t i=0; i<optionsArray->Length(); i++) {
     v8::Local<v8::Value> arrayItemValue = optionsArray->Get(i);
     if(!arrayItemValue->IsString()) {
+      delete[] vmOptions;
       return ThrowException(v8::Exception::TypeError(v8::String::New("options must only contain strings")));
     }
     v8::Local<v8::String> arrayItem = arrayItemValue->ToString();
@@ -287,6 +288,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   if(clazz == NULL) {
     std::ostringstream errStr;
     errStr << "Could not create class node/NodeDynamicProxyClass";
+    delete dynamicProxyData;
     return ThrowException(javaExceptionToV8(env, errStr.str()));
   }
 
