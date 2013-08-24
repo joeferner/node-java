@@ -138,6 +138,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   for(uint32_t i=0; i<optionsArray->Length(); i++) {
     v8::Local<v8::Value> arrayItemValue = optionsArray->Get(i);
     if(!arrayItemValue->IsString()) {
+      delete[] vmOptions;
       return ThrowException(v8::Exception::TypeError(v8::String::New("options must only contain strings")));
     }
     v8::Local<v8::String> arrayItem = arrayItemValue->ToString();
@@ -270,8 +271,6 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   JavaScope javaScope(env);
 
   int argsStart = 0;
-  int argsEnd = args.Length();
-  UNUSED_VARIABLE(argsEnd);
 
   ARGS_FRONT_STRING(interfaceName);
   ARGS_FRONT_OBJECT(functions);
@@ -289,6 +288,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   if(clazz == NULL) {
     std::ostringstream errStr;
     errStr << "Could not create class node/NodeDynamicProxyClass";
+    delete dynamicProxyData;
     return ThrowException(javaExceptionToV8(env, errStr.str()));
   }
 
@@ -411,8 +411,6 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   JavaScope javaScope(env);
 
   int argsStart = 0;
-  int argsEnd = args.Length();
-  UNUSED_VARIABLE(argsEnd);
 
   // arguments
   ARGS_FRONT_CLASSNAME();
@@ -441,7 +439,6 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   JavaScope javaScope(env);
 
   int argsStart = 0;
-  int argsEnd = args.Length();
 
   // arguments
   ARGS_FRONT_CLASSNAME();
@@ -453,8 +450,6 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     return ThrowException(v8::Exception::TypeError(v8::String::New(errStr.str().c_str())));
   }
   v8::Local<v8::Array> arrayObj = v8::Local<v8::Array>::Cast(args[argsStart]);
-
-  UNUSED_VARIABLE(argsEnd);
 
   // find class and method
   jarray results;
@@ -551,12 +546,10 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   JavaScope javaScope(env);
 
   int argsStart = 0;
-  int argsEnd = args.Length();
 
   // arguments
   ARGS_FRONT_CLASSNAME();
   ARGS_FRONT_STRING(fieldName);
-  UNUSED_VARIABLE(argsEnd);
 
   // find the class
   jclass clazz = javaFindClass(env, className);
@@ -599,7 +592,6 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   JavaScope javaScope(env);
 
   int argsStart = 0;
-  int argsEnd = args.Length();
 
   // arguments
   ARGS_FRONT_CLASSNAME();
@@ -613,8 +605,6 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   }
   jobject newValue = v8ToJava(env, args[argsStart]);
   argsStart++;
-
-  UNUSED_VARIABLE(argsEnd);
 
   // find the class
   jclass clazz = javaFindClass(env, className);
