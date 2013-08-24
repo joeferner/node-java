@@ -665,7 +665,7 @@ std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string method
   }
 
   int count = 0;
-  for(std::list<jobject>::iterator it = methods.begin(); it != methods.end(); it++) {
+  for(std::list<jobject>::iterator it = methods.begin(); it != methods.end(); ++it) {
     jstring methodNameTestJava = (jstring)env->CallObjectMethod(*it, member_getName);
     std::string methodNameTest = javaToString(env, methodNameTestJava);
     if(methodNameTest == methodName) {

@@ -43,7 +43,7 @@
     javaReflectionGetMethods(env, objClazz, &methods, false);
     jclass methodClazz = env->FindClass("java/lang/reflect/Method");
     jmethodID method_getName = env->GetMethodID(methodClazz, "getName", "()Ljava/lang/String;");
-    for(std::list<jobject>::iterator it = methods.begin(); it != methods.end(); it++) {
+    for(std::list<jobject>::iterator it = methods.begin(); it != methods.end(); ++it) {
       jstring methodNameJava = (jstring)env->CallObjectMethod(*it, method_getName);
       std::string methodNameStr = javaToString(env, methodNameJava);
 
@@ -60,7 +60,7 @@
     javaReflectionGetFields(env, objClazz, &fields);
     jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
     jmethodID field_getName = env->GetMethodID(fieldClazz, "getName", "()Ljava/lang/String;");
-    for(std::list<jobject>::iterator it = fields.begin(); it != fields.end(); it++) {
+    for(std::list<jobject>::iterator it = fields.begin(); it != fields.end(); ++it) {
       jstring fieldNameJava = (jstring)env->CallObjectMethod(*it, field_getName);
       std::string fieldNameStr = javaToString(env, fieldNameJava);
 
