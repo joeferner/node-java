@@ -10,6 +10,9 @@
       }],
       ['OS=="linux" or OS=="mac"', {
         'javahome%': "<!(echo $JAVA_HOME)"
+      }],
+      ['OS=="mac"', {
+        'javaver%' : "<!(awk -F/ -v h=$JAVA_HOME 'BEGIN {n=split(h, a); print a[2]; exit}')"
       }]
     ]
   },
@@ -76,10 +79,33 @@
             ]
           }
         ],
-        ['OS=="mac"',
+        ['OS=="mac" and javaver=="Library"',
           {
             "include_dirs": [
-              "/System/Library/Frameworks/JavaVM.framework/Headers",
+              "<(javahome)/include",
+              "<(javahome)/include/darwin"
+            ],
+            "libraries": [
+              "-L<(javahome)/jre/lib/server",
+              "-Wl,-rpath,<(javahome)/jre/lib/server",
+              "-ljvm"
+            ]
+          }
+        ],
+        ['OS=="mac" and javaver=="System"',
+          {
+            "include_dirs": [
+              "/System/Library/Frameworks/JavaVM.framework/Headers"
+            ],
+            "libraries": [
+              "-framework JavaVM"
+            ]
+          }
+        ],
+        ['OS=="mac" and javaver==""',
+          {
+            "include_dirs": [
+              "/System/Library/Frameworks/JavaVM.framework/Headers"
             ],
             "libraries": [
               "-framework JavaVM"
