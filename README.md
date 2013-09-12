@@ -25,6 +25,12 @@ Notes:
 $ npm install java
 ```
 
+## Installation ARM (Raspberry Pi)
+
+```bash
+GYP_DEFINES="armv7=0" CCFLAGS='-march=armv6' CXXFLAGS='-march=armv6' npm install java
+```
+
 ## Quick Examples
 
 ```javascript
