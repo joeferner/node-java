@@ -6,18 +6,21 @@ var Builder = require('mnm');
 var builder = new Builder();
 
 var existsSync = fs.existsSync || path.existsSync;
+var javaHome = builder.trimQuotes(process.env["JAVA_HOME"]);
 
 builder.appendUnique('CXXFLAGS', ['-Isrc/']);
 builder.appendUnique('CXXFLAGS', ['-DHAVE_CONFIG_H']);
 
 // MAC has a built in JVM
 if (existsSync("/System/Library/Frameworks/JavaVM.framework/")) {
-  var jdkIncludeDir = process.env["JDK_INCLUDE_DIR"] || "/System/Library/Frameworks/JavaVM.framework/Headers";
+  var jdkIncludeDir = "/System/Library/Frameworks/JavaVM.framework/Headers";
+  if(process.env["JDK_INCLUDE_DIR"]) jdkIncludeDir = process.env["JDK_INCLUDE_DIR"];
+  else if(javaHome && javaHome.substr(0, 7) !== '/System') jdkIncludeDir = path.join(javaHome, 'include');
+  
   builder.appendUnique('CXXFLAGS', '-I' + jdkIncludeDir);
+  if(jdkIncludeDir.substr(0, 7) !== '/System') builder.appendUnique('CXXFLAGS', '-I' + path.join(jdkIncludeDir, 'darwin'));
   builder.appendUnique('LINKFLAGS', ['-framework', 'JavaVM']);
 } else {
-  var javaHome = builder.trimQuotes(process.env["JAVA_HOME"]);
-
   // JDK Include directory
   var jdkIncludeDir = process.env["JDK_INCLUDE_DIR"];
   if (!javaHome && !jdkIncludeDir) {
