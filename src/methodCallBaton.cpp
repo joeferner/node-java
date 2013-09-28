@@ -21,7 +21,9 @@ MethodCallBaton::~MethodCallBaton() {
   if(m_result) {
     env->DeleteGlobalRef(m_result);
   }
-
+  if(m_error) {
+    env->DeleteGlobalRef(m_error);
+  }
   env->DeleteGlobalRef(m_args);
   env->DeleteGlobalRef(m_method);
   m_callback.Dispose();
@@ -98,9 +100,10 @@ void NewInstanceBaton::execute(JNIEnv *env) {
 
   jobject result = env->CallObjectMethod(m_method, constructor_newInstance, m_args);
   if(env->ExceptionCheck()) {
-    m_error = env->ExceptionOccurred();
-    m_errorString = "Error creating class";
+    jthrowable ex = env->ExceptionOccurred();
     env->ExceptionClear();
+    m_error = (jthrowable)env->NewGlobalRef(ex);
+    m_errorString = "Error creating class";
     return;
   }
 
@@ -122,9 +125,10 @@ void StaticMethodCallBaton::execute(JNIEnv *env) {
   jobject result = env->CallObjectMethod(m_method, method_invoke, NULL, m_args);
 
   if(env->ExceptionCheck()) {
-    m_error = env->ExceptionOccurred();
-    m_errorString = "Error running static method";
+    jthrowable ex = env->ExceptionOccurred();
     env->ExceptionClear();
+    m_error = (jthrowable)env->NewGlobalRef(ex);
+    m_errorString = "Error running static method";
     return;
   }
 
@@ -146,9 +150,10 @@ void InstanceMethodCallBaton::execute(JNIEnv *env) {
   jobject result = env->CallObjectMethod(m_method, method_invoke, m_javaObject->getObject(), m_args);
 
   if(env->ExceptionCheck()) {
-    m_error = env->ExceptionOccurred();
-    m_errorString = "Error running instance method";
+    jthrowable ex = env->ExceptionOccurred();
     env->ExceptionClear();
+    m_error = (jthrowable)env->NewGlobalRef(ex);
+    m_errorString = "Error running instance method";
     return;
   }
 
