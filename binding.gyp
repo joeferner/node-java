@@ -8,7 +8,7 @@
       ['OS=="win"', {
         'javahome%': "<!(echo %JAVA_HOME%)"
       }],
-      ['OS=="linux" or OS=="mac" or OS=="freebsd"', {
+      ['OS=="linux" or OS=="mac" or OS=="freebsd" or OS=="openbsd"', {
         'javahome%': "<!(echo $JAVA_HOME)"
       }],
       ['OS=="mac"', {
@@ -96,6 +96,31 @@
             ],
             "include_dirs": [
               "<(javahome)/include/freebsd",
+            ],
+            "libraries": [
+              "-L<(javahome)/jre/lib/<(arch)/server/",
+              "-Wl,-rpath,<(javahome)/jre/lib/<(arch)/server/",
+              "-ljvm"
+            ]
+          }
+        ],
+        ['OS=="openbsd"',
+          {
+            'actions': [
+              {
+                'action_name': 'verifyDeps',
+                'inputs': [
+                  '<(javahome)/jre/lib/<(arch)/server/libjvm.so',
+                  '<(javahome)/include/jni.h',
+                  '<(javahome)/include/openbsd/jni_md.h'
+                ],
+                'outputs': ['./build/depsVerified'],
+                'action': [],
+                'message': 'Verify Deps'
+              }
+            ],
+            "include_dirs": [
+              "<(javahome)/include/openbsd",
             ],
             "libraries": [
               "-L<(javahome)/jre/lib/<(arch)/server/",
