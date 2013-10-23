@@ -18,6 +18,7 @@ private:
   Java();
   ~Java();
   v8::Handle<v8::Value> createJVM(JavaVM** jvm, JNIEnv** env);
+  void destroyJVM(JavaVM** jvm, JNIEnv** env);
 
   static v8::Handle<v8::Value> New(const v8::Arguments& args);
   static v8::Handle<v8::Value> getClassLoader(const v8::Arguments& args);
