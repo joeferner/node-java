@@ -77,7 +77,7 @@ Java::Java() {
 }
 
 Java::~Java() {
-
+  this->destroyJVM(&this->m_jvm, &this->m_env);
 }
 
 v8::Handle<v8::Value> Java::ensureJvm() {
@@ -157,6 +157,12 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   m_classLoader = getSystemClassLoader(*env);
 
   return v8::Undefined();
+}
+
+void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
+  (*jvm)->DestroyJavaVM();
+  *jvm = NULL;
+  *env = NULL;
 }
 
 /*static*/ v8::Handle<v8::Value> Java::getClassLoader(const v8::Arguments& args) {
