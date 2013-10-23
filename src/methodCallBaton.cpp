@@ -59,6 +59,7 @@ v8::Handle<v8::Value> MethodCallBaton::runSync() {
 #endif
   MethodCallBaton* self = static_cast<MethodCallBaton*>(req->data);
   JNIEnv *env = self->m_java->getJavaEnv();
+  JavaScope javaScope(env);
   self->after(env);
   delete req;
   delete self;
@@ -68,6 +69,7 @@ void MethodCallBaton::after(JNIEnv *env) {
   v8::HandleScope scope;
 
   if(m_callback->IsFunction()) {
+    v8::Local<v8::Function> callback = v8::Function::Cast(*m_callback);
     v8::Handle<v8::Value> result = resultsToV8(env);
     v8::Handle<v8::Value> argv[2];
     if(result->IsNativeError()) {
@@ -77,7 +79,7 @@ void MethodCallBaton::after(JNIEnv *env) {
       argv[0] = v8::Undefined();
       argv[1] = result;
     }
-    v8::Function::Cast(*m_callback)->Call(v8::Context::GetCurrent()->Global(), 2, argv);
+    node::MakeCallback(v8::Context::GetCurrent()->Global(), callback, 2, argv);
   }
 }
 
@@ -161,7 +163,6 @@ void InstanceMethodCallBaton::execute(JNIEnv *env) {
     m_result = NULL;
   } else {
     m_result = env->NewGlobalRef(result);
-    env->DeleteLocalRef(result);
   }
 }
 
