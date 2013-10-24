@@ -168,7 +168,15 @@ exports['Simple'] = nodeunit.testCase({
     console.log(r);
     test.equal(r, 97);
     test.done();
-  }
+  },
 
+  "new boolean array": function(test) {
+    var booleanArray = java.newArray("java.lang.Boolean", [true, false]);
+    var r = java.callStaticMethodSync("Test", "staticBooleanArray", booleanArray);
+    test.equal(r.length, 2);
+    test.equal(r[0], true);
+    test.equal(r[1], false);
+    test.done();
+  }
 });
 

@@ -30,6 +30,11 @@ public class Test {
 
   public static int staticByte(byte b) { return (int)b; }
   public static int staticChar(char ch) { return (int)ch; }
+  public static boolean[] staticBooleanArray(Boolean[] arg) {
+    boolean[] b = new boolean[arg.length];
+    for(int i=0; i<arg.length; i++) { b[i] = arg[i]; }
+    return b;
+  }
 
   public static class SuperClass {
     public int getVal() { return 3; }
