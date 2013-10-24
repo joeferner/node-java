@@ -173,6 +173,8 @@ jvalueType javaGetType(JNIEnv *env, jclass type) {
       return TYPE_LONG;
     } else if(strcmp(typeStr, "boolean") == 0 || strcmp(typeStr, "class java.lang.Boolean") == 0) {
       return TYPE_BOOLEAN;
+    } else if(strcmp(typeStr, "short") == 0 || strcmp(typeStr, "class java.lang.Short") == 0) {
+      return TYPE_SHORT;
     } else if(strcmp(typeStr, "byte") == 0 || strcmp(typeStr, "class java.lang.Byte") == 0) {
       return TYPE_BYTE;
     } else if(strcmp(typeStr, "class java.lang.String") == 0) {
@@ -453,6 +455,16 @@ v8::Handle<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArr
     }
     break;
 
+  case TYPE_SHORT:
+    {
+      jshort* elems = env->GetShortArrayElements((jshortArray)objArray, 0);
+      for(jsize i=0; i<arraySize; i++) {
+        result->Set(i, v8::Number::New(elems[i]));
+      }
+      env->ReleaseShortArrayElements((jshortArray)objArray, elems, 0);
+    }
+    break;
+
   case TYPE_DOUBLE:
     {
       jdouble* elems = env->GetDoubleArrayElements((jdoubleArray)objArray, 0);
@@ -547,6 +559,13 @@ v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj) {
         jclass integerClazz = env->FindClass("java/lang/Integer");
         jmethodID integer_intValue = env->GetMethodID(integerClazz, "intValue", "()I");
         jint result = env->CallIntMethod(obj, integer_intValue);
+        return scope.Close(v8::Integer::New(result));
+      }
+    case TYPE_SHORT:
+      {
+        jclass shortClazz = env->FindClass("java/lang/Short");
+        jmethodID short_shortValue = env->GetMethodID(shortClazz, "shortValue", "()S");
+        jshort result = env->CallShortMethod(obj, short_shortValue);
         return scope.Close(v8::Integer::New(result));
       }
     case TYPE_DOUBLE:

@@ -170,13 +170,41 @@ exports['Simple'] = nodeunit.testCase({
     test.done();
   },
 
-  "new boolean array": function(test) {
+  "new boolean array object": function(test) {
     var booleanArray = java.newArray("java.lang.Boolean", [true, false]);
     var r = java.callStaticMethodSync("Test", "staticBooleanArray", booleanArray);
     test.equal(r.length, 2);
     test.equal(r[0], true);
     test.equal(r[1], false);
     test.done();
+  },
+
+  "new boolean array": function(test) {
+    var booleanArray = java.newArray("boolean", [true, false]);
+    var r = java.callStaticMethodSync("Test", "staticBooleanArray", booleanArray);
+    test.equal(r.length, 2);
+    test.equal(r[0], true);
+    test.equal(r[1], false);
+    test.done();
+  },
+
+  "new short array objects": function(test) {
+    var shortArray = java.newArray("java.lang.Short", [1, 2].map(function(c) { return java.newShort(c); }));
+    var r = java.callStaticMethodSync("Test", "staticShortArray", shortArray);
+    test.equal(r.length, 2);
+    test.equal(r[0], 1);
+    test.equal(r[1], 2);
+    test.done();
+  },
+
+  "new short array": function(test) {
+    var shortArray = java.newArray("short", [1, 2]);
+    var r = java.callStaticMethodSync("Test", "staticShortArray", shortArray);
+    test.equal(r.length, 2);
+    test.equal(r[0], 1);
+    test.equal(r[1], 2);
+    test.done();
   }
+
 });
 

@@ -52,6 +52,7 @@ long my_getThreadId() {
   NODE_SET_PROTOTYPE_METHOD(s_ct, "findClassSync", findClassSync);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newArray", newArray);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newByte", newByte);
+  NODE_SET_PROTOTYPE_METHOD(s_ct, "newShort", newShort);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newChar", newChar);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "getStaticFieldValue", getStaticFieldValue);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "setStaticFieldValue", setStaticFieldValue);
@@ -486,6 +487,32 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
     }
   }
 
+  else if(strcmp(className.c_str(), "short") == 0) {
+    results = env->NewShortArray(arrayObj->Length());
+    for(uint32_t i=0; i<arrayObj->Length(); i++) {
+      v8::Local<v8::Value> item = arrayObj->Get(i);
+      jobject val = v8ToJava(env, item);
+      jclass shortClazz = env->FindClass("java/lang/Short");
+      jmethodID short_shortValue = env->GetMethodID(shortClazz, "shortValue", "()S");
+      jshort shortValues[1];
+      shortValues[0] = env->CallShortMethod(val, short_shortValue);
+      env->SetShortArrayRegion((jshortArray)results, i, 1, shortValues);
+    }
+  }
+
+  else if(strcmp(className.c_str(), "boolean") == 0) {
+    results = env->NewBooleanArray(arrayObj->Length());
+    for(uint32_t i=0; i<arrayObj->Length(); i++) {
+      v8::Local<v8::Value> item = arrayObj->Get(i);
+      jobject val = v8ToJava(env, item);
+      jclass booleanClazz = env->FindClass("java/lang/Boolean");
+      jmethodID boolean_booleanValue = env->GetMethodID(booleanClazz, "booleanValue", "()Z");
+      jboolean booleanValues[1];
+      booleanValues[0] = env->CallBooleanMethod(val, boolean_booleanValue);
+      env->SetBooleanArrayRegion((jbooleanArray)results, i, 1, booleanValues);
+    }
+  }
+
   else
   {
     jclass clazz = javaFindClass(env, className);
@@ -538,6 +565,34 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   jclass clazz = env->FindClass("java/lang/Byte");
   jmethodID constructor = env->GetMethodID(clazz, "<init>", "(B)V");
   jobject newObj = env->NewObject(clazz, constructor, (jbyte)val->Value());
+
+  return scope.Close(JavaObject::New(self, newObj));
+}
+
+/*static*/ v8::Handle<v8::Value> Java::newShort(const v8::Arguments& args) {
+  v8::HandleScope scope;
+  Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
+  v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
+  if(!ensureJvmResults->IsUndefined()) {
+    return ensureJvmResults;
+  }
+  JNIEnv* env = self->getJavaEnv();
+  JavaScope javaScope(env);
+
+  if(args.Length() != 1) {
+    return ThrowException(v8::Exception::TypeError(v8::String::New("newShort only takes 1 argument")));
+  }
+
+  // argument - value
+  if(!args[0]->IsNumber()) {
+    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 1 must be a number")));
+  }
+
+  v8::Local<v8::Number> val = args[0]->ToNumber();
+
+  jclass clazz = env->FindClass("java/lang/Short");
+  jmethodID constructor = env->GetMethodID(clazz, "<init>", "(S)V");
+  jobject newObj = env->NewObject(clazz, constructor, (jshort)val->Value());
 
   return scope.Close(JavaObject::New(self, newObj));
 }

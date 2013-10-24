@@ -98,6 +98,7 @@ java.callStaticMethodSync("Test", "staticMethodThatTakesALong", javaLong);
  * [setStaticFieldValue](#javaSetStaticFieldValue)
  * [newArray](#javaNewArray)
  * [newByte](#javaNewByte)
+ * [newShort](#javaNewShort)
  * [newChar](#javaNewChar)
  * [newProxy](#javaNewProxy)
 
@@ -228,6 +229,19 @@ __Arguments__
 __Example__
 
     var b = java.newByte(12);
+
+<a name="javaNewShort" />
+**java.newShort(val)**
+
+Creates a new java short. This is needed because javascript does not have the concept of a short.
+
+__Arguments__
+
+ * val - The value of the java short.
+
+__Example__
+
+    var s = java.newShort(12);
 
 <a name="javaNewChar" />
 **java.newChar(val)**

@@ -22,10 +22,11 @@ typedef enum _jvalueType {
   TYPE_OBJECT  = 4,
   TYPE_STRING  = 5,
   TYPE_BOOLEAN = 6,
-  TYPE_BYTE    = 7,
-  TYPE_DOUBLE  = 8,
-  TYPE_FLOAT   = 9,
-  TYPE_ARRAY   = 10
+  TYPE_SHORT   = 7,
+  TYPE_BYTE    = 8,
+  TYPE_DOUBLE  = 9,
+  TYPE_FLOAT   = 10,
+  TYPE_ARRAY   = 11
 } jvalueType;
 
 struct DynamicProxyData {
