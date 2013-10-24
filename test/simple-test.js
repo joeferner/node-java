@@ -138,6 +138,36 @@ exports['Simple'] = nodeunit.testCase({
     });
     console.log(arr);
     test.done();
+  },
+
+  "method taking a byte": function(test) {
+    var b = java.newByte(1);
+    test.equal('java.lang.Byte', b.getClassSync().getNameSync());
+    test.equal('1', b.toStringSync());
+    var r = java.callStaticMethodSync("Test", "staticByte", b);
+    console.log(r);
+    test.equal(r, 1);
+    test.done();
+  },
+
+  "method taking a char (number)": function(test) {
+    var ch = java.newChar(97); // 'a'
+    test.equal('java.lang.Character', ch.getClassSync().getNameSync());
+    test.equal('a', ch.toStringSync());
+    var r = java.callStaticMethodSync("Test", "staticChar", ch);
+    console.log(r);
+    test.equal(r, 97);
+    test.done();
+  },
+
+  "method taking a char (string)": function(test) {
+    var ch = java.newChar('a');
+    test.equal('java.lang.Character', ch.getClassSync().getNameSync());
+    test.equal('a', ch.toStringSync());
+    var r = java.callStaticMethodSync("Test", "staticChar", ch);
+    console.log(r);
+    test.equal(r, 97);
+    test.done();
   }
 
 });

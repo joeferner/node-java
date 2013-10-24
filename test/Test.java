@@ -28,6 +28,9 @@ public class Test {
   public static String staticMethodLongToString(java.lang.Long l) { return l.toString(); }
   public static long staticMethodReturnLong() { return java.lang.Long.MAX_VALUE; }
 
+  public static int staticByte(byte b) { return (int)b; }
+  public static int staticChar(char ch) { return (int)ch; }
+
   public static class SuperClass {
     public int getVal() { return 3; }
   }

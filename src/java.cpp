@@ -52,6 +52,7 @@ long my_getThreadId() {
   NODE_SET_PROTOTYPE_METHOD(s_ct, "findClassSync", findClassSync);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newArray", newArray);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newByte", newByte);
+  NODE_SET_PROTOTYPE_METHOD(s_ct, "newChar", newChar);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "getStaticFieldValue", getStaticFieldValue);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "setStaticFieldValue", setStaticFieldValue);
 
@@ -537,6 +538,43 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   jclass clazz = env->FindClass("java/lang/Byte");
   jmethodID constructor = env->GetMethodID(clazz, "<init>", "(B)V");
   jobject newObj = env->NewObject(clazz, constructor, (jbyte)val->Value());
+
+  return scope.Close(JavaObject::New(self, newObj));
+}
+
+/*static*/ v8::Handle<v8::Value> Java::newChar(const v8::Arguments& args) {
+  v8::HandleScope scope;
+  Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
+  v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
+  if(!ensureJvmResults->IsUndefined()) {
+    return ensureJvmResults;
+  }
+  JNIEnv* env = self->getJavaEnv();
+  JavaScope javaScope(env);
+
+  if(args.Length() != 1) {
+    return ThrowException(v8::Exception::TypeError(v8::String::New("newChar only takes 1 argument")));
+  }
+
+  // argument - value
+  jchar charVal;
+  if(args[0]->IsNumber()) {
+    v8::Local<v8::Number> val = args[0]->ToNumber();
+    charVal = (jchar)val->Value();
+  } else if(args[0]->IsString()) {
+    v8::Local<v8::String> val = args[0]->ToString();
+    if(val->Length() != 1) {
+      return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 1 must be a string of 1 character.")));
+    }
+    std::string strVal = std::string(*v8::String::Utf8Value(val));
+    charVal = (jchar)strVal[0];
+  } else {
+    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 1 must be a number or string")));
+  }
+
+  jclass clazz = env->FindClass("java/lang/Character");
+  jmethodID constructor = env->GetMethodID(clazz, "<init>", "(C)V");
+  jobject newObj = env->NewObject(clazz, constructor, charVal);
 
   return scope.Close(JavaObject::New(self, newObj));
 }

@@ -98,6 +98,7 @@ java.callStaticMethodSync("Test", "staticMethodThatTakesALong", javaLong);
  * [setStaticFieldValue](#javaSetStaticFieldValue)
  * [newArray](#javaNewArray)
  * [newByte](#javaNewByte)
+ * [newChar](#javaNewChar)
  * [newProxy](#javaNewProxy)
 
 ## java objects
@@ -227,6 +228,19 @@ __Arguments__
 __Example__
 
     var b = java.newByte(12);
+
+<a name="javaNewChar" />
+**java.newChar(val)**
+
+Creates a new java char. This is needed because javascript does not have the concept of a char.
+
+__Arguments__
+
+ * val - The value of the java char.
+
+__Example__
+
+    var ch = java.newChar('a');
 
 <a name="javaNewProxy" />
 **java.newProxy(interfaceName, functions)**
