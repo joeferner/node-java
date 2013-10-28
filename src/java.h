@@ -32,6 +32,7 @@ private:
   static v8::Handle<v8::Value> newByte(const v8::Arguments& args);
   static v8::Handle<v8::Value> newChar(const v8::Arguments& args);
   static v8::Handle<v8::Value> newShort(const v8::Arguments& args);
+  static v8::Handle<v8::Value> newFloat(const v8::Arguments& args);
   static v8::Handle<v8::Value> getStaticFieldValue(const v8::Arguments& args);
   static v8::Handle<v8::Value> setStaticFieldValue(const v8::Arguments& args);
   v8::Handle<v8::Value> ensureJvm();
