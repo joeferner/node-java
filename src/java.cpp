@@ -646,7 +646,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   JavaScope javaScope(env);
 
   if(args.Length() != 1) {
-    return ThrowException(v8::Exception::TypeError(v8::String::New("newShort only takes 1 argument")));
+    return ThrowException(v8::Exception::TypeError(v8::String::New("newFloat only takes 1 argument")));
   } else if(!args[0]->IsNumber()) {
     return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 1 must be a number")));
   }
