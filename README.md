@@ -2,6 +2,8 @@
 
 Bridge API to connect with existing Java APIs.
 
+[Google Groups Discussion Forum](https://groups.google.com/forum/#!forum/node-java)
+
 ## Installation Linux/Windows
 
 ```bash
