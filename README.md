@@ -33,6 +33,16 @@ $ npm install java
 GYP_DEFINES="armv7=0" CCFLAGS='-march=armv6' CXXFLAGS='-march=armv6' npm install java
 ```
 
+## Manual compile (Using node-gyp)
+
+```bash
+./compile-java-code.sh
+node-gyp configure build
+npm test
+```
+
+_NOTE: You will need node-gyp installed using "npm install -g node-gyp"_
+
 ## Quick Examples
 
 ```javascript
