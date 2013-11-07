@@ -104,6 +104,7 @@ java.callStaticMethodSync("Test", "staticMethodThatTakesALong", javaLong);
 
 ## java
  * [classpath](#javaClasspath)
+ * [options](#javaOptions)
  * [import](#javaImport)
  * [newInstance](#javaNewInstance)
  * [callStaticMethod](#javaCallStaticMethod)
@@ -125,13 +126,27 @@ java.callStaticMethodSync("Test", "staticMethodThatTakesALong", javaLong);
 ## java
 
 <a name="javaClasspath" />
-**java.classpath.push(pathOrJarName)**
+**java.classpath**
 
-Adds a path or jar to the classpath. All items must be added to the classpath before calling any other node-java methods.
+Array of paths or jars to pass to the creation of the JVM.
+
+All items must be added to the classpath before calling any other node-java methods.
 
 __Example__
 
     java.classpath.push('commons.io.jar');
+
+<a name="javaOptions" />
+**java.options**
+
+Array of options to pass to the creation of the JVM.
+
+All items must be added to the options before calling any other node-java methods.
+
+__Example__
+
+    java.options.push('-Djava.awt.headless=true');
+    java.options.push('-Xmx1024m');
 
 <a name="javaImport" />
 **java.import(className)**
