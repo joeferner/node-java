@@ -62,8 +62,8 @@ jvalueType javaGetArrayComponentType(JNIEnv *env, jobjectArray array);
 jvalueType javaGetType(JNIEnv *env, jclass type);
 jobjectArray v8ToJava(JNIEnv* env, const v8::Arguments& args, int start, int end);
 jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg);
-v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, const std::string& alternateMessage);
-v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, jthrowable ex, const std::string& alternateMessage);
+v8::Handle<v8::Value> javaExceptionToV8(Java* java, JNIEnv* env, const std::string& alternateMessage);
+v8::Handle<v8::Value> javaExceptionToV8(Java* java, JNIEnv* env, jthrowable ex, const std::string& alternateMessage);
 v8::Handle<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArray);
 v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj);
 jobjectArray javaObjectArrayToClasses(JNIEnv *env, jobjectArray objs);
@@ -112,10 +112,10 @@ std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string method
     callbackProvided = false;                 \
   }
 
-#define EXCEPTION_CALL_CALLBACK(STRBUILDER) \
+#define EXCEPTION_CALL_CALLBACK(JAVA, STRBUILDER) \
   std::ostringstream errStr;                                                            \
   errStr << STRBUILDER;                                                                 \
-  v8::Handle<v8::Value> error = javaExceptionToV8(env, errStr.str());                   \
+  v8::Handle<v8::Value> error = javaExceptionToV8(JAVA, env, errStr.str());             \
   v8::Handle<v8::Value> argv[2];                                                        \
   argv[0] = error;                                                                      \
   argv[1] = v8::Undefined();                                                            \

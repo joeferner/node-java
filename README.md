@@ -92,6 +92,20 @@ console.log('Original long value (as a string): ' + javaLong.longValue);
 java.callStaticMethodSync("Test", "staticMethodThatTakesALong", javaLong);
 ```
 
+### Exceptions
+
+Exceptions from calling methods either caught using JavaScript try/catch block or passed
+to a callback as the first parameter may have a property named "cause" which has a reference
+to the Java Exception object which caused the error.
+
+```javascript
+try {
+  java.methodThatThrowsExceptionSync();
+} catch(ex) {
+  console.log(ex.cause.getMessageSync());
+}
+```
+
 # Release Notes
 
 ### v0.2.0

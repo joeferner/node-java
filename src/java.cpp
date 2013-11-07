@@ -237,7 +237,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   // find class
   jclass clazz = javaFindClass(env, className);
   if(clazz == NULL) {
-    EXCEPTION_CALL_CALLBACK("Could not find class " << className.c_str());
+    EXCEPTION_CALL_CALLBACK(self, "Could not find class " << className.c_str());
     return v8::Undefined();
   }
 
@@ -246,7 +246,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   jobject method = javaFindConstructor(env, clazz, methodArgs);
   if(method == NULL) {
     std::string msg = methodNotFoundToString(env, clazz, className, true, args, argsStart, argsEnd);
-    EXCEPTION_CALL_CALLBACK(msg);
+    EXCEPTION_CALL_CALLBACK(self, msg);
     return v8::Undefined();
   }
 
@@ -278,7 +278,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   if(clazz == NULL) {
     std::ostringstream errStr;
     errStr << "Could not create class " << className.c_str();
-    return ThrowException(javaExceptionToV8(env, errStr.str()));
+    return ThrowException(javaExceptionToV8(self, env, errStr.str()));
   }
 
   // find method
@@ -286,7 +286,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   jobject method = javaFindConstructor(env, clazz, methodArgs);
   if(method == NULL) {
     std::string msg = methodNotFoundToString(env, clazz, className, true, args, argsStart, argsEnd);
-    return ThrowException(javaExceptionToV8(env, msg));
+    return ThrowException(javaExceptionToV8(self, env, msg));
   }
 
   // run
@@ -329,7 +329,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
     std::ostringstream errStr;
     errStr << "Could not create class node/NodeDynamicProxyClass";
     delete dynamicProxyData;
-    return ThrowException(javaExceptionToV8(env, errStr.str()));
+    return ThrowException(javaExceptionToV8(self, env, errStr.str()));
   }
 
   // find constructor
@@ -341,7 +341,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   if(method == NULL) {
     std::ostringstream errStr;
     errStr << "Could not find constructor for class node/NodeDynamicProxyClass";
-    return ThrowException(javaExceptionToV8(env, errStr.str()));
+    return ThrowException(javaExceptionToV8(self, env, errStr.str()));
   }
 
   // run constructor
@@ -376,7 +376,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   // find class
   jclass clazz = javaFindClass(env, className);
   if(clazz == NULL) {
-    EXCEPTION_CALL_CALLBACK("Could not create class " << className.c_str());
+    EXCEPTION_CALL_CALLBACK(self, "Could not create class " << className.c_str());
     return v8::Undefined();
   }
 
@@ -385,7 +385,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   jobject method = javaFindMethod(env, clazz, methodName, methodArgs);
   if(method == NULL) {
     std::string msg = methodNotFoundToString(env, clazz, methodName, false, args, argsStart, argsEnd);
-    EXCEPTION_CALL_CALLBACK(msg);
+    EXCEPTION_CALL_CALLBACK(self, msg);
     return v8::Undefined();
   }
 
@@ -418,7 +418,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   if(clazz == NULL) {
     std::ostringstream errStr;
     errStr << "Could not create class " << className.c_str();
-    return ThrowException(javaExceptionToV8(env, errStr.str()));
+    return ThrowException(javaExceptionToV8(self, env, errStr.str()));
   }
 
   // find method
@@ -426,7 +426,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   jobject method = javaFindMethod(env, clazz, methodName, methodArgs);
   if(method == NULL) {
     std::string msg = methodNotFoundToString(env, clazz, methodName, false, args, argsStart, argsEnd);
-    return ThrowException(javaExceptionToV8(env, msg));
+    return ThrowException(javaExceptionToV8(self, env, msg));
   }
 
   // run
@@ -460,7 +460,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   if(clazz == NULL) {
     std::ostringstream errStr;
     errStr << "Could not create class " << className.c_str();
-    return ThrowException(javaExceptionToV8(env, errStr.str()));
+    return ThrowException(javaExceptionToV8(self, env, errStr.str()));
   }
 
   // run
@@ -551,7 +551,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
     if(clazz == NULL) {
       std::ostringstream errStr;
       errStr << "Could not create class " << className.c_str();
-      return ThrowException(javaExceptionToV8(env, errStr.str()));
+      return ThrowException(javaExceptionToV8(self, env, errStr.str()));
     }
 
     // create array
@@ -565,7 +565,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
         std::ostringstream errStr;
         v8::String::AsciiValue valStr(item);
         errStr << "Could not add item \"" << *valStr << "\" to array.";
-        return ThrowException(javaExceptionToV8(env, errStr.str()));
+        return ThrowException(javaExceptionToV8(self, env, errStr.str()));
       }
     }
   }
@@ -711,7 +711,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   if(clazz == NULL) {
     std::ostringstream errStr;
     errStr << "Could not create class " << className.c_str();
-    return ThrowException(javaExceptionToV8(env, errStr.str()));
+    return ThrowException(javaExceptionToV8(self, env, errStr.str()));
   }
 
   // get the field
@@ -719,7 +719,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   if(field == NULL) {
     std::ostringstream errStr;
     errStr << "Could not find field " << fieldName.c_str() << " on class " << className.c_str();
-    return ThrowException(javaExceptionToV8(env, errStr.str()));
+    return ThrowException(javaExceptionToV8(self, env, errStr.str()));
   }
 
   jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
@@ -730,7 +730,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   if(env->ExceptionOccurred()) {
     std::ostringstream errStr;
     errStr << "Could not get field " << fieldName.c_str() << " on class " << className.c_str();
-    return ThrowException(javaExceptionToV8(env, errStr.str()));
+    return ThrowException(javaExceptionToV8(self, env, errStr.str()));
   }
 
   return scope.Close(javaToV8(self, env, val));
@@ -766,7 +766,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   if(clazz == NULL) {
     std::ostringstream errStr;
     errStr << "Could not create class " << className.c_str();
-    return ThrowException(javaExceptionToV8(env, errStr.str()));
+    return ThrowException(javaExceptionToV8(self, env, errStr.str()));
   }
 
   // get the field
@@ -774,7 +774,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   if(field == NULL) {
     std::ostringstream errStr;
     errStr << "Could not find field " << fieldName.c_str() << " on class " << className.c_str();
-    return ThrowException(javaExceptionToV8(env, errStr.str()));
+    return ThrowException(javaExceptionToV8(self, env, errStr.str()));
   }
 
   jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
@@ -787,7 +787,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   if(env->ExceptionOccurred()) {
     std::ostringstream errStr;
     errStr << "Could not set field " << fieldName.c_str() << " on class " << className.c_str();
-    return ThrowException(javaExceptionToV8(env, errStr.str()));
+    return ThrowException(javaExceptionToV8(self, env, errStr.str()));
   }
 
   return v8::Undefined();

@@ -360,7 +360,7 @@ jobjectArray v8ToJava(JNIEnv* env, const v8::Arguments& args, int start, int end
   return results;
 }
 
-v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, jthrowable ex, const std::string& alternateMessage) {
+v8::Handle<v8::Value> javaExceptionToV8(Java* java, JNIEnv* env, jthrowable ex, const std::string& alternateMessage) {
   v8::HandleScope scope;
 
   std::ostringstream msg;
@@ -384,16 +384,20 @@ v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, jthrowable ex, const std::s
     std::string stackTrace = javaToString(env, strObj);
 
     msg << "\n" << stackTrace;
+
+    v8::Local<v8::Value> v8ex = v8::Exception::Error(v8::String::New(msg.str().c_str()));
+    ((v8::Object*)*v8ex)->Set(v8::String::New("cause"), javaToV8(java, env, ex));
+    return scope.Close(v8ex);
   }
 
   return scope.Close(v8::Exception::Error(v8::String::New(msg.str().c_str())));
 }
 
-v8::Handle<v8::Value> javaExceptionToV8(JNIEnv* env, const std::string& alternateMessage) {
+v8::Handle<v8::Value> javaExceptionToV8(Java* java, JNIEnv* env, const std::string& alternateMessage) {
   v8::HandleScope scope;
   jthrowable ex = env->ExceptionOccurred();
   env->ExceptionClear();
-  return scope.Close(javaExceptionToV8(env, ex, alternateMessage));
+  return scope.Close(javaExceptionToV8(java, env, ex, alternateMessage));
 }
 
 jvalueType javaGetArrayComponentType(JNIEnv *env, jobjectArray array) {

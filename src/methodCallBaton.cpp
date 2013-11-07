@@ -87,7 +87,7 @@ v8::Handle<v8::Value> MethodCallBaton::resultsToV8(JNIEnv *env) {
   v8::HandleScope scope;
 
   if(m_error) {
-    v8::Handle<v8::Value> err = javaExceptionToV8(env, m_error, m_errorString);
+    v8::Handle<v8::Value> err = javaExceptionToV8(m_java, env, m_error, m_errorString);
     return scope.Close(err);
   }
 

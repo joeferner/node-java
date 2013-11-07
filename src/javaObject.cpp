@@ -127,7 +127,7 @@ JavaObject::~JavaObject() {
   jobject method = javaFindMethod(env, self->m_class, methodNameStr, methodArgs);
   if(method == NULL) {
     std::string msg = methodNotFoundToString(env, self->m_class, methodNameStr, false, args, argsStart, argsEnd);
-    EXCEPTION_CALL_CALLBACK(msg);
+    EXCEPTION_CALL_CALLBACK(self->m_java, msg);
     return v8::Undefined();
   }
 
@@ -155,7 +155,7 @@ JavaObject::~JavaObject() {
   jobject method = javaFindMethod(env, self->m_class, methodNameStr, methodArgs);
   if(method == NULL) {
     std::string msg = methodNotFoundToString(env, self->m_class, methodNameStr, false, args, argsStart, argsEnd);
-    v8::Handle<v8::Value> ex = javaExceptionToV8(env, msg);
+    v8::Handle<v8::Value> ex = javaExceptionToV8(self->m_java, env, msg);
     return ThrowException(ex);
   }
 
@@ -184,7 +184,7 @@ JavaObject::~JavaObject() {
   if(field == NULL) {
     std::ostringstream errStr;
     errStr << "Could not find field " << propertyStr;
-    v8::Handle<v8::Value> ex = javaExceptionToV8(env, errStr.str());
+    v8::Handle<v8::Value> ex = javaExceptionToV8(self->m_java, env, errStr.str());
     return ThrowException(ex);
   }
 
@@ -196,7 +196,7 @@ JavaObject::~JavaObject() {
   if(env->ExceptionOccurred()) {
     std::ostringstream errStr;
     errStr << "Could not get field " << propertyStr;
-    v8::Handle<v8::Value> ex = javaExceptionToV8(env, errStr.str());
+    v8::Handle<v8::Value> ex = javaExceptionToV8(self->m_java, env, errStr.str());
     return ThrowException(ex);
   }
 
@@ -219,7 +219,7 @@ JavaObject::~JavaObject() {
   if(field == NULL) {
     std::ostringstream errStr;
     errStr << "Could not find field " << propertyStr;
-    v8::Handle<v8::Value> ex = javaExceptionToV8(env, errStr.str());
+    v8::Handle<v8::Value> ex = javaExceptionToV8(self->m_java, env, errStr.str());
     ThrowException(ex);
     return;
   }
@@ -234,7 +234,7 @@ JavaObject::~JavaObject() {
   if(env->ExceptionOccurred()) {
     std::ostringstream errStr;
     errStr << "Could not set field " << propertyStr;
-    v8::Handle<v8::Value> ex = javaExceptionToV8(env, errStr.str());
+    v8::Handle<v8::Value> ex = javaExceptionToV8(self->m_java, env, errStr.str());
     ThrowException(ex);
     return;
   }
