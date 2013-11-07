@@ -12,10 +12,10 @@
 #include <node_version.h>
 #include <sstream>
 
-std::string nativeBindingLocation;
 long v8ThreadId;
 
 /*static*/ v8::Persistent<v8::FunctionTemplate> Java::s_ct;
+/*static*/ std::string Java::s_nativeBindingLocation;
 
 void my_sleep(int dur) {
 #ifdef WIN32
@@ -103,8 +103,9 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   if(!classPathValue->IsArray()) {
     return ThrowException(v8::Exception::TypeError(v8::String::New("Classpath must be an array")));
   }
-  v8::Local<v8::Array> classPathArray = v8::Array::Cast(*classPathValue);
-  for(uint32_t i=0; i<classPathArray->Length(); i++) {
+  v8::Local<v8::Array> classPathArrayTemp = v8::Array::Cast(*classPathValue);
+  m_classPathArray = v8::Persistent<v8::Array>::New(classPathArrayTemp);
+  for(uint32_t i=0; i<m_classPathArray->Length(); i++) {
     if(i != 0) {
       #ifdef WIN32
         classPath << ";";
@@ -112,7 +113,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
         classPath << ":";
       #endif
     }
-    v8::Local<v8::Value> arrayItemValue = classPathArray->Get(i);
+    v8::Local<v8::Value> arrayItemValue = m_classPathArray->Get(i);
     if(!arrayItemValue->IsString()) {
       return ThrowException(v8::Exception::TypeError(v8::String::New("Classpath must only contain strings")));
     }
@@ -124,22 +125,23 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   // set the native binding location
   v8::Local<v8::Value> v8NativeBindingLocation = handle_->Get(v8::String::New("nativeBindingLocation"));
   v8::String::AsciiValue nativeBindingLocationStr(v8NativeBindingLocation);
-  nativeBindingLocation = *nativeBindingLocationStr;
+  s_nativeBindingLocation = *nativeBindingLocationStr;
 
   // get other options
   v8::Local<v8::Value> optionsValue = handle_->Get(v8::String::New("options"));
   if(!optionsValue->IsArray()) {
     return ThrowException(v8::Exception::TypeError(v8::String::New("options must be an array")));
   }
-  v8::Local<v8::Array> optionsArray = v8::Array::Cast(*optionsValue);
+  v8::Local<v8::Array> optionsArrayTemp = v8::Array::Cast(*optionsValue);
+  m_optionsArray = v8::Persistent<v8::Array>::New(optionsArrayTemp);
 
   // create vm options
-  int vmOptionsCount = optionsArray->Length() + 1;
+  int vmOptionsCount = m_optionsArray->Length() + 1;
   JavaVMOption* vmOptions = new JavaVMOption[vmOptionsCount];
   //printf("classPath: %s\n", classPath.str().c_str());
   vmOptions[0].optionString = strdup(classPath.str().c_str());
-  for(uint32_t i=0; i<optionsArray->Length(); i++) {
-    v8::Local<v8::Value> arrayItemValue = optionsArray->Get(i);
+  for(uint32_t i=0; i<m_optionsArray->Length(); i++) {
+    v8::Local<v8::Value> arrayItemValue = m_optionsArray->Get(i);
     if(!arrayItemValue->IsString()) {
       delete[] vmOptions;
       return ThrowException(v8::Exception::TypeError(v8::String::New("options must only contain strings")));
@@ -159,7 +161,36 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
 
   m_classLoader = getSystemClassLoader(*env);
 
+  // TODO: this handles sets put doesn't prevent modifing the underlying data. So java.classpath.push will still work which is invalid.
+  handle_->SetAccessor(v8::String::New("classpath"), AccessorProhibitsOverwritingGetter, AccessorProhibitsOverwritingSetter);
+  handle_->SetAccessor(v8::String::New("options"), AccessorProhibitsOverwritingGetter, AccessorProhibitsOverwritingSetter);
+  handle_->SetAccessor(v8::String::New("nativeBindingLocation"), AccessorProhibitsOverwritingGetter, AccessorProhibitsOverwritingSetter);
+
   return v8::Undefined();
+}
+
+/*static*/ v8::Handle<v8::Value> Java::AccessorProhibitsOverwritingGetter(v8::Local<v8::String> name, const v8::AccessorInfo &info) {
+  Java* self = node::ObjectWrap::Unwrap<Java>(info.This());
+  v8::HandleScope scope;
+  v8::String::AsciiValue nameStr(name);
+  if(!strcmp("classpath", *nameStr)) {
+    return scope.Close(self->m_classPathArray);
+  } else if(!strcmp("options", *nameStr)) {
+    return scope.Close(self->m_optionsArray);
+  } else if(!strcmp("nativeBindingLocation", *nameStr)) {
+    return scope.Close(v8::String::New(Java::s_nativeBindingLocation.c_str()));
+  }
+
+  std::ostringstream errStr;
+  errStr << "Invalid call to accessor " << *nameStr;
+  return v8::Exception::Error(v8::String::New(errStr.str().c_str()));
+}
+
+/*static*/ void Java::AccessorProhibitsOverwritingSetter(v8::Local<v8::String> name, v8::Local<v8::Value> value, const v8::AccessorInfo &info) {
+  v8::String::AsciiValue nameStr(name);
+  std::ostringstream errStr;
+  errStr << "Cannot set " << *nameStr << " after calling any other java function.";
+  v8::ThrowException(v8::Exception::Error(v8::String::New(errStr.str().c_str())));
 }
 
 void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
@@ -304,7 +335,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   // find constructor
   jclass objectClazz = env->FindClass("java/lang/Object");
   jobjectArray methodArgs = env->NewObjectArray(2, objectClazz, NULL);
-  env->SetObjectArrayElement(methodArgs, 0, v8ToJava(env, v8::String::New(nativeBindingLocation.c_str())));
+  env->SetObjectArrayElement(methodArgs, 0, v8ToJava(env, v8::String::New(s_nativeBindingLocation.c_str())));
   env->SetObjectArrayElement(methodArgs, 1, longToJavaLongObj(env, (long)dynamicProxyData));
   jobject method = javaFindConstructor(env, clazz, methodArgs);
   if(method == NULL) {

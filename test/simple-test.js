@@ -11,6 +11,42 @@ exports['Simple'] = nodeunit.testCase({
     test.done();
   },
 
+  "test adding to classpath after other calls are made": function(test) {
+    java.callStaticMethodSync("java.lang.System", "currentTimeMillis");
+    try {
+      console.log('classpath', java.classpath);
+      java.classpath = ["test/"];
+      test.fail("Exception should be thrown");
+    } catch(e) {
+      // ok
+    }
+    test.done();
+  },
+
+  "test changing options after other calls are made": function(test) {
+    java.callStaticMethodSync("java.lang.System", "currentTimeMillis");
+    try {
+      console.log('options', java.options);
+      java.options = ["newoption"];
+      test.fail("Exception should be thrown");
+    } catch(e) {
+      // ok
+    }
+    test.done();
+  },
+
+  "test changing nativeBindingLocation after other calls are made": function(test) {
+    java.callStaticMethodSync("java.lang.System", "currentTimeMillis");
+    try {
+      console.log('nativeBindingLocation', java.nativeBindingLocation);
+      java.nativeBindingLocation = "newNativeBindingLocation";
+      test.fail("Exception should be thrown");
+    } catch(e) {
+      // ok
+    }
+    test.done();
+  },
+
   "test static calls": function(test) {
     var result = java.callStaticMethodSync("java.lang.System", "currentTimeMillis");
     console.log("currentTimeMillis:", result);
