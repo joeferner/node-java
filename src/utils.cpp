@@ -120,19 +120,26 @@ std::string javaMethodCallToString(JNIEnv *env, jobject obj, jmethodID methodId,
   return result.str();
 }
 
-JNIEnv* javaAttachCurrentThread(JavaVM* jvm, jobject classLoader) {
-  JNIEnv* env;
-  JavaVMAttachArgs attachArgs;
-  attachArgs.version = JNI_VERSION_1_4;
-  attachArgs.name = NULL;
-  attachArgs.group = NULL;
-  jvm->AttachCurrentThread((void**)&env, &attachArgs);
+JNIEnv* javaGetEnv(JavaVM* jvm, jobject classLoader) {
+  JNIEnv *env = NULL;
+  int ret = jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
 
-  jclass threadClazz = env->FindClass("java/lang/Thread");
-  jmethodID thread_currentThread = env->GetStaticMethodID(threadClazz, "currentThread", "()Ljava/lang/Thread;");
-  jmethodID thread_setContextClassLoader = env->GetMethodID(threadClazz, "setContextClassLoader", "(Ljava/lang/ClassLoader;)V");
-  jobject currentThread = env->CallStaticObjectMethod(threadClazz, thread_currentThread);
-  env->CallObjectMethod(currentThread, thread_setContextClassLoader, classLoader);
+  if (ret == JNI_EDETACHED) {
+    JavaVMAttachArgs attachArgs;
+    attachArgs.version = JNI_VERSION_1_6;
+    attachArgs.name = NULL;
+    attachArgs.group = NULL;
+    jvm->AttachCurrentThread((void**)&env, &attachArgs);
+
+    jclass threadClazz = env->FindClass("java/lang/Thread");
+    jmethodID thread_currentThread = env->GetStaticMethodID(threadClazz, "currentThread", "()Ljava/lang/Thread;");
+    jmethodID thread_setContextClassLoader = env->GetMethodID(threadClazz, "setContextClassLoader", "(Ljava/lang/ClassLoader;)V");
+    jobject currentThread = env->CallStaticObjectMethod(threadClazz, thread_currentThread);
+    env->CallObjectMethod(currentThread, thread_setContextClassLoader, classLoader);
+
+    env->DeleteLocalRef(threadClazz);
+    env->DeleteLocalRef(currentThread);
+  }
 
   return env;
 }
@@ -143,10 +150,6 @@ jobject getSystemClassLoader(JNIEnv *env) {
   jmethodID thread_getContextClassLoader = env->GetMethodID(threadClazz, "getContextClassLoader", "()Ljava/lang/ClassLoader;");
   jobject currentThread = env->CallStaticObjectMethod(threadClazz, thread_currentThread);
   return env->CallObjectMethod(currentThread, thread_getContextClassLoader);
-}
-
-void javaDetachCurrentThread(JavaVM* jvm) {
-  jvm->DetachCurrentThread();
 }
 
 jvalueType javaGetType(JNIEnv *env, jclass type) {
