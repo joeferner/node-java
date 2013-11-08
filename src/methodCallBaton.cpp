@@ -43,13 +43,9 @@ v8::Handle<v8::Value> MethodCallBaton::runSync() {
 
 /*static*/ void MethodCallBaton::EIO_MethodCall(uv_work_t* req) {
   MethodCallBaton* self = static_cast<MethodCallBaton*>(req->data);
-  JNIEnv *env = javaAttachCurrentThread(self->m_java->getJvm(), self->m_java->getClassLoader());
-  // scope the java scope to after/before attaching to thread.
-  {
-    JavaScope javaScope(env);
-    self->execute(env);
-  }
-  javaDetachCurrentThread(self->m_java->getJvm());
+  JNIEnv *env = javaGetEnv(self->m_java->getJvm(), self->m_java->getClassLoader());
+  JavaScope javaScope(env);
+  self->execute(env);
 }
 
 #if NODE_MINOR_VERSION >= 10
