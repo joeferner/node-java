@@ -1,35 +1,36 @@
 {
-  "variables": {
-    "arch%": "amd64", # linux JVM architecture. See $(JAVA_HOME)/jre/lib/<@(arch)/server/
+  'variables': {
+    'arch%': 'amd64', # linux JVM architecture. See $(JAVA_HOME)/jre/lib/<@(arch)/server/
     'conditions': [
       ['target_arch=="ia32"', {
-        'arch%': "i386"
+        'arch%': 'i386'
       }],
       ['OS=="win"', {
-        'javahome%': "<!(echo %JAVA_HOME%)"
+        'javahome%': '<!(echo %JAVA_HOME%)'
       }],
       ['OS=="linux" or OS=="mac" or OS=="freebsd" or OS=="openbsd"', {
-        'javahome%': "<!(echo $JAVA_HOME)"
+        'javahome%': '<!(echo $JAVA_HOME)'
       }],
       ['OS=="mac"', {
       	'javaver%' : "<!(awk -F/ -v h=$JAVA_HOME 'BEGIN {n=split(h, a); print a[2]; exit}')"
       }]
     ]
   },
-  "targets": [
+  'targets': [
     {
-      "target_name": "nodejavabridge_bindings",
-      "sources": [
-        "src/java.cpp",
-        "src/javaObject.cpp",
-        "src/javaScope.cpp",
-        "src/methodCallBaton.cpp",
-        "src/nodeJavaBridge.cpp",
-        "src/utils.cpp"
+      'target_name': 'nodejavabridge_bindings',
+      'sources': [
+        'src/java.cpp',
+        'src/javaObject.cpp',
+        'src/javaScope.cpp',
+        'src/methodCallBaton.cpp',
+        'src/nodeJavaBridge.cpp',
+        'src/utils.cpp'
       ],
-      "include_dirs": [
-        "<(javahome)/include",
+      'include_dirs': [
+        '<(javahome)/include',
       ],
+      'cflags': ['-O3'],
       'conditions': [
         ['OS=="win"',
           {
@@ -46,11 +47,11 @@
                 'message': 'Verify Deps'
               }
             ],
-            "include_dirs": [
-              "<(javahome)/include/win32",
+            'include_dirs': [
+              '<(javahome)/include/win32',
             ],
-            "libraries": [
-              "-l<(javahome)/lib/jvm.lib"
+            'libraries': [
+              '-l<(javahome)/lib/jvm.lib'
             ]
           }
         ],
@@ -69,13 +70,13 @@
                 'message': 'Verify Deps'
               }
             ],
-            "include_dirs": [
-              "<(javahome)/include/linux",
+            'include_dirs': [
+              '<(javahome)/include/linux',
             ],
-            "libraries": [
-              "-L<(javahome)/jre/lib/<(arch)/server/",
-              "-Wl,-rpath,<(javahome)/jre/lib/<(arch)/server/",
-              "-ljvm"
+            'libraries': [
+              '-L<(javahome)/jre/lib/<(arch)/server/',
+              '-Wl,-rpath,<(javahome)/jre/lib/<(arch)/server/',
+              '-ljvm'
             ]
           }
         ],
@@ -94,13 +95,13 @@
                 'message': 'Verify Deps'
               }
             ],
-            "include_dirs": [
-              "<(javahome)/include/freebsd",
+            'include_dirs': [
+              '<(javahome)/include/freebsd',
             ],
-            "libraries": [
-              "-L<(javahome)/jre/lib/<(arch)/server/",
-              "-Wl,-rpath,<(javahome)/jre/lib/<(arch)/server/",
-              "-ljvm"
+            'libraries': [
+              '-L<(javahome)/jre/lib/<(arch)/server/',
+              '-Wl,-rpath,<(javahome)/jre/lib/<(arch)/server/',
+              '-ljvm'
             ]
           }
         ],
@@ -119,49 +120,58 @@
                 'message': 'Verify Deps'
               }
             ],
-            "include_dirs": [
-              "<(javahome)/include/openbsd",
+            'include_dirs': [
+              '<(javahome)/include/openbsd',
             ],
-            "libraries": [
-              "-L<(javahome)/jre/lib/<(arch)/server/",
-              "-Wl,-rpath,<(javahome)/jre/lib/<(arch)/server/",
-              "-ljvm"
+            'libraries': [
+              '-L<(javahome)/jre/lib/<(arch)/server/',
+              '-Wl,-rpath,<(javahome)/jre/lib/<(arch)/server/',
+              '-ljvm'
             ]
           }
         ],
-        ['OS=="mac" and javaver=="Library"',
+        ['OS=="mac"',
           {
-            "include_dirs": [
-              "<(javahome)/include",
-              "<(javahome)/include/darwin"
+            'xcode_settings': {
+              'OTHER_CFLAGS': ['-O3'],
+            },
+            'conditions': [
+              ['javaver=="Library"',
+                {
+                  'include_dirs': [
+                    '<(javahome)/include',
+                    '<(javahome)/include/darwin'
+                  ],
+                  'libraries': [
+                    '-L<(javahome)/jre/lib/server',
+                    '-Wl,-rpath,<(javahome)/jre/lib/server',
+                    '-ljvm'
+                  ],
+                },
+              ],
+              ['javaver=="System"',
+                {
+                  'include_dirs': [
+                    '/System/Library/Frameworks/JavaVM.framework/Headers'
+                  ],
+                  'libraries': [
+                    '-framework JavaVM'
+                  ],
+                },
+              ],
+              ['javaver==""',
+                {
+                  'include_dirs': [
+                    '/System/Library/Frameworks/JavaVM.framework/Headers'
+                  ],
+                  'libraries': [
+                    '-framework JavaVM'
+                  ],
+                },
+              ],
             ],
-            "libraries": [
-              "-L<(javahome)/jre/lib/server",
-              "-Wl,-rpath,<(javahome)/jre/lib/server",
-              "-ljvm"
-            ]
-          }
+          },
         ],
-        ['OS=="mac" and javaver=="System"',
-          {
-            "include_dirs": [
-              "/System/Library/Frameworks/JavaVM.framework/Headers"
-            ],
-            "libraries": [
-              "-framework JavaVM"
-            ]
-          }
-        ],
-        ['OS=="mac" and javaver==""',
-          {
-            "include_dirs": [
-              "/System/Library/Frameworks/JavaVM.framework/Headers"
-            ],
-            "libraries": [
-              "-framework JavaVM"
-            ]
-          }
-        ]
       ]
     }
   ]
