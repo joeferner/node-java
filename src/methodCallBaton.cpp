@@ -83,9 +83,17 @@ v8::Handle<v8::Value> MethodCallBaton::resultsToV8(JNIEnv *env) {
   v8::HandleScope scope;
 
   if(m_error) {
-    jclass throwableClazz = env->FindClass("java/lang/Throwable");
-    jmethodID throwable_getCause = env->GetMethodID(throwableClazz, "getCause", "()Ljava/lang/Throwable;");
-    jthrowable cause = (jthrowable)env->CallObjectMethod(m_error, throwable_getCause);
+    jthrowable cause = m_error;
+
+    // if we've caught an InvocationTargetException exception,
+    // let's grab the cause. users don't necessarily know that
+    // we're invoking the methods through reflection
+    jclass invocationExceptionClazz = env->FindClass("java/lang/reflect/InvocationTargetException");
+    if (env->IsInstanceOf(m_error, invocationExceptionClazz)) {
+      jclass throwableClazz = env->FindClass("java/lang/Throwable");
+      jmethodID throwable_getCause = env->GetMethodID(throwableClazz, "getCause", "()Ljava/lang/Throwable;");
+      cause = (jthrowable)env->CallObjectMethod(m_error, throwable_getCause);
+    }
 
     v8::Handle<v8::Value> err = javaExceptionToV8(m_java, env, cause, m_errorString);
     return scope.Close(err);
