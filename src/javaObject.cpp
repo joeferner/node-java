@@ -15,7 +15,6 @@
   v8::HandleScope scope;
 
   JNIEnv *env = java->getJavaEnv();
-  obj = env->NewGlobalRef(obj);
   JavaScope javaScope(env);
 
   jclass objClazz = env->GetObjectClass(obj);
@@ -83,7 +82,7 @@
 JavaObject::JavaObject(Java *java, jobject obj) {
   m_java = java;
   JNIEnv *env = m_java->getJavaEnv();
-  m_obj = obj;
+  m_obj = env->NewGlobalRef(obj);
   m_class = (jclass)env->NewGlobalRef(env->GetObjectClass(obj));
 }
 
