@@ -102,7 +102,7 @@ exports['Java - Call Static Method'] = nodeunit.testCase({
     var ex = java.newInstanceSync("java.lang.Exception", "my exception");
     java.callStaticMethod("Test", "staticMethodThrows", ex, function(err, result) {
       test.ok(err);
-      test.equals('my exception', err.cause.getCauseSync().getMessageSync());
+      test.equals('my exception', err.cause.getMessageSync());
       test.ok(err.toString().match(/my exception/));
       test.ok(!result);
       test.done();

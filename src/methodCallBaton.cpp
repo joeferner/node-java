@@ -83,7 +83,11 @@ v8::Handle<v8::Value> MethodCallBaton::resultsToV8(JNIEnv *env) {
   v8::HandleScope scope;
 
   if(m_error) {
-    v8::Handle<v8::Value> err = javaExceptionToV8(m_java, env, m_error, m_errorString);
+    jclass throwableClazz = env->FindClass("java/lang/Throwable");
+    jmethodID throwable_getCause = env->GetMethodID(throwableClazz, "getCause", "()Ljava/lang/Throwable;");
+    jthrowable cause = (jthrowable)env->CallObjectMethod(m_error, throwable_getCause);
+
+    v8::Handle<v8::Value> err = javaExceptionToV8(m_java, env, cause, m_errorString);
     return scope.Close(err);
   }
 
