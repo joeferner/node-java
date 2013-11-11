@@ -53,6 +53,7 @@ long my_getThreadId() {
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newArray", newArray);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newByte", newByte);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newShort", newShort);
+  NODE_SET_PROTOTYPE_METHOD(s_ct, "newLong", newLong);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newChar", newChar);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newFloat", newFloat);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "getStaticFieldValue", getStaticFieldValue);
@@ -626,6 +627,34 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   jclass clazz = env->FindClass("java/lang/Short");
   jmethodID constructor = env->GetMethodID(clazz, "<init>", "(S)V");
   jobject newObj = env->NewObject(clazz, constructor, (jshort)val->Value());
+
+  return scope.Close(JavaObject::New(self, newObj));
+}
+
+/*static*/ v8::Handle<v8::Value> Java::newLong(const v8::Arguments& args) {
+  v8::HandleScope scope;
+  Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
+  v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
+  if(!ensureJvmResults->IsUndefined()) {
+    return ensureJvmResults;
+  }
+  JNIEnv* env = self->getJavaEnv();
+  JavaScope javaScope(env);
+
+  if(args.Length() != 1) {
+    return ThrowException(v8::Exception::TypeError(v8::String::New("newLong only takes 1 argument")));
+  }
+
+  // argument - value
+  if(!args[0]->IsNumber()) {
+    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 1 must be a number")));
+  }
+
+  v8::Local<v8::Number> val = args[0]->ToNumber();
+
+  jclass clazz = env->FindClass("java/lang/Long");
+  jmethodID constructor = env->GetMethodID(clazz, "<init>", "(J)V");
+  jobject newObj = env->NewObject(clazz, constructor, (jlong)val->Value());
 
   return scope.Close(JavaObject::New(self, newObj));
 }
