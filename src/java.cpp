@@ -57,6 +57,7 @@ long my_getThreadId() {
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newFloat", newFloat);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "getStaticFieldValue", getStaticFieldValue);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "setStaticFieldValue", setStaticFieldValue);
+  NODE_SET_PROTOTYPE_METHOD(s_ct, "instanceof", instanceof);
 
   target->Set(v8::String::NewSymbol("Java"), s_ct->GetFunction());
 }
@@ -791,6 +792,37 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   }
 
   return v8::Undefined();
+}
+
+/*static*/ v8::Handle<v8::Value> Java::instanceof(const v8::Arguments& args) {
+  v8::HandleScope scope;
+  Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
+  v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
+  if(!ensureJvmResults->IsUndefined()) {
+    return ensureJvmResults;
+  }
+  JNIEnv* env = self->getJavaEnv();
+  JavaScope javaScope(env);
+
+  int argsStart = 0;
+  ARGS_FRONT_OBJECT(obj);
+  ARGS_FRONT_STRING(className);
+
+  jobject instance = v8ToJava(env, obj);
+  if (!instance) {
+    // not even a Java object
+    return v8::False();
+  }
+
+  jclass clazz = javaFindClass(env, className);
+  if(!clazz) {
+    std::ostringstream errStr;
+    errStr << "Could not find class " << className.c_str();
+    return ThrowException(javaExceptionToV8(self, env, errStr.str()));
+  }
+
+  jboolean res = env->IsInstanceOf(instance, clazz);
+  return v8::Boolean::New(res);
 }
 
 void EIO_CallJs(uv_work_t* req) {
