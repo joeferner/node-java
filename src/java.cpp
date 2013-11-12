@@ -214,6 +214,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   jclass classClazz = env->FindClass("java/lang/ClassLoader");
   jmethodID class_getClassLoader = env->GetStaticMethodID(classClazz, "getSystemClassLoader", "()Ljava/lang/ClassLoader;");
   jobject classLoader = env->CallStaticObjectMethod(classClazz, class_getClassLoader);
+  assert(!env->ExceptionCheck());
 
   jobject result = env->NewGlobalRef(classLoader);
   return scope.Close(javaToV8(self, env, result));
@@ -504,6 +505,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
       jmethodID byte_byteValue = env->GetMethodID(byteClazz, "byteValue", "()B");
       jbyte byteValues[1];
       byteValues[0] = env->CallByteMethod(val, byte_byteValue);
+      assert(!env->ExceptionCheck());
       env->SetByteArrayRegion((jbyteArray)results, i, 1, byteValues);
     }
   }
@@ -517,6 +519,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
       jmethodID string_charAt = env->GetMethodID(stringClazz, "charAt", "(I)C");
       jchar itemValues[1];
       itemValues[0] = env->CallCharMethod(val, string_charAt, 0);
+      assert(!env->ExceptionCheck());
       env->SetCharArrayRegion((jcharArray)results, i, 1, itemValues);
     }
   }
@@ -530,6 +533,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
       jmethodID short_shortValue = env->GetMethodID(shortClazz, "shortValue", "()S");
       jshort shortValues[1];
       shortValues[0] = env->CallShortMethod(val, short_shortValue);
+      assert(!env->ExceptionCheck());
       env->SetShortArrayRegion((jshortArray)results, i, 1, shortValues);
     }
   }
@@ -543,6 +547,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
       jmethodID boolean_booleanValue = env->GetMethodID(booleanClazz, "booleanValue", "()Z");
       jboolean booleanValues[1];
       booleanValues[0] = env->CallBooleanMethod(val, boolean_booleanValue);
+      assert(!env->ExceptionCheck());
       env->SetBooleanArrayRegion((jbooleanArray)results, i, 1, booleanValues);
     }
   }
@@ -933,6 +938,7 @@ JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jo
   jclass methodClazz = env->FindClass("java/lang/reflect/Method");
   jmethodID method_getName = env->GetMethodID(methodClazz, "getName", "()Ljava/lang/String;");
   dynamicProxyData->methodName = javaObjectToString(env, env->CallObjectMethod(method, method_getName));
+  assert(!env->ExceptionCheck());
 
   uv_work_t* req = new uv_work_t();
   req->data = dynamicProxyData;
