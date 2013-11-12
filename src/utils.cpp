@@ -18,10 +18,12 @@ void javaReflectionGetMethods(JNIEnv *env, jclass clazz, std::list<jobject>* met
   jmethodID method_getModifiers = env->GetMethodID(methodClazz, "getModifiers", "()I");
 
   jobjectArray methodObjects = (jobjectArray)env->CallObjectMethod(clazz, clazz_getMethods);
+  assert(!env->ExceptionCheck());
   jsize methodCount = env->GetArrayLength(methodObjects);
   for(jsize i=0; i<methodCount; i++) {
     jobject method = env->GetObjectArrayElement(methodObjects, i);
     jint methodModifiers = env->CallIntMethod(method, method_getModifiers);
+    assert(!env->ExceptionCheck());
     if(!includeStatic && (methodModifiers & MODIFIER_STATIC) == MODIFIER_STATIC) {
       continue;
     }
@@ -34,6 +36,7 @@ void javaReflectionGetConstructors(JNIEnv *env, jclass clazz, std::list<jobject>
   jmethodID clazz_getConstructors = env->GetMethodID(clazzclazz, "getConstructors", "()[Ljava/lang/reflect/Constructor;");
 
   jobjectArray constructorObjects = (jobjectArray)env->CallObjectMethod(clazz, clazz_getConstructors);
+  assert(!env->ExceptionCheck());
   jsize constructorCount = env->GetArrayLength(constructorObjects);
   for(jsize i=0; i<constructorCount; i++) {
     jobject constructor = env->GetObjectArrayElement(constructorObjects, i);
@@ -48,10 +51,12 @@ void javaReflectionGetFields(JNIEnv *env, jclass clazz, std::list<jobject>* fiel
   jmethodID field_getModifiers = env->GetMethodID(fieldClazz, "getModifiers", "()I");
 
   jobjectArray fieldObjects = (jobjectArray)env->CallObjectMethod(clazz, clazz_getFields);
+  assert(!env->ExceptionCheck());
   jsize fieldCount = env->GetArrayLength(fieldObjects);
   for(jsize i=0; i<fieldCount; i++) {
     jobject field = env->GetObjectArrayElement(fieldObjects, i);
     jint fieldModifiers = env->CallIntMethod(field, field_getModifiers);
+    assert(!env->ExceptionCheck());
     if((fieldModifiers & MODIFIER_STATIC) == MODIFIER_STATIC) {
       continue;
     }
@@ -92,6 +97,7 @@ std::string javaObjectToString(JNIEnv *env, jobject obj) {
   jclass objClazz = env->GetObjectClass(obj);
   jmethodID methodId = env->GetMethodID(objClazz, "toString", "()Ljava/lang/String;");
   jstring result = (jstring)env->CallObjectMethod(obj, methodId);
+  assert(!env->ExceptionCheck());
   return javaToString(env, result);
 }
 
@@ -135,7 +141,9 @@ JNIEnv* javaGetEnv(JavaVM* jvm, jobject classLoader) {
     jmethodID thread_currentThread = env->GetStaticMethodID(threadClazz, "currentThread", "()Ljava/lang/Thread;");
     jmethodID thread_setContextClassLoader = env->GetMethodID(threadClazz, "setContextClassLoader", "(Ljava/lang/ClassLoader;)V");
     jobject currentThread = env->CallStaticObjectMethod(threadClazz, thread_currentThread);
+    assert(!env->ExceptionCheck());
     env->CallObjectMethod(currentThread, thread_setContextClassLoader, classLoader);
+    assert(!env->ExceptionCheck());
 
     env->DeleteLocalRef(threadClazz);
     env->DeleteLocalRef(currentThread);
@@ -149,7 +157,10 @@ jobject getSystemClassLoader(JNIEnv *env) {
   jmethodID thread_currentThread = env->GetStaticMethodID(threadClazz, "currentThread", "()Ljava/lang/Thread;");
   jmethodID thread_getContextClassLoader = env->GetMethodID(threadClazz, "getContextClassLoader", "()Ljava/lang/ClassLoader;");
   jobject currentThread = env->CallStaticObjectMethod(threadClazz, thread_currentThread);
-  return env->CallObjectMethod(currentThread, thread_getContextClassLoader);
+  assert(!env->ExceptionCheck());
+  jobject result = env->CallObjectMethod(currentThread, thread_getContextClassLoader);
+  assert(!env->ExceptionCheck());
+  return result;
 }
 
 jvalueType javaGetType(JNIEnv *env, jclass type) {
@@ -157,6 +168,7 @@ jvalueType javaGetType(JNIEnv *env, jclass type) {
   jmethodID class_isArray = env->GetMethodID(clazzClazz, "isArray", "()Z");
 
   jboolean isArray = env->CallBooleanMethod(type, class_isArray);
+  assert(!env->ExceptionCheck());
   if(isArray) {
     return TYPE_ARRAY;
   } else {
@@ -215,11 +227,14 @@ jobject javaFindField(JNIEnv* env, jclass clazz, std::string& fieldName) {
   jmethodID field_getName = env->GetMethodID(fieldClazz, "getName", "()Ljava/lang/String;");
   jmethodID class_getFields = env->GetMethodID(clazzclazz, "getFields", "()[Ljava/lang/reflect/Field;");
   jobjectArray fieldObjects = (jobjectArray)env->CallObjectMethod(clazz, class_getFields);
+  assert(!env->ExceptionCheck());
 
   jsize fieldCount = env->GetArrayLength(fieldObjects);
   for(jsize i=0; i<fieldCount; i++) {
     jobject field = env->GetObjectArrayElement(fieldObjects, i);
     jstring fieldNameJava = (jstring)env->CallObjectMethod(field, field_getName);
+    assert(!env->ExceptionCheck());
+
     std::string itFieldName = javaToString(env, fieldNameJava);
     if(strcmp(itFieldName.c_str(), fieldName.c_str()) == 0) {
       result = field;
@@ -316,11 +331,15 @@ jobject v8ToJava_javaObject(JNIEnv* env, v8::Local<v8::Object> obj) {
 
     jmethodID class_getClassLoader = env->GetMethodID(classClazz, "getClassLoader", "()Ljava/lang/ClassLoader;");
     jobject classLoader = env->CallObjectMethod(dynamicInterface, class_getClassLoader);
+    assert(!env->ExceptionCheck());
+
     if(classLoader == NULL) {
       jclass objectClazz = env->FindClass("java/lang/Object");
       jmethodID object_getClass = env->GetMethodID(objectClazz, "getClass", "()Ljava/lang/Class;");
       jobject jobjClass = env->CallObjectMethod(jobj, object_getClass);
+      assert(!env->ExceptionCheck());
       classLoader = env->CallObjectMethod(jobjClass, class_getClassLoader);
+      assert(!env->ExceptionCheck());
     }
 
     jclass proxyClass = env->FindClass("java/lang/reflect/Proxy");
@@ -338,6 +357,7 @@ jobject v8ToJava_javaObject(JNIEnv* env, v8::Local<v8::Object> obj) {
       return NULL;
     }
     jobj = env->CallStaticObjectMethod(proxyClass, proxy_newProxyInstance, classLoader, classArray, jobj);
+    assert(!env->ExceptionCheck());
   }
 
   return jobj;
@@ -382,10 +402,11 @@ v8::Handle<v8::Value> javaExceptionToV8(Java* java, JNIEnv* env, jthrowable ex, 
     jclass throwableClazz = env->FindClass("java/lang/Throwable");
     jmethodID throwable_printStackTrace = env->GetMethodID(throwableClazz, "printStackTrace", "(Ljava/io/PrintWriter;)V");
     env->CallObjectMethod(ex, throwable_printStackTrace, printWriter);
-
+    assert(!env->ExceptionCheck());
     jstring strObj = (jstring)env->CallObjectMethod(stringWriter, stringWriter_toString);
-    std::string stackTrace = javaToString(env, strObj);
+    assert(!env->ExceptionCheck());
 
+    std::string stackTrace = javaToString(env, strObj);
     msg << "\n" << stackTrace;
 
     v8::Local<v8::Value> v8ex = v8::Exception::Error(v8::String::New(msg.str().c_str()));
@@ -409,9 +430,11 @@ jvalueType javaGetArrayComponentType(JNIEnv *env, jobjectArray array) {
 
   jmethodID object_getClass = env->GetMethodID(objectClazz, "getClass", "()Ljava/lang/Class;");
   jobject arrayClass = env->CallObjectMethod(array, object_getClass);
+  assert(!env->ExceptionCheck());
 
   jmethodID class_getComponentType = env->GetMethodID(clazzclazz, "getComponentType", "()Ljava/lang/Class;");
   jobject arrayComponentTypeClass = env->CallObjectMethod(arrayClass, class_getComponentType);
+  assert(!env->ExceptionCheck());
 
   jvalueType arrayComponentType = javaGetType(env, (jclass)arrayComponentTypeClass);
   return arrayComponentType;
@@ -540,6 +563,7 @@ v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj) {
         jclass booleanClazz = env->FindClass("java/lang/Boolean");
         jmethodID boolean_booleanValue = env->GetMethodID(booleanClazz, "booleanValue", "()Z");
         bool result = env->CallBooleanMethod(obj, boolean_booleanValue);
+        assert(!env->ExceptionCheck());
         return scope.Close(v8::Boolean::New(result));
       }
     case TYPE_BYTE:
@@ -547,6 +571,7 @@ v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj) {
         jclass byteClazz = env->FindClass("java/lang/Byte");
         jmethodID byte_byteValue = env->GetMethodID(byteClazz, "byteValue", "()B");
         jbyte result = env->CallByteMethod(obj, byte_byteValue);
+        assert(!env->ExceptionCheck());
         return scope.Close(v8::Number::New(result));
       }
     case TYPE_LONG:
@@ -554,6 +579,7 @@ v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj) {
         jclass longClazz = env->FindClass("java/lang/Long");
         jmethodID long_longValue = env->GetMethodID(longClazz, "longValue", "()J");
         jlong result = env->CallLongMethod(obj, long_longValue);
+        assert(!env->ExceptionCheck());
         std::string strValue = javaObjectToString(env, obj);
         v8::Local<v8::Value> v8Result = v8::NumberObject::New(result);
         v8::NumberObject* v8ResultNumberObject = v8::NumberObject::Cast(*v8Result);
@@ -566,6 +592,7 @@ v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj) {
         jclass integerClazz = env->FindClass("java/lang/Integer");
         jmethodID integer_intValue = env->GetMethodID(integerClazz, "intValue", "()I");
         jint result = env->CallIntMethod(obj, integer_intValue);
+        assert(!env->ExceptionCheck());
         return scope.Close(v8::Integer::New(result));
       }
     case TYPE_SHORT:
@@ -573,6 +600,7 @@ v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj) {
         jclass shortClazz = env->FindClass("java/lang/Short");
         jmethodID short_shortValue = env->GetMethodID(shortClazz, "shortValue", "()S");
         jshort result = env->CallShortMethod(obj, short_shortValue);
+        assert(!env->ExceptionCheck());
         return scope.Close(v8::Integer::New(result));
       }
     case TYPE_DOUBLE:
@@ -580,6 +608,7 @@ v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj) {
         jclass doubleClazz = env->FindClass("java/lang/Double");
         jmethodID double_doubleValue = env->GetMethodID(doubleClazz, "doubleValue", "()D");
         jdouble result = env->CallDoubleMethod(obj, double_doubleValue);
+        assert(!env->ExceptionCheck());
         return scope.Close(v8::Number::New(result));
       }
     case TYPE_FLOAT:
@@ -587,6 +616,7 @@ v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj) {
         jclass floatClazz = env->FindClass("java/lang/Float");
         jmethodID float_floatValue = env->GetMethodID(floatClazz, "floatValue", "()F");
         jfloat result = env->CallFloatMethod(obj, float_floatValue);
+        assert(!env->ExceptionCheck());
         return scope.Close(v8::Number::New(result));
       }
     case TYPE_STRING:
@@ -625,7 +655,7 @@ jobject javaFindMethod(JNIEnv *env, jclass clazz, std::string& methodName, jobje
   jstring methodNameJavaStr = env->NewStringUTF(methodNameCStr);
   jobjectArray methodArgClasses = javaObjectArrayToClasses(env, methodArgs);
   jobject method = env->CallStaticObjectMethod(methodUtilsClazz, methodUtils_getMatchingAccessibleMethod, clazz, methodNameJavaStr, methodArgClasses);
-
+  assert(!env->ExceptionCheck());
   return method;
 }
 
@@ -634,6 +664,7 @@ jobject javaFindConstructor(JNIEnv *env, jclass clazz, jobjectArray methodArgs) 
   jmethodID constructorUtils_getMatchingAccessibleConstructor = env->GetStaticMethodID(constructorUtilsClazz, "getMatchingAccessibleConstructor", "(Ljava/lang/Class;[Ljava/lang/Class;)Ljava/lang/reflect/Constructor;");
   jobjectArray methodArgClasses = javaObjectArrayToClasses(env, methodArgs);
   jobject method = env->CallStaticObjectMethod(constructorUtilsClazz, constructorUtils_getMatchingAccessibleConstructor, clazz, methodArgClasses);
+  assert(!env->ExceptionCheck());
   return method;
 }
 
@@ -671,6 +702,7 @@ std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string method
     } else {
       jclass argClass = env->GetObjectClass(val);
       jstring argClassNameJava = (jstring)env->CallObjectMethod(argClass, class_getName);
+      assert(!env->ExceptionCheck());
       std::string argClassName = javaToString(env, argClassNameJava);
       startOfMessage << argClassName;
     }
@@ -693,6 +725,7 @@ std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string method
   int count = 0;
   for(std::list<jobject>::iterator it = methods.begin(); it != methods.end(); ++it) {
     jstring methodNameTestJava = (jstring)env->CallObjectMethod(*it, member_getName);
+    assert(!env->ExceptionCheck());
     std::string methodNameTest = javaToString(env, methodNameTestJava);
     if(methodNameTest == methodName) {
       msg << "  " << javaObjectToString(env, *it).c_str() << "\n";

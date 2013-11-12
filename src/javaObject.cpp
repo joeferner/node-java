@@ -21,6 +21,7 @@
   jclass classClazz = env->FindClass("java/lang/Class");
   jmethodID class_getName = env->GetMethodID(classClazz, "getName", "()Ljava/lang/String;");
   jobject classNameJava = env->CallObjectMethod(objClazz, class_getName);
+  assert(!env->ExceptionCheck());
   std::string className = javaObjectToString(env, classNameJava);
   std::replace(className.begin(), className.end(), '.', '_');
   std::replace(className.begin(), className.end(), '$', '_');
@@ -44,6 +45,7 @@
     jmethodID method_getName = env->GetMethodID(methodClazz, "getName", "()Ljava/lang/String;");
     for(std::list<jobject>::iterator it = methods.begin(); it != methods.end(); ++it) {
       jstring methodNameJava = (jstring)env->CallObjectMethod(*it, method_getName);
+      assert(!env->ExceptionCheck());
       std::string methodNameStr = javaToString(env, methodNameJava);
 
       v8::Handle<v8::String> methodName = v8::String::New(methodNameStr.c_str());
@@ -61,6 +63,7 @@
     jmethodID field_getName = env->GetMethodID(fieldClazz, "getName", "()Ljava/lang/String;");
     for(std::list<jobject>::iterator it = fields.begin(); it != fields.end(); ++it) {
       jstring fieldNameJava = (jstring)env->CallObjectMethod(*it, field_getName);
+      assert(!env->ExceptionCheck());
       std::string fieldNameStr = javaToString(env, fieldNameJava);
 
       v8::Handle<v8::String> fieldName = v8::String::New(fieldNameStr.c_str());
