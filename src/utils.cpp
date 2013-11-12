@@ -288,8 +288,8 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
   }
 
   // TODO: handle other arg types
-  // v8::String::AsciiValue typeStr(arg);
-  // printf("v8ToJava: Unhandled type: %s\n", *typeStr);
+  v8::String::AsciiValue typeStr(arg);
+  printf("v8ToJava: Unhandled type: %s\n", *typeStr);
   return NULL;
 }
 
