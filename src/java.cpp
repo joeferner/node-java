@@ -53,10 +53,12 @@ long my_getThreadId() {
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newArray", newArray);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newByte", newByte);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newShort", newShort);
+  NODE_SET_PROTOTYPE_METHOD(s_ct, "newLong", newLong);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newChar", newChar);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newFloat", newFloat);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "getStaticFieldValue", getStaticFieldValue);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "setStaticFieldValue", setStaticFieldValue);
+  NODE_SET_PROTOTYPE_METHOD(s_ct, "instanceof", instanceof);
 
   target->Set(v8::String::NewSymbol("Java"), s_ct->GetFunction());
 }
@@ -629,6 +631,34 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   return scope.Close(JavaObject::New(self, newObj));
 }
 
+/*static*/ v8::Handle<v8::Value> Java::newLong(const v8::Arguments& args) {
+  v8::HandleScope scope;
+  Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
+  v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
+  if(!ensureJvmResults->IsUndefined()) {
+    return ensureJvmResults;
+  }
+  JNIEnv* env = self->getJavaEnv();
+  JavaScope javaScope(env);
+
+  if(args.Length() != 1) {
+    return ThrowException(v8::Exception::TypeError(v8::String::New("newLong only takes 1 argument")));
+  }
+
+  // argument - value
+  if(!args[0]->IsNumber()) {
+    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 1 must be a number")));
+  }
+
+  v8::Local<v8::Number> val = args[0]->ToNumber();
+
+  jclass clazz = env->FindClass("java/lang/Long");
+  jmethodID constructor = env->GetMethodID(clazz, "<init>", "(J)V");
+  jobject newObj = env->NewObject(clazz, constructor, (jlong)val->Value());
+
+  return scope.Close(JavaObject::New(self, newObj));
+}
+
 /*static*/ v8::Handle<v8::Value> Java::newChar(const v8::Arguments& args) {
   v8::HandleScope scope;
   Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
@@ -791,6 +821,37 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   }
 
   return v8::Undefined();
+}
+
+/*static*/ v8::Handle<v8::Value> Java::instanceof(const v8::Arguments& args) {
+  v8::HandleScope scope;
+  Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
+  v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
+  if(!ensureJvmResults->IsUndefined()) {
+    return ensureJvmResults;
+  }
+  JNIEnv* env = self->getJavaEnv();
+  JavaScope javaScope(env);
+
+  int argsStart = 0;
+  ARGS_FRONT_OBJECT(obj);
+  ARGS_FRONT_STRING(className);
+
+  jobject instance = v8ToJava(env, obj);
+  if (!instance) {
+    // not even a Java object
+    return v8::False();
+  }
+
+  jclass clazz = javaFindClass(env, className);
+  if(!clazz) {
+    std::ostringstream errStr;
+    errStr << "Could not find class " << className.c_str();
+    return ThrowException(javaExceptionToV8(self, env, errStr.str()));
+  }
+
+  jboolean res = env->IsInstanceOf(instance, clazz);
+  return v8::Boolean::New(res);
 }
 
 void EIO_CallJs(uv_work_t* req) {
