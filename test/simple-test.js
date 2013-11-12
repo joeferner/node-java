@@ -186,6 +186,26 @@ exports['Simple'] = nodeunit.testCase({
     test.done();
   },
 
+  "method taking a short": function(test) {
+    var s = java.newShort(1);
+    test.equal('java.lang.Short', s.getClassSync().getNameSync());
+    test.equal('1', s.toStringSync());
+    var r = java.callStaticMethodSync("Test", "staticShort", s);
+    console.log(r);
+    test.equal(r, 1);
+    test.done();
+  },
+
+  "method taking a long": function(test) {
+    var l = java.newLong(1);
+    test.equal('java.lang.Long', l.getClassSync().getNameSync());
+    test.equal('1', l.toStringSync());
+    var r = java.callStaticMethodSync("Test", "staticLong", l);
+    console.log(r);
+    test.equal(r, 1);
+    test.done();
+  },
+
   "method taking a char (number)": function(test) {
     var ch = java.newChar(97); // 'a'
     test.equal('java.lang.Character', ch.getClassSync().getNameSync());

@@ -127,6 +127,7 @@ try {
  * [newArray](#javaNewArray)
  * [newByte](#javaNewByte)
  * [newShort](#javaNewShort)
+ * [newLong](#javaNewLong)
  * [newChar](#javaNewChar)
  * [newProxy](#javaNewProxy)
 
@@ -293,6 +294,19 @@ __Arguments__
 __Example__
 
     var s = java.newShort(12);
+
+<a name="javaNewLong" />
+**java.newLong(val)**
+
+Creates a new java long. This is needed because javascript does not have the concept of a long.
+
+__Arguments__
+
+ * val - The value of the java long.
+
+__Example__
+
+    var s = java.newLong(12);
 
 <a name="javaNewChar" />
 **java.newChar(val)**

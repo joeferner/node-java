@@ -29,6 +29,9 @@ public class Test {
   public static long staticMethodReturnLong() { return java.lang.Long.MAX_VALUE; }
 
   public static int staticByte(byte b) { return (int)b; }
+  public static int staticShort(short s) { return (int)s; }
+  public static int staticLong(long l) { return (int)l; }
+
   public static int staticChar(char ch) { return (int)ch; }
   public static short[] staticShortArray(Short[] arg) {
     short[] b = new short[arg.length];
