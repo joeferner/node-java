@@ -121,6 +121,7 @@ try {
  * [options](#javaOptions)
  * [import](#javaImport)
  * [newInstance](#javaNewInstance)
+ * [instanceOf](#javaInstanceOf)
  * [callStaticMethod](#javaCallStaticMethod)
  * [getStaticFieldValue](#javaGetStaticFieldValue)
  * [setStaticFieldValue](#javaSetStaticFieldValue)
@@ -202,6 +203,24 @@ __Example__
       if(err) { console.error(err); return; }
       // new list
     });
+
+<a name="javaInstanceOf" />
+**java.instanceOf(javaObject, className)**
+
+Determines of a javaObject is an instance of a class.
+
+__Arguments__
+
+ * javaObject - Instance of a java object returned from a method or from newInstance.
+ * className - A string class name.
+
+__Example__
+
+    var obj = java.newInstanceSync("my.package.SubClass");
+
+    if(java.instanceOf(obj, "my.package.SuperClass")) {
+      console.log("obj is an instance of SuperClass");
+    }
 
 <a name="javaCallStaticMethod" />
 **java.callStaticMethod(className, methodName, [args...], callback)**

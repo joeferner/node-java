@@ -58,7 +58,7 @@ long my_getThreadId() {
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newFloat", newFloat);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "getStaticFieldValue", getStaticFieldValue);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "setStaticFieldValue", setStaticFieldValue);
-  NODE_SET_PROTOTYPE_METHOD(s_ct, "instanceof", instanceof);
+  NODE_SET_PROTOTYPE_METHOD(s_ct, "instanceOf", instanceOf);
 
   target->Set(v8::String::NewSymbol("Java"), s_ct->GetFunction());
 }
@@ -823,7 +823,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   return v8::Undefined();
 }
 
-/*static*/ v8::Handle<v8::Value> Java::instanceof(const v8::Arguments& args) {
+/*static*/ v8::Handle<v8::Value> Java::instanceOf(const v8::Arguments& args) {
   v8::HandleScope scope;
   Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
   v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();

@@ -260,6 +260,14 @@ exports['Simple'] = nodeunit.testCase({
     test.equal(r[0], 1);
     test.equal(r[1], 2);
     test.done();
+  },
+
+  "instanceof test": function(test) {
+    var subclass = java.newInstanceSync("Test$SubClass");
+    if(!java.instanceOf(subclass, "Test$SuperClass")) {
+      test.fail(subclass.getNameSync() + " should be an instance of Test$SuperClass");
+    }
+    test.done();
   }
 
 });

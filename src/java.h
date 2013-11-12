@@ -36,7 +36,7 @@ private:
   static v8::Handle<v8::Value> newFloat(const v8::Arguments& args);
   static v8::Handle<v8::Value> getStaticFieldValue(const v8::Arguments& args);
   static v8::Handle<v8::Value> setStaticFieldValue(const v8::Arguments& args);
-  static v8::Handle<v8::Value> instanceof(const v8::Arguments& args);
+  static v8::Handle<v8::Value> instanceOf(const v8::Arguments& args);
   static v8::Handle<v8::Value> AccessorProhibitsOverwritingGetter(v8::Local<v8::String> name, const v8::AccessorInfo &info);
   static void AccessorProhibitsOverwritingSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::AccessorInfo &info);
   v8::Handle<v8::Value> ensureJvm();
