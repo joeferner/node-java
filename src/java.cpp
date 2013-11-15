@@ -56,6 +56,7 @@ long my_getThreadId() {
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newLong", newLong);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newChar", newChar);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "newFloat", newFloat);
+  NODE_SET_PROTOTYPE_METHOD(s_ct, "newDouble", newDouble);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "getStaticFieldValue", getStaticFieldValue);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "setStaticFieldValue", setStaticFieldValue);
   NODE_SET_PROTOTYPE_METHOD(s_ct, "instanceOf", instanceOf);
@@ -721,6 +722,30 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   jclass clazz = env->FindClass("java/lang/Float");
   jmethodID constructor = env->GetMethodID(clazz, "<init>", "(F)V");
   jobject newObj = env->NewObject(clazz, constructor, (jfloat)val->Value());
+
+  return scope.Close(JavaObject::New(self, newObj));
+}
+
+/*static*/ v8::Handle<v8::Value> Java::newDouble(const v8::Arguments& args) {
+  v8::HandleScope scope;
+  Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
+  v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
+  if(!ensureJvmResults->IsUndefined()) {
+    return ensureJvmResults;
+  }
+  JNIEnv* env = self->getJavaEnv();
+  JavaScope javaScope(env);
+
+  if(args.Length() != 1) {
+    return ThrowException(v8::Exception::TypeError(v8::String::New("newDouble only takes 1 argument")));
+  } else if(!args[0]->IsNumber()) {
+    return ThrowException(v8::Exception::TypeError(v8::String::New("Argument 1 must be a number")));
+  }
+  v8::Local<v8::Number> val = args[0]->ToNumber();
+
+  jclass clazz = env->FindClass("java/lang/Double");
+  jmethodID constructor = env->GetMethodID(clazz, "<init>", "(D)V");
+  jobject newObj = env->NewObject(clazz, constructor, (jdouble)val->Value());
 
   return scope.Close(JavaObject::New(self, newObj));
 }

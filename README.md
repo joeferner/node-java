@@ -130,6 +130,8 @@ try {
  * [newShort](#javaNewShort)
  * [newLong](#javaNewLong)
  * [newChar](#javaNewChar)
+ * [newDouble](#javaNewDouble)
+ * [newFloat](#javaNewFloat)
  * [newProxy](#javaNewProxy)
 
 ## java objects
@@ -339,6 +341,32 @@ __Arguments__
 __Example__
 
     var ch = java.newChar('a');
+
+<a name="javaNewDouble" />
+**java.newDouble(val)**
+
+Creates a new java double. This is needed to force javascript's number to a double to call some methods.
+
+__Arguments__
+
+ * val - The value of the java double.
+
+__Example__
+
+    var d = java.newDouble(3.14);
+
+<a name="javaNewFloat" />
+**java.newFloat(val)**
+
+Creates a new java float. This is needed to force javascript's number to a float to call some methods.
+
+__Arguments__
+
+ * val - The value of the java float.
+
+__Example__
+
+    var f = java.newFloat(3.14);
 
 <a name="javaNewProxy" />
 **java.newProxy(interfaceName, functions)**

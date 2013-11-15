@@ -31,6 +31,8 @@ public class Test {
   public static int staticByte(byte b) { return (int)b; }
   public static int staticShort(short s) { return (int)s; }
   public static int staticLong(long l) { return (int)l; }
+  public static double staticDouble(double s) { return s; }
+  public static float staticFloat(float s) { return s; }
 
   public static int staticChar(char ch) { return (int)ch; }
   public static short[] staticShortArray(Short[] arg) {

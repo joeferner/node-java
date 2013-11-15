@@ -17,7 +17,7 @@ exports['Simple'] = nodeunit.testCase({
       console.log('classpath', java.classpath);
       java.classpath = ["test/"];
       test.fail("Exception should be thrown");
-    } catch(e) {
+    } catch (e) {
       // ok
     }
     test.done();
@@ -29,7 +29,7 @@ exports['Simple'] = nodeunit.testCase({
       console.log('options', java.options);
       java.options = ["newoption"];
       test.fail("Exception should be thrown");
-    } catch(e) {
+    } catch (e) {
       // ok
     }
     test.done();
@@ -41,7 +41,7 @@ exports['Simple'] = nodeunit.testCase({
       console.log('nativeBindingLocation', java.nativeBindingLocation);
       java.nativeBindingLocation = "newNativeBindingLocation";
       test.fail("Exception should be thrown");
-    } catch(e) {
+    } catch (e) {
       // ok
     }
     test.done();
@@ -72,20 +72,32 @@ exports['Simple'] = nodeunit.testCase({
 
   "test method does not exists (async)": function(test) {
     java.callStaticMethod("java.lang.System", "badMethod", function(err, result) {
-      if(err) { test.done(); return; }
+      if (err) {
+        test.done();
+        return;
+      }
       test.done(new Error("should throw exception"));
     });
   },
 
   "create an instance of a class and call methods (getName) (async)": function(test) {
     java.newInstance("java.util.ArrayList", function(err, list) {
-      if(err) { console.log(err); return; }
+      if (err) {
+        console.log(err);
+        return;
+      }
       test.ok(list);
-      if(list) {
+      if (list) {
         list.getClass(function(err, result) {
-          if(err) { console.log(err); return; }
+          if (err) {
+            console.log(err);
+            return;
+          }
           result.getName(function(err, result) {
-            if(err) { console.log(err); return; }
+            if (err) {
+              console.log(err);
+              return;
+            }
             test.equal(result, "java.util.ArrayList");
             test.done();
           });
@@ -110,11 +122,17 @@ exports['Simple'] = nodeunit.testCase({
 
   "create an instance of a class and call methods (size) (async)": function(test) {
     java.newInstance("java.util.ArrayList", function(err, list) {
-      if(err) { console.log(err); return; }
+      if (err) {
+        console.log(err);
+        return;
+      }
       test.ok(list);
-      if(list) {
+      if (list) {
         list.size(function(err, result) {
-          if(err) { console.log(err); return; }
+          if (err) {
+            console.log(err);
+            return;
+          }
           test.equal(result, 0);
           test.done();
         });
@@ -193,6 +211,26 @@ exports['Simple'] = nodeunit.testCase({
     var r = java.callStaticMethodSync("Test", "staticShort", s);
     console.log(r);
     test.equal(r, 1);
+    test.done();
+  },
+
+  "method taking a double": function(test) {
+    var s = java.newDouble(3.14);
+    test.equal('java.lang.Double', s.getClassSync().getNameSync());
+    test.equal('3.14', s.toStringSync());
+    var r = java.callStaticMethodSync("Test", "staticDouble", s);
+    console.log(r);
+    test.ok(Math.abs(r - 3.14) < 0.0001, r + " != 3.14");
+    test.done();
+  },
+
+  "method taking a float": function(test) {
+    var s = java.newFloat(3.14);
+    test.equal('java.lang.Float', s.getClassSync().getNameSync());
+    test.equal('3.14', s.toStringSync());
+    var r = java.callStaticMethodSync("Test", "staticFloat", s);
+    console.log(r);
+    test.ok(Math.abs(r - 3.14) < 0.0001, r + " != 3.14");
     test.done();
   },
 
