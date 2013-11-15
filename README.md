@@ -27,6 +27,8 @@ Notes:
 $ npm install java
 ```
 
+_Mavericks Users: If you are having problems finding 'jni.h' please see [Issue #86](https://github.com/nearinfinity/node-java/issues/86)_
+
 ## Installation ARM (Raspberry Pi)
 
 ```bash
