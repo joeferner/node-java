@@ -433,6 +433,40 @@ __Example__
     list.data = "test";
     var data = list.data;
 
+# Signal Handling
+
+As it is the JVM intercepts signals (Ctrl+C, etc.) before node/v8 gets to handle them. To capture some of these
+events you can do a bit of a trick.
+
+First create a java wrapper around the Runtime.addShutdownHook method to allow using a proxy object.
+
+```java
+public class ShutdownHookHelper {
+  public static void setShutdownHook(final Runnable r) {
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      @Override
+      public void run() {
+        r.run();
+      }
+    });
+  }
+}
+```
+
+Compile ShutdownHookHelper and then use it as follows.
+
+```javascript
+var java = require('./');
+java.classpath.push('.');
+var ShutdownHookHelper = java.import('ShutdownHookHelper');
+
+ShutdownHookHelper.setShutdownHookSync(java.newProxy('java.lang.Runnable', {
+  run: function () {
+    console.log("do shutdown stuff here instead.");
+  }
+}));
+```
+
 ## License
 
 (The MIT License)
