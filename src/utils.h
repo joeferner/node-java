@@ -63,6 +63,8 @@ jobjectArray v8ToJava(JNIEnv* env, const v8::Arguments& args, int start, int end
 jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg);
 v8::Handle<v8::Value> javaExceptionToV8(Java* java, JNIEnv* env, const std::string& alternateMessage);
 v8::Handle<v8::Value> javaExceptionToV8(Java* java, JNIEnv* env, jthrowable ex, const std::string& alternateMessage);
+std::string javaExceptionToString(JNIEnv* env, jthrowable ex);
+void checkJavaException(JNIEnv* env);
 v8::Handle<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArray);
 v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj);
 jobjectArray javaObjectArrayToClasses(JNIEnv *env, jobjectArray objs);

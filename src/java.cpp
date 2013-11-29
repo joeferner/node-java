@@ -215,7 +215,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   jclass classClazz = env->FindClass("java/lang/ClassLoader");
   jmethodID class_getClassLoader = env->GetStaticMethodID(classClazz, "getSystemClassLoader", "()Ljava/lang/ClassLoader;");
   jobject classLoader = env->CallStaticObjectMethod(classClazz, class_getClassLoader);
-  assert(!env->ExceptionCheck());
+  checkJavaException(env);
 
   jobject result = env->NewGlobalRef(classLoader);
   return scope.Close(javaToV8(self, env, result));
@@ -520,7 +520,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
       jmethodID string_charAt = env->GetMethodID(stringClazz, "charAt", "(I)C");
       jchar itemValues[1];
       itemValues[0] = env->CallCharMethod(val, string_charAt, 0);
-      assert(!env->ExceptionCheck());
+      checkJavaException(env);
       env->SetCharArrayRegion((jcharArray)results, i, 1, itemValues);
     }
   }
@@ -548,7 +548,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
       jmethodID boolean_booleanValue = env->GetMethodID(booleanClazz, "booleanValue", "()Z");
       jboolean booleanValues[1];
       booleanValues[0] = env->CallBooleanMethod(val, boolean_booleanValue);
-      assert(!env->ExceptionCheck());
+      checkJavaException(env);
       env->SetBooleanArrayRegion((jbooleanArray)results, i, 1, booleanValues);
     }
   }
