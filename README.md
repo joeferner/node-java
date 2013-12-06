@@ -435,8 +435,19 @@ __Example__
 
 # Signal Handling
 
-As it is the JVM intercepts signals (Ctrl+C, etc.) before node/v8 gets to handle them. To capture some of these
-events you can do a bit of a trick.
+The JVM intercepts signals (Ctrl+C, etc.) before node/v8 gets to handle them. To fix this there are a couple options.
+
+## Signal Handling Option 1
+
+One option to capture these events is to add the following.
+
+```
+java.options.push('-Xrs');
+```
+
+## Signal Handling Option 2
+
+Hook into the runtime shutdown hook.
 
 First create a java wrapper around the Runtime.addShutdownHook method to allow using a proxy object.
 
