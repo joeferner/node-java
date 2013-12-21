@@ -26,7 +26,7 @@
     "url": "https://github.com/joeferner/node-java.git"
   },
   "dependencies": {
-    "find-java-home": ""
+    "find-java-home": "0.0.3"
   },
   "devDependencies": {
     "nodeunit": "~0.6.4",
@@ -34,8 +34,7 @@
     "async": "~0.1.22"
   },
   "scripts": {
-    "test": "nodeunit test",
-    "preinstall": "node preinstall.js"
+    "test": "nodeunit test"
   },
   "main": "./index.js"
 }
