@@ -19,6 +19,8 @@ Notes:
       xxxxxx\node_modules\java\build\Release\nodejavabridge_bindings.node".
       Ensure the directory where jvm.dll exists is in your PATH. (e.g. C:\Program Files (x86)\Java\jdk1.6.0_18\jre\bin\client).
       This path cannot have quotes.
+* If you see an error such as "Call to 'node findJavaHome.js' returned exit status 1"
+      Try running `node findJavaHome.js` in the node-java directory to see the full failure message.
 
 
 ## Installation Mac
