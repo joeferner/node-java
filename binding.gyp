@@ -6,13 +6,13 @@
         'arch%': 'i386'
       }],
       ['OS=="win"', {
-        'javahome%': '<!(echo %JAVA_HOME%)'
+        'javahome%': '<!(node findJavaHome.js)'
       }],
       ['OS=="linux" or OS=="mac" or OS=="freebsd" or OS=="openbsd"', {
-        'javahome%': '<!(echo $JAVA_HOME)'
+        'javahome%': '<!(node findJavaHome.js)'
       }],
       ['OS=="mac"', {
-      	'javaver%' : "<!(awk -F/ -v h=$JAVA_HOME 'BEGIN {n=split(h, a); print a[2]; exit}')"
+      	'javaver%' : "<!(awk -F/ -v h=`node findJavaHome.js` 'BEGIN {n=split(h, a); print a[2]; exit}')"
       }]
     ]
   },
