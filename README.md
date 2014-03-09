@@ -21,6 +21,8 @@ Notes:
       This path cannot have quotes.
 * If you see an error such as "Call to 'node findJavaHome.js' returned exit status 1"
       Try running `node findJavaHome.js` in the node-java directory to see the full failure message.
+* If you are having problems finding 'jni.h'. Make sure you have the JDK installed not just the JRE. If you are using
+      OpenJDK you want the openjdk-7-jdk package, not openjdk-7-jre.
 
 
 ## Installation Mac
