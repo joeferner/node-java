@@ -443,11 +443,13 @@ The JVM intercepts signals (Ctrl+C, etc.) before node/v8 gets to handle them. To
 
 ## Signal Handling Option 1
 
-One option to capture these events is to add the following.
+One option to capture these events is to add the following flag:
 
-```
+```javascript
 java.options.push('-Xrs');
 ```
+
+As `man java` says, the `-Xrs` flag will “reduce usage of operating-system signals by [the] Java virtual machine (JVM)”, to avoid issues when developing “applications that embed the JVM”.
 
 ## Signal Handling Option 2
 
