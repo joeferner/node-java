@@ -24,6 +24,9 @@ Notes:
 * If you are having problems finding 'jni.h'. Make sure you have the JDK installed not just the JRE. If you are using
       OpenJDK you want the openjdk-7-jdk package, not openjdk-7-jre.
 
+* If you are on windows 7 64 bits and installed node 32 bits you need java JDK 32 bits, with 64 bits you get LNK2001   
+  errormessages (http://stackoverflow.com/questions/10309304/what-library-to-link-to-on-windows-7-for-jni-createjavavm).
+  I replaced 64 bits python by the 32 bits version too, I don't knwo if this is necessary.
 
 ## Installation Mac
 
