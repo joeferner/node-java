@@ -23,7 +23,7 @@ Notes:
       Try running `node findJavaHome.js` in the node-java directory to see the full failure message.
 * If you are having problems finding 'jni.h'. Make sure you have the JDK installed not just the JRE. If you are using
       OpenJDK you want the openjdk-7-jdk package, not openjdk-7-jre.
-
+* (this is an additional remark on installing 32 bits node-java on windows 7 64 bits): if you use win SDK 7.1 command prompt (64 bits) be sure to setenv.cmd /Release /x86
 
 ## Installation Mac
 
