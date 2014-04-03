@@ -4,7 +4,7 @@ Bridge API to connect with existing Java APIs.
 
 [Google Groups Discussion Forum](https://groups.google.com/forum/#!forum/node-java)
 
-## Installation Linux/Windows
+## Installation Linux
 
 ```bash
 $ export JAVA_HOME=/usr/local/share/jdk1.6.0_30
@@ -15,18 +15,32 @@ Notes:
 * node-gyp requires python 2.x not python 3.x. See https://github.com/TooTallNate/node-gyp/issues/155 for more details.
 * If you see an error such as "No rule to make target '/opt/jdk1.7.0_09/jre/lib/amd64/server/libjvm.so', needed by 'build/depsVerified'.  Stop."
       this means that your JAVA_HOME is not set correctly and you need to verify the location of libjvm.so or jvm.lib.
-* If you see an error such as "Error: The specified module could not be found. 
-      xxxxxx\node_modules\java\build\Release\nodejavabridge_bindings.node".
-      Ensure the directory where jvm.dll exists is in your PATH. (e.g. C:\Program Files (x86)\Java\jdk1.6.0_18\jre\bin\client).
-      This path cannot have quotes.
 * If you see an error such as "Call to 'node findJavaHome.js' returned exit status 1"
       Try running `node findJavaHome.js` in the node-java directory to see the full failure message.
 * If you are having problems finding 'jni.h'. Make sure you have the JDK installed not just the JRE. If you are using
       OpenJDK you want the openjdk-7-jdk package, not openjdk-7-jre.
 
-* If you are on windows 7 64 bits and installed node 32 bits you need java JDK 32 bits, with 64 bits you get LNK2001   
-  errormessages (http://stackoverflow.com/questions/10309304/what-library-to-link-to-on-windows-7-for-jni-createjavavm).
-  I replaced 64 bits python by the 32 bits version too, I don't knwo if this is necessary.
+## Installation Windows
+
+```bash
+$ set JAVA_HOME=C:\Program Files (x86)\Java\jdk1.6.0_18\
+$ npm install java
+```
+
+Notes:
+* If you see an error such as "Error: The specified module could not be found. 
+      xxxxxx\node_modules\java\build\Release\nodejavabridge_bindings.node".
+      Ensure the directory where jvm.dll exists is in your PATH. (e.g. C:\Program Files (x86)\Java\jdk1.6.0_18\jre\bin\client).
+      This path cannot have quotes.
+* node-gyp requires python 2.x not python 3.x. See https://github.com/TooTallNate/node-gyp/issues/155 for more details.
+* For 64 bit installs with 32 bit node
+ * you need the 32 bit JDK, with the 64 bit JDK you will see LNK2001   
+   errormessages (http://stackoverflow.com/questions/10309304/what-library-to-link-to-on-windows-7-for-jni-createjavavm).
+ * when using the windows SDK 7.1 command prompt (64 bits) be sure to setenv.cmd /Release /x86
+* If you see an error such as "Call to 'node findJavaHome.js' returned exit status 1"
+      Try running `node findJavaHome.js` in the node-java directory to see the full failure message.
+* If you are having problems finding 'jni.h'. Make sure you have the JDK installed not just the JRE. If you are using
+      OpenJDK you want the openjdk-7-jdk package, not openjdk-7-jre.
 
 ## Installation Mac
 
