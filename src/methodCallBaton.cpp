@@ -6,10 +6,13 @@
 
 MethodCallBaton::MethodCallBaton(Java* java, jobject method, jarray args, v8::Handle<v8::Value>& callback) {
   JNIEnv *env = java->getJavaEnv();
-
   m_java = java;
   m_args = (jarray)env->NewGlobalRef(args);
-  NanAssignPersistent(v8::Value, m_callback, callback);
+  if(callback->IsFunction()) {
+    m_callback = new NanCallback(v8::Handle<v8::Function>::Cast(callback));
+  } else {
+    m_callback = new NanCallback();
+  }
   m_method = env->NewGlobalRef(method);
   m_error = NULL;
   m_result = NULL;
@@ -26,7 +29,7 @@ MethodCallBaton::~MethodCallBaton() {
   }
   env->DeleteGlobalRef(m_args);
   env->DeleteGlobalRef(m_method);
-  m_callback.Dispose();
+  delete m_callback;
 }
 
 void MethodCallBaton::run() {
@@ -64,20 +67,16 @@ v8::Handle<v8::Value> MethodCallBaton::runSync() {
 void MethodCallBaton::after(JNIEnv *env) {
   NanScope();
 
-  v8::Local<v8::Value> callback = NanPersistentToLocal(m_callback);
-  if(callback->IsFunction()) {
-    v8::Local<v8::Function> callback = v8::Local<v8::Function>::Cast(callback);
-    v8::Handle<v8::Value> result = resultsToV8(env);
-    v8::Handle<v8::Value> argv[2];
-    if(result->IsNativeError()) {
-      argv[0] = result;
-      argv[1] = v8::Undefined();
-    } else {
-      argv[0] = v8::Undefined();
-      argv[1] = result;
-    }
-    node::MakeCallback(v8::Context::GetCurrent()->Global(), callback, 2, argv);
+  v8::Handle<v8::Value> result = resultsToV8(env);
+  v8::Handle<v8::Value> argv[2];
+  if(result->IsNativeError()) {
+    argv[0] = result;
+    argv[1] = v8::Undefined();
+  } else {
+    argv[0] = v8::Undefined();
+    argv[1] = result;
   }
+  m_callback->Call(2, argv);
 }
 
 v8::Handle<v8::Value> MethodCallBaton::resultsToV8(JNIEnv *env) {

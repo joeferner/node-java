@@ -103,16 +103,16 @@ std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string method
 
 #define ARGS_FRONT_CLASSNAME() ARGS_FRONT_STRING(className)
 
-#define ARGS_BACK_CALLBACK() \
-  bool callbackProvided;                      \
-  v8::Handle<v8::Value> callback;             \
-  if(args[args.Length()-1]->IsFunction()) {   \
-    callback = args[argsEnd-1];               \
-    argsEnd--;                                \
-    callbackProvided = true;                  \
-  } else {                                    \
-    callback = v8::Null();                    \
-    callbackProvided = false;                 \
+#define ARGS_BACK_CALLBACK()                              \
+  bool callbackProvided;                                  \
+  v8::Handle<v8::Value> callback;                         \
+  if(args[args.Length()-1]->IsFunction()) {               \
+    callback = args[argsEnd-1];                           \
+    argsEnd--;                                            \
+    callbackProvided = true;                              \
+  } else {                                                \
+    callback = v8::Null();                                \
+    callbackProvided = false;                             \
   }
 
 #define EXCEPTION_CALL_CALLBACK(JAVA, STRBUILDER) \

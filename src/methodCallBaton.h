@@ -32,7 +32,7 @@ protected:
   v8::Handle<v8::Value> resultsToV8(JNIEnv *env);
 
   Java* m_java;
-  v8::Persistent<v8::Value> m_callback;
+  NanCallback *m_callback;
   jthrowable m_error;
   std::string m_errorString;
   jarray m_args;
