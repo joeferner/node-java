@@ -5,3 +5,4 @@ node_modules
 .lock*
 npm-debug.log
 .idea
+node-java.cbp
