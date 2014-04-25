@@ -30,7 +30,7 @@ private:
   static NAN_GETTER(fieldGetter);
   static NAN_SETTER(fieldSetter);
 
-  static std::map<std::string, v8::Persistent<v8::FunctionTemplate> > sFunctionTemplates;
+  static std::map<std::string, v8::Persistent<v8::FunctionTemplate>*> sFunctionTemplates;
   Java* m_java;
   jobject m_obj;
   jclass m_class;

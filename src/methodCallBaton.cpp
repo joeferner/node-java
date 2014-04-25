@@ -9,7 +9,7 @@ MethodCallBaton::MethodCallBaton(Java* java, jobject method, jarray args, v8::Ha
 
   m_java = java;
   m_args = (jarray)env->NewGlobalRef(args);
-  m_callback = v8::Persistent<v8::Value>::New(callback);
+  NanAssignPersistent(v8::Value, m_callback, callback);
   m_method = env->NewGlobalRef(method);
   m_error = NULL;
   m_result = NULL;
@@ -62,10 +62,11 @@ v8::Handle<v8::Value> MethodCallBaton::runSync() {
 }
 
 void MethodCallBaton::after(JNIEnv *env) {
-  v8::HandleScope scope;
+  NanScope();
 
-  if(m_callback->IsFunction()) {
-    v8::Local<v8::Function> callback = v8::Function::Cast(*m_callback);
+  v8::Local<v8::Value> callback = NanPersistentToLocal(m_callback);
+  if(callback->IsFunction()) {
+    v8::Local<v8::Function> callback = v8::Local<v8::Function>::Cast(callback);
     v8::Handle<v8::Value> result = resultsToV8(env);
     v8::Handle<v8::Value> argv[2];
     if(result->IsNativeError()) {
@@ -80,7 +81,7 @@ void MethodCallBaton::after(JNIEnv *env) {
 }
 
 v8::Handle<v8::Value> MethodCallBaton::resultsToV8(JNIEnv *env) {
-  v8::HandleScope scope;
+  NanScope();
 
   if(m_error) {
     jthrowable cause = m_error;

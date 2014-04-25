@@ -6,7 +6,7 @@
 #include <sstream>
 #include <algorithm>
 
-/*static*/ std::map<std::string, v8::Persistent<v8::FunctionTemplate> > JavaObject::sFunctionTemplates;
+/*static*/ std::map<std::string, v8::Persistent<v8::FunctionTemplate>*> JavaObject::sFunctionTemplates;
 
 /*static*/ void JavaObject::Init(v8::Handle<v8::Object> target) {
 }
@@ -28,14 +28,14 @@
   std::replace(className.begin(), className.end(), '[', 'a');
   className = "nodeJava_" + className;
 
-  v8::Persistent<v8::FunctionTemplate> persistentFuncTemplate;
+  v8::Local<v8::FunctionTemplate> funcTemplate;
   if(sFunctionTemplates.find(className) != sFunctionTemplates.end()) {
     //printf("existing className: %s\n", className.c_str());
-    persistentFuncTemplate = sFunctionTemplates[className];
+    funcTemplate = NanPersistentToLocal(*sFunctionTemplates[className]);
   } else {
     //printf("create className: %s\n", className.c_str());
 
-    v8::Local<v8::FunctionTemplate> funcTemplate = v8::FunctionTemplate::New();
+    funcTemplate = v8::FunctionTemplate::New();
     funcTemplate->InstanceTemplate()->SetInternalFieldCount(1);
     funcTemplate->SetClassName(v8::String::NewSymbol(className.c_str()));
 
@@ -70,16 +70,18 @@
       funcTemplate->InstanceTemplate()->SetAccessor(fieldName, fieldGetter, fieldSetter);
     }
 
-    sFunctionTemplates[className] = persistentFuncTemplate = v8::Persistent<v8::FunctionTemplate>::New(funcTemplate);
+    v8::Persistent<v8::FunctionTemplate>* persistentFuncTemplate = new v8::Persistent<v8::FunctionTemplate>();
+    NanAssignPersistent(v8::FunctionTemplate, (*persistentFuncTemplate), funcTemplate);
+    sFunctionTemplates[className] = persistentFuncTemplate;
   }
 
-  v8::Local<v8::Function> ctor = persistentFuncTemplate->GetFunction();
+  v8::Local<v8::Function> ctor = funcTemplate->GetFunction();
   v8::Local<v8::Object> javaObjectObj = ctor->NewInstance();
   javaObjectObj->SetHiddenValue(v8::String::New(V8_HIDDEN_MARKER_JAVA_OBJECT), v8::Boolean::New(true));
   JavaObject *self = new JavaObject(java, obj);
   self->Wrap(javaObjectObj);
 
-  NanReturnValue(javaObjectObj);
+  return javaObjectObj;
 }
 
 JavaObject::JavaObject(Java *java, jobject obj) {
@@ -132,7 +134,7 @@ NAN_METHOD(JavaObject::methodCall) {
   if(method == NULL) {
     std::string msg = methodNotFoundToString(env, self->m_class, methodNameStr, false, args, argsStart, argsEnd);
     EXCEPTION_CALL_CALLBACK(self->m_java, msg);
-    return v8::Undefined();
+    NanReturnUndefined();
   }
 
   // run
@@ -160,7 +162,7 @@ NAN_METHOD(JavaObject::methodCallSync) {
   if(method == NULL) {
     std::string msg = methodNotFoundToString(env, self->m_class, methodNameStr, false, args, argsStart, argsEnd);
     v8::Handle<v8::Value> ex = javaExceptionToV8(self->m_java, env, msg);
-    return ThrowException(ex);
+    return NanThrowError(ex);
   }
 
   // run
@@ -170,7 +172,7 @@ NAN_METHOD(JavaObject::methodCallSync) {
   delete baton;
 
   if(result->IsNativeError()) {
-    return ThrowException(result);
+    return NanThrowError(result);
   }
 
   NanReturnValue(result);
@@ -178,7 +180,7 @@ NAN_METHOD(JavaObject::methodCallSync) {
 
 NAN_GETTER(JavaObject::fieldGetter) {
   NanScope();
-  JavaObject* self = node::ObjectWrap::Unwrap<JavaObject>(info.This());
+  JavaObject* self = node::ObjectWrap::Unwrap<JavaObject>(args.This());
   JNIEnv *env = self->m_java->getJavaEnv();
   JavaScope javaScope(env);
 
@@ -189,7 +191,7 @@ NAN_GETTER(JavaObject::fieldGetter) {
     std::ostringstream errStr;
     errStr << "Could not find field " << propertyStr;
     v8::Handle<v8::Value> ex = javaExceptionToV8(self->m_java, env, errStr.str());
-    return ThrowException(ex);
+    return NanThrowError(ex);
   }
 
   jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
@@ -201,7 +203,7 @@ NAN_GETTER(JavaObject::fieldGetter) {
     std::ostringstream errStr;
     errStr << "Could not get field " << propertyStr;
     v8::Handle<v8::Value> ex = javaExceptionToV8(self->m_java, env, errStr.str());
-    return ThrowException(ex);
+    return NanThrowError(ex);
   }
 
   v8::Handle<v8::Value> result = javaToV8(self->m_java, env, val);
@@ -211,7 +213,7 @@ NAN_GETTER(JavaObject::fieldGetter) {
 
 NAN_SETTER(JavaObject::fieldSetter) {
   NanScope();
-  JavaObject* self = node::ObjectWrap::Unwrap<JavaObject>(info.This());
+  JavaObject* self = node::ObjectWrap::Unwrap<JavaObject>(args.This());
   JNIEnv *env = self->m_java->getJavaEnv();
   JavaScope javaScope(env);
 

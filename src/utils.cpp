@@ -251,7 +251,7 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
   }
 
   if(arg->IsArray()) {
-    v8::Local<v8::Array> array = v8::Array::Cast(*arg);
+    v8::Local<v8::Array> array = v8::Local<v8::Array>::Cast(arg);
     uint32_t arraySize = array->Length();
     jclass objectClazz = env->FindClass("java/lang/Object");
     jobjectArray result = env->NewObjectArray(arraySize, objectClazz, NULL);
@@ -289,7 +289,7 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
   }
 
   if(arg->IsObject()) {
-    v8::Local<v8::Object> obj = v8::Object::Cast(*arg);
+    v8::Local<v8::Object> obj = v8::Local<v8::Object>::Cast(arg);
 
     v8::Local<v8::Value> isJavaObject = obj->GetHiddenValue(v8::String::New(V8_HIDDEN_MARKER_JAVA_OBJECT));
     if(!isJavaObject.IsEmpty() && isJavaObject->IsBoolean()) {
@@ -382,7 +382,7 @@ jobject v8ToJava_javaLong(JNIEnv* env, v8::Local<v8::Object> obj) {
   return jobj;
 }
 
-jobjectArray v8ToJava(JNIEnv* env, const v8::Arguments& args, int start, int end) {
+jobjectArray v8ToJava(JNIEnv* env, _NAN_METHOD_ARGS_TYPE args, int start, int end) {
   jclass clazz = env->FindClass("java/lang/Object");
   jobjectArray results = env->NewObjectArray(end-start, clazz, NULL);
 
@@ -415,7 +415,7 @@ std::string javaExceptionToString(JNIEnv* env, jthrowable ex) {
 }
 
 v8::Handle<v8::Value> javaExceptionToV8(Java* java, JNIEnv* env, jthrowable ex, const std::string& alternateMessage) {
-  v8::HandleScope scope;
+  NanScope();
 
   std::ostringstream msg;
   msg << alternateMessage;
@@ -432,7 +432,7 @@ v8::Handle<v8::Value> javaExceptionToV8(Java* java, JNIEnv* env, jthrowable ex, 
 }
 
 v8::Handle<v8::Value> javaExceptionToV8(Java* java, JNIEnv* env, const std::string& alternateMessage) {
-  v8::HandleScope scope;
+  NanScope();
   jthrowable ex = env->ExceptionOccurred();
   env->ExceptionClear();
   return scope.Close(javaExceptionToV8(java, env, ex, alternateMessage));
@@ -455,7 +455,7 @@ jvalueType javaGetArrayComponentType(JNIEnv *env, jobjectArray array) {
 }
 
 v8::Handle<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArray) {
-  v8::HandleScope scope;
+  NanScope();
 
   if(objArray == NULL) {
     return v8::Null();
@@ -553,7 +553,7 @@ v8::Handle<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArr
 }
 
 v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj) {
-  v8::HandleScope scope;
+  NanScope();
 
   if(obj == NULL) {
     return v8::Null();
@@ -698,7 +698,7 @@ int dynamicProxyDataVerify(DynamicProxyData* data) {
   return 0;
 }
 
-std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string methodName, bool constructor, const v8::Arguments& args, int argStart, int argEnd) {
+std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string methodName, bool constructor, _NAN_METHOD_ARGS_TYPE args, int argStart, int argEnd) {
   std::ostringstream startOfMessage;
   std::ostringstream msg;
 
