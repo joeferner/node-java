@@ -12,7 +12,7 @@
 }
 
 /*static*/ v8::Local<v8::Object> JavaObject::New(Java *java, jobject obj) {
-  v8::HandleScope scope;
+  NanScope();
 
   JNIEnv *env = java->getJavaEnv();
   JavaScope javaScope(env);
@@ -79,7 +79,7 @@
   JavaObject *self = new JavaObject(java, obj);
   self->Wrap(javaObjectObj);
 
-  return scope.Close(javaObjectObj);
+  NanReturnValue(javaObjectObj);
 }
 
 JavaObject::JavaObject(Java *java, jobject obj) {
@@ -107,8 +107,8 @@ JavaObject::~JavaObject() {
   env->DeleteGlobalRef(m_class);
 }
 
-/*static*/ v8::Handle<v8::Value> JavaObject::methodCall(const v8::Arguments& args) {
-  v8::HandleScope scope;
+NAN_METHOD(JavaObject::methodCall) {
+  NanScope();
   JavaObject* self = node::ObjectWrap::Unwrap<JavaObject>(args.This());
   JNIEnv *env = self->m_java->getJavaEnv();
   JavaScope javaScope(env);
@@ -142,8 +142,8 @@ JavaObject::~JavaObject() {
   END_CALLBACK_FUNCTION("\"Method '" << methodNameStr << "' called without a callback did you mean to use the Sync version?\"");
 }
 
-/*static*/ v8::Handle<v8::Value> JavaObject::methodCallSync(const v8::Arguments& args) {
-  v8::HandleScope scope;
+NAN_METHOD(JavaObject::methodCallSync) {
+  NanScope();
   JavaObject* self = node::ObjectWrap::Unwrap<JavaObject>(args.This());
   JNIEnv *env = self->m_java->getJavaEnv();
   JavaScope javaScope(env);
@@ -173,11 +173,11 @@ JavaObject::~JavaObject() {
     return ThrowException(result);
   }
 
-  return scope.Close(result);
+  NanReturnValue(result);
 }
 
-/*static*/ v8::Handle<v8::Value> JavaObject::fieldGetter(v8::Local<v8::String> property, const v8::AccessorInfo& info) {
-  v8::HandleScope scope;
+NAN_GETTER(JavaObject::fieldGetter) {
+  NanScope();
   JavaObject* self = node::ObjectWrap::Unwrap<JavaObject>(info.This());
   JNIEnv *env = self->m_java->getJavaEnv();
   JavaScope javaScope(env);
@@ -206,11 +206,11 @@ JavaObject::~JavaObject() {
 
   v8::Handle<v8::Value> result = javaToV8(self->m_java, env, val);
 
-  return scope.Close(result);
+  NanReturnValue(result);
 }
 
-/*static*/ void JavaObject::fieldSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::AccessorInfo& info) {
-  v8::HandleScope scope;
+NAN_SETTER(JavaObject::fieldSetter) {
+  NanScope();
   JavaObject* self = node::ObjectWrap::Unwrap<JavaObject>(info.This());
   JNIEnv *env = self->m_java->getJavaEnv();
   JavaScope javaScope(env);

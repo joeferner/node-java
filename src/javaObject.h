@@ -25,10 +25,10 @@ public:
 private:
   JavaObject(Java* java, jobject obj);
   ~JavaObject();
-  static v8::Handle<v8::Value> methodCall(const v8::Arguments& args);
-  static v8::Handle<v8::Value> methodCallSync(const v8::Arguments& args);
-  static v8::Handle<v8::Value> fieldGetter(v8::Local<v8::String> property, const v8::AccessorInfo& info);
-  static void fieldSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::AccessorInfo& info);
+  static NAN_METHOD(methodCall);
+  static NAN_METHOD(methodCallSync);
+  static NAN_GETTER(fieldGetter);
+  static NAN_SETTER(fieldSetter);
 
   static std::map<std::string, v8::Persistent<v8::FunctionTemplate> > sFunctionTemplates;
   Java* m_java;

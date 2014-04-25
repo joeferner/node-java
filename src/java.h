@@ -6,6 +6,7 @@
 #include <node.h>
 #include <jni.h>
 #include <string>
+#include <nan.h>
 
 class Java : public node::ObjectWrap {
 public:
@@ -20,26 +21,26 @@ private:
   v8::Handle<v8::Value> createJVM(JavaVM** jvm, JNIEnv** env);
   void destroyJVM(JavaVM** jvm, JNIEnv** env);
 
-  static v8::Handle<v8::Value> New(const v8::Arguments& args);
-  static v8::Handle<v8::Value> getClassLoader(const v8::Arguments& args);
-  static v8::Handle<v8::Value> newInstance(const v8::Arguments& args);
-  static v8::Handle<v8::Value> newInstanceSync(const v8::Arguments& args);
-  static v8::Handle<v8::Value> newProxy(const v8::Arguments& args);
-  static v8::Handle<v8::Value> callStaticMethod(const v8::Arguments& args);
-  static v8::Handle<v8::Value> callStaticMethodSync(const v8::Arguments& args);
-  static v8::Handle<v8::Value> findClassSync(const v8::Arguments& args);
-  static v8::Handle<v8::Value> newArray(const v8::Arguments& args);
-  static v8::Handle<v8::Value> newByte(const v8::Arguments& args);
-  static v8::Handle<v8::Value> newChar(const v8::Arguments& args);
-  static v8::Handle<v8::Value> newShort(const v8::Arguments& args);
-  static v8::Handle<v8::Value> newLong(const v8::Arguments& args);
-  static v8::Handle<v8::Value> newFloat(const v8::Arguments& args);
-  static v8::Handle<v8::Value> newDouble(const v8::Arguments& args);
-  static v8::Handle<v8::Value> getStaticFieldValue(const v8::Arguments& args);
-  static v8::Handle<v8::Value> setStaticFieldValue(const v8::Arguments& args);
-  static v8::Handle<v8::Value> instanceOf(const v8::Arguments& args);
-  static v8::Handle<v8::Value> AccessorProhibitsOverwritingGetter(v8::Local<v8::String> name, const v8::AccessorInfo &info);
-  static void AccessorProhibitsOverwritingSetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::AccessorInfo &info);
+  static NAN_METHOD(New);
+  static NAN_METHOD(getClassLoader);
+  static NAN_METHOD(newInstance);
+  static NAN_METHOD(newInstanceSync);
+  static NAN_METHOD(newProxy);
+  static NAN_METHOD(callStaticMethod);
+  static NAN_METHOD(callStaticMethodSync);
+  static NAN_METHOD(findClassSync);
+  static NAN_METHOD(newArray);
+  static NAN_METHOD(newByte);
+  static NAN_METHOD(newChar);
+  static NAN_METHOD(newShort);
+  static NAN_METHOD(newLong);
+  static NAN_METHOD(newFloat);
+  static NAN_METHOD(newDouble);
+  static NAN_METHOD(getStaticFieldValue);
+  static NAN_METHOD(setStaticFieldValue);
+  static NAN_METHOD(instanceOf);
+  static NAN_GETTER(AccessorProhibitsOverwritingGetter);
+  static NAN_SETTER(AccessorProhibitsOverwritingSetter);
   v8::Handle<v8::Value> ensureJvm();
 
   static v8::Persistent<v8::FunctionTemplate> s_ct;

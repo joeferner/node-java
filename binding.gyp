@@ -29,6 +29,7 @@
       ],
       'include_dirs': [
         '<(javahome)/include',
+        "<!(node -e \"require('nan')\")",
       ],
       'cflags': ['-O3'],
       'conditions': [

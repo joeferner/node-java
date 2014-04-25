@@ -9,6 +9,7 @@
 #include <vector>
 #include <string>
 #include <uv.h>
+#include <nan.h>
 
 class Java;
 
@@ -60,7 +61,7 @@ JNIEnv* javaGetEnv(JavaVM* jvm, jobject classLoader);
 jobject getSystemClassLoader(JNIEnv *env);
 jvalueType javaGetArrayComponentType(JNIEnv *env, jobjectArray array);
 jvalueType javaGetType(JNIEnv *env, jclass type);
-jobjectArray v8ToJava(JNIEnv* env, const v8::Arguments& args, int start, int end);
+jobjectArray v8ToJava(JNIEnv* env, _NAN_METHOD_ARGS_TYPE args, int start, int end);
 jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg);
 v8::Handle<v8::Value> javaExceptionToV8(Java* java, JNIEnv* env, const std::string& alternateMessage);
 v8::Handle<v8::Value> javaExceptionToV8(Java* java, JNIEnv* env, jthrowable ex, const std::string& alternateMessage);
@@ -76,7 +77,7 @@ jobject javaFindField(JNIEnv* env, jclass clazz, std::string& fieldName);
 jobject javaFindMethod(JNIEnv *env, jclass clazz, std::string& methodName, jobjectArray methodArgs);
 jobject javaFindConstructor(JNIEnv *env, jclass clazz, jobjectArray methodArgs);
 
-std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string methodName, bool constructor, const v8::Arguments& args, int argStart, int argEnd);
+std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string methodName, bool constructor, _NAN_METHOD_ARGS_TYPE args, int argStart, int argEnd);
 
 #define UNUSED_VARIABLE(var) var = var;
 
@@ -84,7 +85,7 @@ std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string method
   if(args.Length() < argsStart+1 || !args[argsStart]->IsObject()) {                          \
     std::ostringstream errStr;                                                               \
     errStr << "Argument " << (argsStart+1) << " must be an object";                          \
-    return ThrowException(v8::Exception::TypeError(v8::String::New(errStr.str().c_str())));  \
+    return NanThrowError(v8::Exception::TypeError(v8::String::New(errStr.str().c_str())));   \
   }                                                                                          \
   v8::Local<v8::Object> ARGNAME = v8::Local<v8::Object>::Cast(args[argsStart]);              \
   argsStart++;
@@ -93,11 +94,11 @@ std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string method
   if(args.Length() < argsStart+1 || !args[argsStart]->IsString()) {                          \
     std::ostringstream errStr;                                                               \
     errStr << "Argument " << (argsStart+1) << " must be a string";                           \
-    return ThrowException(v8::Exception::TypeError(v8::String::New(errStr.str().c_str())));  \
+    return NanThrowError(v8::Exception::TypeError(v8::String::New(errStr.str().c_str())));   \
   }                                                                                          \
   v8::Local<v8::String> _##ARGNAME##_obj = v8::Local<v8::String>::Cast(args[argsStart]);     \
   v8::String::AsciiValue _##ARGNAME##_val(_##ARGNAME##_obj);                                 \
-  std::string ARGNAME = *_##ARGNAME##_val;                                              \
+  std::string ARGNAME = *_##ARGNAME##_val;                                                   \
   argsStart++;
 
 #define ARGS_FRONT_CLASSNAME() ARGS_FRONT_STRING(className)
@@ -125,11 +126,11 @@ std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string method
 
 #define END_CALLBACK_FUNCTION(MSG) \
   if(callbackProvided) {                                     \
-    return v8::Undefined();                                  \
+    NanReturnUndefined();                                    \
   } else {                                                   \
     std::ostringstream str;                                  \
     str << MSG;                                              \
-    return scope.Close(v8::String::New(str.str().c_str()));  \
+    NanReturnValue(v8::String::New(str.str().c_str()));      \
   }
 
 #ifndef UNUSED_VARIABLE
