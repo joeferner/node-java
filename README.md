@@ -4,49 +4,29 @@ Bridge API to connect with existing Java APIs.
 
 [Google Groups Discussion Forum](https://groups.google.com/forum/#!forum/node-java)
 
-## Installation Linux
+## Installation
 
 ```bash
-$ export JAVA_HOME=/usr/local/share/jdk1.6.0_30
 $ npm install java
 ```
 
 Notes:
+
 * node-gyp requires python 2.x not python 3.x. See https://github.com/TooTallNate/node-gyp/issues/155 for more details.
-* If you see an error such as "No rule to make target '/opt/jdk1.7.0_09/jre/lib/amd64/server/libjvm.so', needed by 'build/depsVerified'.  Stop."
-      this means that your JAVA_HOME is not set correctly and you need to verify the location of libjvm.so or jvm.lib.
 * If you see an error such as "Call to 'node findJavaHome.js' returned exit status 1"
       Try running `node findJavaHome.js` in the node-java directory to see the full failure message.
 * If you are having problems finding 'jni.h'. Make sure you have the JDK installed not just the JRE. If you are using
-      OpenJDK you want the openjdk-7-jdk package, not openjdk-7-jre.
+      OpenJDK you want the openjdk-7-jdk package, not openjdk-7-jre.  _Mavericks users see [Issue #86](https://github.com/nearinfinity/node-java/issues/86) if you run into this._
 
-## Installation Windows
-
-```bash
-$ set JAVA_HOME=C:\Program Files (x86)\Java\jdk1.6.0_18\
-$ npm install java
-```
+### Installation Windows
 
 Notes:
-* node-gyp requires python 2.x not python 3.x. See https://github.com/TooTallNate/node-gyp/issues/155 for more details.
 * For 64 bit installs with 32 bit node
  * you need the 32 bit JDK, with the 64 bit JDK you will see LNK2001
    errormessages (http://stackoverflow.com/questions/10309304/what-library-to-link-to-on-windows-7-for-jni-createjavavm).
  * when using the windows SDK 7.1 command prompt (64 bits) be sure to setenv.cmd /Release /x86
-* If you see an error such as "Call to 'node findJavaHome.js' returned exit status 1"
-      Try running `node findJavaHome.js` in the node-java directory to see the full failure message.
-* If you are having problems finding 'jni.h'. Make sure you have the JDK installed not just the JRE. If you are using
-      OpenJDK you want the openjdk-7-jdk package, not openjdk-7-jre.
 
-## Installation Mac
-
-```bash
-$ npm install java
-```
-
-_Mavericks Users: If you are having problems finding 'jni.h' please see [Issue #86](https://github.com/nearinfinity/node-java/issues/86)_
-
-## Installation ARM (Raspberry Pi)
+### Installation ARM (Raspberry Pi)
 
 ```bash
 GYP_DEFINES="armv7=0" CCFLAGS='-march=armv6' CXXFLAGS='-march=armv6' npm install java
