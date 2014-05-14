@@ -28,13 +28,9 @@ $ npm install java
 ```
 
 Notes:
-* If you see an error such as "Error: The specified module could not be found. 
-      xxxxxx\node_modules\java\build\Release\nodejavabridge_bindings.node".
-      Ensure the directory where jvm.dll exists is in your PATH. (e.g. C:\Program Files (x86)\Java\jdk1.6.0_18\jre\bin\client).
-      This path cannot have quotes.
 * node-gyp requires python 2.x not python 3.x. See https://github.com/TooTallNate/node-gyp/issues/155 for more details.
 * For 64 bit installs with 32 bit node
- * you need the 32 bit JDK, with the 64 bit JDK you will see LNK2001   
+ * you need the 32 bit JDK, with the 64 bit JDK you will see LNK2001
    errormessages (http://stackoverflow.com/questions/10309304/what-library-to-link-to-on-windows-7-for-jni-createjavavm).
  * when using the windows SDK 7.1 command prompt (64 bits) be sure to setenv.cmd /Release /x86
 * If you see an error such as "Call to 'node findJavaHome.js' returned exit status 1"
