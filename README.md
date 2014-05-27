@@ -20,11 +20,17 @@ Notes:
 
 ### Installation Windows
 
-Notes:
-* For 64 bit installs with 32 bit node
- * you need the 32 bit JDK, with the 64 bit JDK you will see LNK2001
-   errormessages (http://stackoverflow.com/questions/10309304/what-library-to-link-to-on-windows-7-for-jni-createjavavm).
- * when using the windows SDK 7.1 command prompt (64 bits) be sure to setenv.cmd /Release /x86
+For 64 bit installs with 32 bit node:
+* you need the 32 bit JDK, with the 64 bit JDK you will see LNK2001 errormessages (http://stackoverflow.com/questions/10309304/what-library-to-link-to-on-windows-7-for-jni-createjavavm).
+* when using the windows SDK 7.1 command prompt (64 bits) be sure to setenv.cmd /Release /x86
+
+If you get `ENOENT` errors looking for `<nodepath>\node_modules\node-gyp\..`, ensure you have node-gyp installed as a global nodule:
+
+```bash
+npm install -g node-gyp
+```
+
+If you get `D9025` warnings and `C1083` errors when looking for `.sln` or `.h` files, be sure you've got the `node-gyp`'s dependencies, [as explained here](https://github.com/joeferner/node-java#installation).
 
 ### Installation ARM (Raspberry Pi)
 
