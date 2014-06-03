@@ -34,6 +34,8 @@ public class Test {
   public static double staticDouble(double s) { return s; }
   public static float staticFloat(float s) { return s; }
 
+  public static String staticBigDecimalToString(java.math.BigDecimal bigDecimal) { return bigDecimal.toString(); }
+  
   public static int staticChar(char ch) { return (int)ch; }
   public static short[] staticShortArray(Short[] arg) {
     short[] b = new short[arg.length];

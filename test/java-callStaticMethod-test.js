@@ -37,6 +37,14 @@ exports['Java - Call Static Method'] = nodeunit.testCase({
     test.done();
   },
 
+  "callStaticMethodSync with BigDecimal": function(test) {
+    var bigDecimal = java.newInstanceSync("java.math.BigDecimal", 100.1);
+    var result = java.callStaticMethodSync("Test", "staticBigDecimalToString", bigDecimal);
+    test.ok(result);
+    test.ok(Math.abs(parseFloat(result) - 100.1) < 0.0001);
+    test.done();
+  },
+  
   "callStaticMethod bad class name": function(test) {
     java.callStaticMethod("BadClassName", "staticMethod", function(err, result) {
       test.ok(err);
