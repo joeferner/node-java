@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/joeferner/node-java.png)](https://travis-ci.org/joeferner/node-java)
+
 # java
 
 Bridge API to connect with existing Java APIs.
