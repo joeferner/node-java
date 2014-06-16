@@ -14,6 +14,8 @@ $ npm install java
 
 Notes:
 
+* On OS X, only JDK6 is supported. This is because the Oracle JDK does not advertise itself as available for JNI;
+      see [Issue 90](https://github.com/joeferner/node-java/issues/90#issuecomment-45613235) for more details and manual workarounds.
 * node-gyp requires python 2.x not python 3.x. See https://github.com/TooTallNate/node-gyp/issues/155 for more details.
 * If you see an error such as "Call to 'node findJavaHome.js' returned exit status 1"
       Try running `node findJavaHome.js` in the node-java directory to see the full failure message.
