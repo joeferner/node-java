@@ -285,7 +285,7 @@ __Arguments__
 
 __Example__
 
-    java.getStaticFieldValue("com.nearinfinty.MyClass", "data", "Hello World");
+    java.setStaticFieldValue("com.nearinfinty.MyClass", "data", "Hello World");
 
 <a name="javaNewArray" />
 **java.newArray(className, values[])**
