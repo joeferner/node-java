@@ -35,6 +35,7 @@ struct DynamicProxyData {
   Java* java;
   std::string interfaceName;
   v8::Persistent<v8::Object> functions;
+  v8::Persistent<v8::Value> jsObject;
   std::string methodName;
   jobjectArray args;
   jobject result;

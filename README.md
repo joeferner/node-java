@@ -384,8 +384,8 @@ __Example__
 
 Creates a new java Proxy for the given interface. Functions passed in will run on the v8 main thread and not a new thread.
 
-The returned object has two methods ref() and unref() which you can use to maintain references to prevent premature
-garbage collection. You must call these methods to ensure the proxy stays around.
+The returned object has a method unref() which you can use to free the object for
+garbage collection.
 
 __Arguments__
 

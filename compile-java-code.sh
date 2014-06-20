@@ -8,3 +8,6 @@ javac ${JAVAC_OPTS} *.java
 
 cd ../src-java/node
 javac ${JAVAC_OPTS} *.java
+
+cd ../../
+javah -classpath src-java -d ./src node.NodeDynamicProxyClass

@@ -694,7 +694,7 @@ int dynamicProxyDataVerify(DynamicProxyData* data) {
     return 1;
   }
 
-  printf("*** ERROR: Lost reference to the dynamic proxy. You must maintain a reference in javascript land using ref() and unref(). ***\n");
+  printf("*** ERROR: Lost reference to the dynamic proxy. You must maintain a reference in javascript land using ref() and unref(). (%p) ***\n", data);
   return 0;
 }
 

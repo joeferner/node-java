@@ -356,6 +356,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
   if(result->IsNativeError()) {
     return ThrowException(result);
   }
+  dynamicProxyData->jsObject = v8::Persistent<v8::Value>::New(result);
   return scope.Close(result);
 }
 
@@ -988,4 +989,12 @@ JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jo
     env->DeleteGlobalRef(dynamicProxyData->resultGlobalRef);
   }
   return dynamicProxyData->result;
+}
+
+JNIEXPORT void JNICALL Java_node_NodeDynamicProxyClass_unref(JNIEnv *env, jobject src, jlong ptr) {
+  DynamicProxyData* dynamicProxyData = (DynamicProxyData*)ptr;
+  if(!dynamicProxyDataVerify(dynamicProxyData)) {
+    return;
+  }
+  dynamicProxyData->jsObject.Clear();
 }

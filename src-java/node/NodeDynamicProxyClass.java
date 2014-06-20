@@ -1,8 +1,10 @@
 package node;
 
-public class NodeDynamicProxyClass implements java.lang.reflect.InvocationHandler
-{
+import java.util.HashSet;
+
+public class NodeDynamicProxyClass implements java.lang.reflect.InvocationHandler {
   private native Object callJs(long ptr, java.lang.reflect.Method m, Object[] args) throws Throwable;
+  private native void unref(long ptr) throws Throwable;
   public long ptr;
 
   public NodeDynamicProxyClass(String path, long ptr) {
@@ -25,11 +27,7 @@ public class NodeDynamicProxyClass implements java.lang.reflect.InvocationHandle
     return result;
   }
 
-  public void ref() {
-
-  }
-
-  public void unref() {
-
+  public void unref() throws Throwable {
+    unref(this.ptr);
   }
 }

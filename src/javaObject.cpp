@@ -97,6 +97,8 @@ JavaObject::~JavaObject() {
     jfieldID ptrField = env->GetFieldID(nodeDynamicProxyClass, "ptr", "J");
     DynamicProxyData* proxyData = (DynamicProxyData*)(long)env->GetLongField(m_obj, ptrField);
     if(dynamicProxyDataVerify(proxyData)) {
+      proxyData->markerStart = 0;
+      proxyData->markerEnd = 0;
       delete proxyData;
     }
   }

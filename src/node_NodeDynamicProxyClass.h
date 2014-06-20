@@ -15,6 +15,14 @@ extern "C" {
 JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs
   (JNIEnv *, jobject, jlong, jobject, jobjectArray);
 
+/*
+ * Class:     node_NodeDynamicProxyClass
+ * Method:    unref
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_node_NodeDynamicProxyClass_unref
+  (JNIEnv *, jobject, jlong);
+
 #ifdef __cplusplus
 }
 #endif
