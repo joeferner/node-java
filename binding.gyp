@@ -34,19 +34,6 @@
       'conditions': [
         ['OS=="win"',
           {
-            'actions': [
-              {
-                'action_name': 'verifyDeps',
-                'inputs': [
-                  '<(javahome)/lib/jvm.lib',
-                  '<(javahome)/include/jni.h',
-                  '<(javahome)/include/win32/jni_md.h'
-                ],
-                'outputs': ['./build/depsVerified'],
-                'action': ['python', 'touch.py'],
-                'message': 'Verify Deps'
-              }
-            ],
             'include_dirs': [
               '<(javahome)/include/win32',
             ],
@@ -57,19 +44,6 @@
         ],
         ['OS=="linux"',
           {
-            'actions': [
-              {
-                'action_name': 'verifyDeps',
-                'inputs': [
-                  '<(javahome)/jre/lib/<(arch)/server/libjvm.so',
-                  '<(javahome)/include/jni.h',
-                  '<(javahome)/include/linux/jni_md.h'
-                ],
-                'outputs': ['./build/depsVerified'],
-                'action': [],
-                'message': 'Verify Deps'
-              }
-            ],
             'include_dirs': [
               '<(javahome)/include/linux',
             ],
@@ -82,19 +56,6 @@
         ],
         ['OS=="freebsd"',
           {
-            'actions': [
-              {
-                'action_name': 'verifyDeps',
-                'inputs': [
-                  '<(javahome)/jre/lib/<(arch)/server/libjvm.so',
-                  '<(javahome)/include/jni.h',
-                  '<(javahome)/include/freebsd/jni_md.h'
-                ],
-                'outputs': ['./build/depsVerified'],
-                'action': [],
-                'message': 'Verify Deps'
-              }
-            ],
             'include_dirs': [
               '<(javahome)/include/freebsd',
             ],
@@ -107,19 +68,6 @@
         ],
         ['OS=="openbsd"',
           {
-            'actions': [
-              {
-                'action_name': 'verifyDeps',
-                'inputs': [
-                  '<(javahome)/jre/lib/<(arch)/server/libjvm.so',
-                  '<(javahome)/include/jni.h',
-                  '<(javahome)/include/openbsd/jni_md.h'
-                ],
-                'outputs': ['./build/depsVerified'],
-                'action': [],
-                'message': 'Verify Deps'
-              }
-            ],
             'include_dirs': [
               '<(javahome)/include/openbsd',
             ],
