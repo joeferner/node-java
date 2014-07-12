@@ -11,6 +11,7 @@
 #include "node_NodeDynamicProxyClass.h"
 #include <node_version.h>
 #include <sstream>
+#include <nan.h>
 
 long v8ThreadId;
 
@@ -38,10 +39,10 @@ long my_getThreadId() {
 
   v8ThreadId = my_getThreadId();
 
-  v8::Local<v8::FunctionTemplate> t = v8::FunctionTemplate::New(New);
-  NanAssignPersistent(v8::FunctionTemplate, s_ct, t);
+  v8::Local<v8::FunctionTemplate> t = NanNew<v8::FunctionTemplate>(New);
+  NanAssignPersistent(s_ct, t);
   t->InstanceTemplate()->SetInternalFieldCount(1);
-  t->SetClassName(v8::String::NewSymbol("Java"));
+  t->SetClassName(NanNew<v8::String>("Java"));
 
   NODE_SET_PROTOTYPE_METHOD(t, "getClassLoader", getClassLoader);
   NODE_SET_PROTOTYPE_METHOD(t, "newInstance", newInstance);
@@ -61,7 +62,7 @@ long my_getThreadId() {
   NODE_SET_PROTOTYPE_METHOD(t, "setStaticFieldValue", setStaticFieldValue);
   NODE_SET_PROTOTYPE_METHOD(t, "instanceOf", instanceOf);
 
-  target->Set(v8::String::NewSymbol("Java"), t->GetFunction());
+  target->Set(NanNew<v8::String>("Java"), t->GetFunction());
 }
 
 NAN_METHOD(Java::New) {
@@ -70,9 +71,9 @@ NAN_METHOD(Java::New) {
   Java *self = new Java();
   self->Wrap(args.This());
 
-  NanObjectWrapHandle(self)->Set(v8::String::New("classpath"), v8::Array::New());
-  NanObjectWrapHandle(self)->Set(v8::String::New("options"), v8::Array::New());
-  NanObjectWrapHandle(self)->Set(v8::String::New("nativeBindingLocation"), v8::String::New("Not Set"));
+  NanObjectWrapHandle(self)->Set(NanNew<v8::String>("classpath"), NanNew<v8::Array>());
+  NanObjectWrapHandle(self)->Set(NanNew<v8::String>("options"), NanNew<v8::Array>());
+  NanObjectWrapHandle(self)->Set(NanNew<v8::String>("nativeBindingLocation"), NanNew<v8::String>("Not Set"));
 
   NanReturnValue(args.This());
 }
@@ -91,7 +92,7 @@ v8::Handle<v8::Value> Java::ensureJvm() {
     return createJVM(&this->m_jvm, &this->m_env);
   }
 
-  return v8::Undefined();
+  NanReturnUndefined();
 }
 
 v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
@@ -102,12 +103,12 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   std::ostringstream classPath;
   classPath << "-Djava.class.path=";
 
-  v8::Local<v8::Value> classPathValue = NanObjectWrapHandle(this)->Get(v8::String::New("classpath"));
+  v8::Local<v8::Value> classPathValue = NanObjectWrapHandle(this)->Get(NanNew<v8::String>("classpath"));
   if(!classPathValue->IsArray()) {
-    return ThrowException(v8::Exception::TypeError(v8::String::New("Classpath must be an array")));
+    return NanThrowTypeError("Classpath must be an array");
   }
   v8::Handle<v8::Array> classPathArrayTemp = v8::Handle<v8::Array>::Cast(classPathValue);
-  NanAssignPersistent(v8::Array, m_classPathArray, classPathArrayTemp);
+  NanAssignPersistent(m_classPathArray, classPathArrayTemp);
   for(uint32_t i=0; i<classPathArrayTemp->Length(); i++) {
     if(i != 0) {
       #ifdef WIN32
@@ -118,7 +119,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     }
     v8::Local<v8::Value> arrayItemValue = classPathArrayTemp->Get(i);
     if(!arrayItemValue->IsString()) {
-      return ThrowException(v8::Exception::TypeError(v8::String::New("Classpath must only contain strings")));
+      return NanThrowTypeError("Classpath must only contain strings");
     }
     v8::Local<v8::String> arrayItem = arrayItemValue->ToString();
     v8::String::AsciiValue arrayItemStr(arrayItem);
@@ -126,17 +127,17 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   }
 
   // set the native binding location
-  v8::Local<v8::Value> v8NativeBindingLocation = NanObjectWrapHandle(this)->Get(v8::String::New("nativeBindingLocation"));
+  v8::Local<v8::Value> v8NativeBindingLocation = NanObjectWrapHandle(this)->Get(NanNew<v8::String>("nativeBindingLocation"));
   v8::String::AsciiValue nativeBindingLocationStr(v8NativeBindingLocation);
   s_nativeBindingLocation = *nativeBindingLocationStr;
 
   // get other options
-  v8::Local<v8::Value> optionsValue = NanObjectWrapHandle(this)->Get(v8::String::New("options"));
+  v8::Local<v8::Value> optionsValue = NanObjectWrapHandle(this)->Get(NanNew<v8::String>("options"));
   if(!optionsValue->IsArray()) {
-    return ThrowException(v8::Exception::TypeError(v8::String::New("options must be an array")));
+    return NanThrowTypeError("options must be an array");
   }
   v8::Handle<v8::Array> optionsArrayTemp = v8::Handle<v8::Array>::Cast(optionsValue);
-  NanAssignPersistent(v8::Array, m_optionsArray, optionsArrayTemp);
+  NanAssignPersistent(m_optionsArray, optionsArrayTemp);
 
   // create vm options
   int vmOptionsCount = optionsArrayTemp->Length() + 1;
@@ -147,7 +148,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     v8::Local<v8::Value> arrayItemValue = optionsArrayTemp->Get(i);
     if(!arrayItemValue->IsString()) {
       delete[] vmOptions;
-      return ThrowException(v8::Exception::TypeError(v8::String::New("options must only contain strings")));
+      return NanThrowTypeError("options must only contain strings");
     }
     v8::Local<v8::String> arrayItem = arrayItemValue->ToString();
     v8::String::AsciiValue arrayItemStr(arrayItem);
@@ -165,11 +166,11 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   m_classLoader = getSystemClassLoader(*env);
 
   // TODO: this handles sets put doesn't prevent modifing the underlying data. So java.classpath.push will still work which is invalid.
-  NanObjectWrapHandle(this)->SetAccessor(v8::String::New("classpath"), AccessorProhibitsOverwritingGetter, AccessorProhibitsOverwritingSetter);
-  NanObjectWrapHandle(this)->SetAccessor(v8::String::New("options"), AccessorProhibitsOverwritingGetter, AccessorProhibitsOverwritingSetter);
-  NanObjectWrapHandle(this)->SetAccessor(v8::String::New("nativeBindingLocation"), AccessorProhibitsOverwritingGetter, AccessorProhibitsOverwritingSetter);
+  NanObjectWrapHandle(this)->SetAccessor(NanNew<v8::String>("classpath"), AccessorProhibitsOverwritingGetter, AccessorProhibitsOverwritingSetter);
+  NanObjectWrapHandle(this)->SetAccessor(NanNew<v8::String>("options"), AccessorProhibitsOverwritingGetter, AccessorProhibitsOverwritingSetter);
+  NanObjectWrapHandle(this)->SetAccessor(NanNew<v8::String>("nativeBindingLocation"), AccessorProhibitsOverwritingGetter, AccessorProhibitsOverwritingSetter);
 
-  return v8::Undefined();
+  NanReturnUndefined();
 }
 
 NAN_GETTER(Java::AccessorProhibitsOverwritingGetter) {
@@ -181,19 +182,19 @@ NAN_GETTER(Java::AccessorProhibitsOverwritingGetter) {
   } else if(!strcmp("options", *nameStr)) {
     NanReturnValue(self->m_optionsArray);
   } else if(!strcmp("nativeBindingLocation", *nameStr)) {
-    NanReturnValue(v8::String::New(Java::s_nativeBindingLocation.c_str()));
+    NanReturnValue(NanNew<v8::String>(Java::s_nativeBindingLocation.c_str()));
   }
 
   std::ostringstream errStr;
   errStr << "Invalid call to accessor " << *nameStr;
-  NanReturnValue(v8::Exception::Error(v8::String::New(errStr.str().c_str())));
+  NanReturnValue(v8::Exception::Error(NanNew<v8::String>(errStr.str().c_str())));
 }
 
 NAN_SETTER(Java::AccessorProhibitsOverwritingSetter) {
   v8::String::AsciiValue nameStr(property);
   std::ostringstream errStr;
   errStr << "Cannot set " << *nameStr << " after calling any other java function.";
-  v8::ThrowException(v8::Exception::Error(v8::String::New(errStr.str().c_str())));
+  v8::ThrowException(v8::Exception::Error(NanNew<v8::String>(errStr.str().c_str())));
 }
 
 void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
@@ -324,7 +325,7 @@ NAN_METHOD(Java::newProxy) {
   dynamicProxyData->markerEnd = DYNAMIC_PROXY_DATA_MARKER_END;
   dynamicProxyData->java = self;
   dynamicProxyData->interfaceName = interfaceName;
-  NanAssignPersistent(v8::Object, dynamicProxyData->functions, functions);
+  NanAssignPersistent(dynamicProxyData->functions, functions);
 
   // find NodeDynamicProxyClass
   std::string className = "node.NodeDynamicProxyClass";
@@ -339,7 +340,7 @@ NAN_METHOD(Java::newProxy) {
   // find constructor
   jclass objectClazz = env->FindClass("java/lang/Object");
   jobjectArray methodArgs = env->NewObjectArray(2, objectClazz, NULL);
-  env->SetObjectArrayElement(methodArgs, 0, v8ToJava(env, v8::String::New(s_nativeBindingLocation.c_str())));
+  env->SetObjectArrayElement(methodArgs, 0, v8ToJava(env, NanNew<v8::String>(s_nativeBindingLocation.c_str())));
   env->SetObjectArrayElement(methodArgs, 1, longToJavaLongObj(env, (long)dynamicProxyData));
   jobject method = javaFindConstructor(env, clazz, methodArgs);
   if(method == NULL) {
@@ -492,7 +493,7 @@ NAN_METHOD(Java::newArray) {
   if(args.Length() < argsStart+1 || !args[argsStart]->IsArray()) {
     std::ostringstream errStr;
     errStr << "Argument " << (argsStart+1) << " must be an array";
-    return NanThrowError(v8::Exception::TypeError(v8::String::New(errStr.str().c_str())));
+    return NanThrowError(v8::Exception::TypeError(NanNew<v8::String>(errStr.str().c_str())));
   }
   v8::Local<v8::Array> arrayObj = v8::Local<v8::Array>::Cast(args[argsStart]);
 
@@ -593,12 +594,12 @@ NAN_METHOD(Java::newByte) {
   JavaScope javaScope(env);
 
   if(args.Length() != 1) {
-    return NanThrowError(v8::Exception::TypeError(v8::String::New("newByte only takes 1 argument")));
+    return NanThrowError(v8::Exception::TypeError(NanNew<v8::String>("newByte only takes 1 argument")));
   }
 
   // argument - value
   if(!args[0]->IsNumber()) {
-    return NanThrowError(v8::Exception::TypeError(v8::String::New("Argument 1 must be a number")));
+    return NanThrowError(v8::Exception::TypeError(NanNew<v8::String>("Argument 1 must be a number")));
   }
 
   v8::Local<v8::Number> val = args[0]->ToNumber();
@@ -621,12 +622,12 @@ NAN_METHOD(Java::newShort) {
   JavaScope javaScope(env);
 
   if(args.Length() != 1) {
-    return NanThrowError(v8::Exception::TypeError(v8::String::New("newShort only takes 1 argument")));
+    return NanThrowError(v8::Exception::TypeError(NanNew<v8::String>("newShort only takes 1 argument")));
   }
 
   // argument - value
   if(!args[0]->IsNumber()) {
-    return NanThrowError(v8::Exception::TypeError(v8::String::New("Argument 1 must be a number")));
+    return NanThrowError(v8::Exception::TypeError(NanNew<v8::String>("Argument 1 must be a number")));
   }
 
   v8::Local<v8::Number> val = args[0]->ToNumber();
@@ -649,12 +650,12 @@ NAN_METHOD(Java::newLong) {
   JavaScope javaScope(env);
 
   if(args.Length() != 1) {
-    return NanThrowError(v8::Exception::TypeError(v8::String::New("newLong only takes 1 argument")));
+    return NanThrowError(v8::Exception::TypeError(NanNew<v8::String>("newLong only takes 1 argument")));
   }
 
   // argument - value
   if(!args[0]->IsNumber()) {
-    return NanThrowError(v8::Exception::TypeError(v8::String::New("Argument 1 must be a number")));
+    return NanThrowError(v8::Exception::TypeError(NanNew<v8::String>("Argument 1 must be a number")));
   }
 
   v8::Local<v8::Number> val = args[0]->ToNumber();
@@ -677,7 +678,7 @@ NAN_METHOD(Java::newChar) {
   JavaScope javaScope(env);
 
   if(args.Length() != 1) {
-    return NanThrowError(v8::Exception::TypeError(v8::String::New("newChar only takes 1 argument")));
+    return NanThrowError(v8::Exception::TypeError(NanNew<v8::String>("newChar only takes 1 argument")));
   }
 
   // argument - value
@@ -688,12 +689,12 @@ NAN_METHOD(Java::newChar) {
   } else if(args[0]->IsString()) {
     v8::Local<v8::String> val = args[0]->ToString();
     if(val->Length() != 1) {
-      return NanThrowError(v8::Exception::TypeError(v8::String::New("Argument 1 must be a string of 1 character.")));
+      return NanThrowError(v8::Exception::TypeError(NanNew<v8::String>("Argument 1 must be a string of 1 character.")));
     }
     std::string strVal = std::string(*v8::String::Utf8Value(val));
     charVal = (jchar)strVal[0];
   } else {
-    return NanThrowError(v8::Exception::TypeError(v8::String::New("Argument 1 must be a number or string")));
+    return NanThrowError(v8::Exception::TypeError(NanNew<v8::String>("Argument 1 must be a number or string")));
   }
 
   jclass clazz = env->FindClass("java/lang/Character");
@@ -714,9 +715,9 @@ NAN_METHOD(Java::newFloat) {
   JavaScope javaScope(env);
 
   if(args.Length() != 1) {
-    return NanThrowError(v8::Exception::TypeError(v8::String::New("newFloat only takes 1 argument")));
+    return NanThrowError(v8::Exception::TypeError(NanNew<v8::String>("newFloat only takes 1 argument")));
   } else if(!args[0]->IsNumber()) {
-    return NanThrowError(v8::Exception::TypeError(v8::String::New("Argument 1 must be a number")));
+    return NanThrowError(v8::Exception::TypeError(NanNew<v8::String>("Argument 1 must be a number")));
   }
   v8::Local<v8::Number> val = args[0]->ToNumber();
 
@@ -738,9 +739,9 @@ NAN_METHOD(Java::newDouble) {
   JavaScope javaScope(env);
 
   if(args.Length() != 1) {
-    return NanThrowError(v8::Exception::TypeError(v8::String::New("newDouble only takes 1 argument")));
+    return NanThrowError(v8::Exception::TypeError(NanNew<v8::String>("newDouble only takes 1 argument")));
   } else if(!args[0]->IsNumber()) {
-    return NanThrowError(v8::Exception::TypeError(v8::String::New("Argument 1 must be a number")));
+    return NanThrowError(v8::Exception::TypeError(NanNew<v8::String>("Argument 1 must be a number")));
   }
   v8::Local<v8::Number> val = args[0]->ToNumber();
 
@@ -817,7 +818,7 @@ NAN_METHOD(Java::setStaticFieldValue) {
   if(args.Length() < argsStart+1) {
     std::ostringstream errStr;
     errStr << "setStaticFieldValue requires " << (argsStart+1) << " arguments";
-    return NanThrowError(v8::Exception::TypeError(v8::String::New(errStr.str().c_str())));
+    return NanThrowError(v8::Exception::TypeError(NanNew<v8::String>(errStr.str().c_str())));
   }
   jobject newValue = v8ToJava(env, args[argsStart]);
   argsStart++;
@@ -882,7 +883,7 @@ NAN_METHOD(Java::instanceOf) {
   }
 
   jboolean res = env->IsInstanceOf(instance, clazz);
-  NanReturnValue(v8::Boolean::New(res));
+  NanReturnValue(NanNew<v8::Boolean>(res));
 }
 
 void EIO_CallJs(uv_work_t* req) {
@@ -910,8 +911,8 @@ void EIO_AfterCallJs(uv_work_t* req) {
   v8::Local<v8::Value> v8Result;
   jobject javaResult;
 
-  v8::Local<v8::Object> dynamicProxyDataFunctions = NanPersistentToLocal(dynamicProxyData->functions);
-  v8::Local<v8::Value> fnObj = dynamicProxyDataFunctions->Get(v8::String::New(dynamicProxyData->methodName.c_str()));
+  v8::Local<v8::Object> dynamicProxyDataFunctions = NanNew(dynamicProxyData->functions);
+  v8::Local<v8::Value> fnObj = dynamicProxyDataFunctions->Get(NanNew<v8::String>(dynamicProxyData->methodName.c_str()));
   if(fnObj->IsUndefined() || fnObj->IsNull()) {
     printf("ERROR: Could not find method %s\n", dynamicProxyData->methodName.c_str());
     goto CleanUp;

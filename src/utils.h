@@ -85,7 +85,7 @@ std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string method
   if(args.Length() < argsStart+1 || !args[argsStart]->IsObject()) {                          \
     std::ostringstream errStr;                                                               \
     errStr << "Argument " << (argsStart+1) << " must be an object";                          \
-    return NanThrowError(v8::Exception::TypeError(v8::String::New(errStr.str().c_str())));   \
+    return NanThrowError(v8::Exception::TypeError(NanNew<v8::String>(errStr.str().c_str())));   \
   }                                                                                          \
   v8::Local<v8::Object> ARGNAME = v8::Local<v8::Object>::Cast(args[argsStart]);              \
   argsStart++;
@@ -94,7 +94,7 @@ std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string method
   if(args.Length() < argsStart+1 || !args[argsStart]->IsString()) {                          \
     std::ostringstream errStr;                                                               \
     errStr << "Argument " << (argsStart+1) << " must be a string";                           \
-    return NanThrowError(v8::Exception::TypeError(v8::String::New(errStr.str().c_str())));   \
+    return NanThrowError(v8::Exception::TypeError(NanNew<v8::String>(errStr.str().c_str())));   \
   }                                                                                          \
   v8::Local<v8::String> _##ARGNAME##_obj = v8::Local<v8::String>::Cast(args[argsStart]);     \
   v8::String::AsciiValue _##ARGNAME##_val(_##ARGNAME##_obj);                                 \
@@ -130,7 +130,7 @@ std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string method
   } else {                                                   \
     std::ostringstream str;                                  \
     str << MSG;                                              \
-    NanReturnValue(v8::String::New(str.str().c_str()));      \
+    NanReturnValue(NanNew<v8::String>(str.str().c_str()));      \
   }
 
 #ifndef UNUSED_VARIABLE

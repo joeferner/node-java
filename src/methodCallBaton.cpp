@@ -97,10 +97,10 @@ v8::Handle<v8::Value> MethodCallBaton::resultsToV8(JNIEnv *env) {
     }
 
     v8::Handle<v8::Value> err = javaExceptionToV8(m_java, env, cause, m_errorString);
-    return scope.Close(err);
+    NanReturnValue(err);
   }
 
-  return scope.Close(javaToV8(m_java, env, m_result));
+  NanReturnValue(javaToV8(m_java, env, m_result));
 }
 
 void NewInstanceBaton::execute(JNIEnv *env) {

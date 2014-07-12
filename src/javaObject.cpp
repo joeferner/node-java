@@ -31,13 +31,13 @@
   v8::Local<v8::FunctionTemplate> funcTemplate;
   if(sFunctionTemplates.find(className) != sFunctionTemplates.end()) {
     //printf("existing className: %s\n", className.c_str());
-    funcTemplate = NanPersistentToLocal(*sFunctionTemplates[className]);
+    funcTemplate = NanNew(*sFunctionTemplates[className]);
   } else {
     //printf("create className: %s\n", className.c_str());
 
-    funcTemplate = v8::FunctionTemplate::New();
+    funcTemplate = NanNew<v8::FunctionTemplate>();
     funcTemplate->InstanceTemplate()->SetInternalFieldCount(1);
-    funcTemplate->SetClassName(v8::String::NewSymbol(className.c_str()));
+    funcTemplate->SetClassName(NanNew<v8::String>(className.c_str()));
 
     std::list<jobject> methods;
     javaReflectionGetMethods(env, objClazz, &methods, false);
@@ -48,12 +48,12 @@
       assert(!env->ExceptionCheck());
       std::string methodNameStr = javaToString(env, methodNameJava);
 
-      v8::Handle<v8::String> methodName = v8::String::New(methodNameStr.c_str());
-      v8::Local<v8::FunctionTemplate> methodCallTemplate = v8::FunctionTemplate::New(methodCall, methodName);
+      v8::Handle<v8::String> methodName = NanNew<v8::String>(methodNameStr.c_str());
+      v8::Local<v8::FunctionTemplate> methodCallTemplate = NanNew<v8::FunctionTemplate>(methodCall, methodName);
       funcTemplate->PrototypeTemplate()->Set(methodName, methodCallTemplate->GetFunction());
 
-      v8::Handle<v8::String> methodNameSync = v8::String::New((methodNameStr + "Sync").c_str());
-      v8::Local<v8::FunctionTemplate> methodCallSyncTemplate = v8::FunctionTemplate::New(methodCallSync, methodName);
+      v8::Handle<v8::String> methodNameSync = NanNew<v8::String>((methodNameStr + "Sync").c_str());
+      v8::Local<v8::FunctionTemplate> methodCallSyncTemplate = NanNew<v8::FunctionTemplate>(methodCallSync, methodName);
       funcTemplate->PrototypeTemplate()->Set(methodNameSync, methodCallSyncTemplate->GetFunction());
     }
 
@@ -66,18 +66,18 @@
       checkJavaException(env);
       std::string fieldNameStr = javaToString(env, fieldNameJava);
 
-      v8::Handle<v8::String> fieldName = v8::String::New(fieldNameStr.c_str());
+      v8::Handle<v8::String> fieldName = NanNew<v8::String>(fieldNameStr.c_str());
       funcTemplate->InstanceTemplate()->SetAccessor(fieldName, fieldGetter, fieldSetter);
     }
 
     v8::Persistent<v8::FunctionTemplate>* persistentFuncTemplate = new v8::Persistent<v8::FunctionTemplate>();
-    NanAssignPersistent(v8::FunctionTemplate, (*persistentFuncTemplate), funcTemplate);
+    NanAssignPersistent(*persistentFuncTemplate, funcTemplate);
     sFunctionTemplates[className] = persistentFuncTemplate;
   }
 
   v8::Local<v8::Function> ctor = funcTemplate->GetFunction();
   v8::Local<v8::Object> javaObjectObj = ctor->NewInstance();
-  javaObjectObj->SetHiddenValue(v8::String::New(V8_HIDDEN_MARKER_JAVA_OBJECT), v8::Boolean::New(true));
+  javaObjectObj->SetHiddenValue(NanNew<v8::String>(V8_HIDDEN_MARKER_JAVA_OBJECT), NanNew<v8::Boolean>(true));
   JavaObject *self = new JavaObject(java, obj);
   self->Wrap(javaObjectObj);
 
@@ -225,8 +225,8 @@ NAN_SETTER(JavaObject::fieldSetter) {
   if(field == NULL) {
     std::ostringstream errStr;
     errStr << "Could not find field " << propertyStr;
-    v8::Handle<v8::Value> ex = javaExceptionToV8(self->m_java, env, errStr.str());
-    ThrowException(ex);
+    v8::Handle<v8::Value> error = javaExceptionToV8(self->m_java, env, errStr.str());
+    NanThrowError(error);
     return;
   }
 
@@ -240,8 +240,8 @@ NAN_SETTER(JavaObject::fieldSetter) {
   if(env->ExceptionOccurred()) {
     std::ostringstream errStr;
     errStr << "Could not set field " << propertyStr;
-    v8::Handle<v8::Value> ex = javaExceptionToV8(self->m_java, env, errStr.str());
-    ThrowException(ex);
+    v8::Handle<v8::Value> error = javaExceptionToV8(self->m_java, env, errStr.str());
+    NanThrowError(error);
     return;
   }
 }

@@ -291,12 +291,12 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
   if(arg->IsObject()) {
     v8::Local<v8::Object> obj = v8::Local<v8::Object>::Cast(arg);
 
-    v8::Local<v8::Value> isJavaObject = obj->GetHiddenValue(v8::String::New(V8_HIDDEN_MARKER_JAVA_OBJECT));
+    v8::Local<v8::Value> isJavaObject = obj->GetHiddenValue(NanNew<v8::String>(V8_HIDDEN_MARKER_JAVA_OBJECT));
     if(!isJavaObject.IsEmpty() && isJavaObject->IsBoolean()) {
       return v8ToJava_javaObject(env, obj);
     }
 
-    v8::Local<v8::Value> isJavaLong = obj->GetHiddenValue(v8::String::New(V8_HIDDEN_MARKER_JAVA_LONG));
+    v8::Local<v8::Value> isJavaLong = obj->GetHiddenValue(NanNew<v8::String>(V8_HIDDEN_MARKER_JAVA_LONG));
     if(!isJavaLong.IsEmpty() && isJavaLong->IsBoolean()) {
       return v8ToJava_javaLong(env, obj);
     }
@@ -375,7 +375,7 @@ void checkJavaException(JNIEnv* env) {
 }
 
 jobject v8ToJava_javaLong(JNIEnv* env, v8::Local<v8::Object> obj) {
-  jobject longValue = v8ToJava(env, obj->Get(v8::String::New("longValue")));
+  jobject longValue = v8ToJava(env, obj->Get(NanNew<v8::String>("longValue")));
   jclass longClazz = env->FindClass("java/lang/Long");
   jmethodID long_constructor = env->GetMethodID(longClazz, "<init>", "(Ljava/lang/String;)V");
   jobject jobj = env->NewObject(longClazz, long_constructor, longValue);
@@ -423,19 +423,19 @@ v8::Handle<v8::Value> javaExceptionToV8(Java* java, JNIEnv* env, jthrowable ex, 
   if(ex) {
     msg << "\n" << javaExceptionToString(env, ex);
 
-    v8::Local<v8::Value> v8ex = v8::Exception::Error(v8::String::New(msg.str().c_str()));
-    ((v8::Object*)*v8ex)->Set(v8::String::New("cause"), javaToV8(java, env, ex));
-    return scope.Close(v8ex);
+    v8::Local<v8::Value> v8ex = v8::Exception::Error(NanNew<v8::String>(msg.str().c_str()));
+    ((v8::Object*)*v8ex)->Set(NanNew<v8::String>("cause"), javaToV8(java, env, ex));
+    NanReturnValue(v8ex);
   }
 
-  return scope.Close(v8::Exception::Error(v8::String::New(msg.str().c_str())));
+  NanReturnValue(v8::Exception::Error(NanNew<v8::String>(msg.str().c_str())));
 }
 
 v8::Handle<v8::Value> javaExceptionToV8(Java* java, JNIEnv* env, const std::string& alternateMessage) {
   NanScope();
   jthrowable ex = env->ExceptionOccurred();
   env->ExceptionClear();
-  return scope.Close(javaExceptionToV8(java, env, ex, alternateMessage));
+  NanReturnValue(javaExceptionToV8(java, env, ex, alternateMessage));
 }
 
 jvalueType javaGetArrayComponentType(JNIEnv *env, jobjectArray array) {
@@ -467,13 +467,13 @@ v8::Handle<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArr
   jsize arraySize = env->GetArrayLength(objArray);
   //printf("array size: %d\n", arraySize);
 
-  v8::Handle<v8::Array> result = v8::Array::New(arraySize);
+  v8::Handle<v8::Array> result = NanNew<v8::Array>(arraySize);
   switch(arrayComponentType) {
   case TYPE_INT:
     {
       jint* elems = env->GetIntArrayElements((jintArray)objArray, 0);
       for(jsize i=0; i<arraySize; i++) {
-        result->Set(i, v8::Integer::New(elems[i]));
+        result->Set(i, NanNew<v8::Integer>(elems[i]));
       }
       env->ReleaseIntArrayElements((jintArray)objArray, elems, 0);
     }
@@ -483,7 +483,7 @@ v8::Handle<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArr
     {
       jbyte* elems = env->GetByteArrayElements((jbyteArray)objArray, 0);
       for(jsize i=0; i<arraySize; i++) {
-        result->Set(i, v8::Number::New(elems[i]));
+        result->Set(i, NanNew<v8::Number>(elems[i]));
       }
       env->ReleaseByteArrayElements((jbyteArray)objArray, elems, 0);
     }
@@ -493,7 +493,7 @@ v8::Handle<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArr
     {
       jboolean* elems = env->GetBooleanArrayElements((jbooleanArray)objArray, 0);
       for(jsize i=0; i<arraySize; i++) {
-        result->Set(i, v8::Boolean::New(elems[i]));
+        result->Set(i, NanNew<v8::Boolean>(elems[i]));
       }
       env->ReleaseBooleanArrayElements((jbooleanArray)objArray, elems, 0);
     }
@@ -503,7 +503,7 @@ v8::Handle<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArr
     {
       jshort* elems = env->GetShortArrayElements((jshortArray)objArray, 0);
       for(jsize i=0; i<arraySize; i++) {
-        result->Set(i, v8::Number::New(elems[i]));
+        result->Set(i, NanNew<v8::Number>(elems[i]));
       }
       env->ReleaseShortArrayElements((jshortArray)objArray, elems, 0);
     }
@@ -513,7 +513,7 @@ v8::Handle<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArr
     {
       jdouble* elems = env->GetDoubleArrayElements((jdoubleArray)objArray, 0);
       for(jsize i=0; i<arraySize; i++) {
-        result->Set(i, v8::Number::New(elems[i]));
+        result->Set(i, NanNew<v8::Number>(elems[i]));
       }
       env->ReleaseDoubleArrayElements((jdoubleArray)objArray, elems, 0);
     }
@@ -523,7 +523,7 @@ v8::Handle<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArr
     {
       jfloat* elems = env->GetFloatArrayElements((jfloatArray)objArray, 0);
       for(jsize i=0; i<arraySize; i++) {
-        result->Set(i, v8::Number::New(elems[i]));
+        result->Set(i, NanNew<v8::Number>(elems[i]));
       }
       env->ReleaseFloatArrayElements((jfloatArray)objArray, elems, 0);
     }
@@ -549,7 +549,7 @@ v8::Handle<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArr
     break;
   }
 
-  return scope.Close(result);
+  NanReturnValue(result);
 }
 
 v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj) {
@@ -568,7 +568,7 @@ v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj) {
     case TYPE_ARRAY:
       {
         v8::Handle<v8::Value> result = javaArrayToV8(java, env, (jobjectArray)obj);
-        return scope.Close(result);
+        NanReturnValue(result);
       }
     case TYPE_VOID:
       return v8::Undefined();
@@ -578,7 +578,7 @@ v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj) {
         jmethodID boolean_booleanValue = env->GetMethodID(booleanClazz, "booleanValue", "()Z");
         bool result = env->CallBooleanMethod(obj, boolean_booleanValue);
         assert(!env->ExceptionCheck());
-        return scope.Close(v8::Boolean::New(result));
+        NanReturnValue(NanNew<v8::Boolean>(result));
       }
     case TYPE_BYTE:
       {
@@ -586,7 +586,7 @@ v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj) {
         jmethodID byte_byteValue = env->GetMethodID(byteClazz, "byteValue", "()B");
         jbyte result = env->CallByteMethod(obj, byte_byteValue);
         checkJavaException(env);
-        return scope.Close(v8::Number::New(result));
+        NanReturnValue(NanNew<v8::Number>(result));
       }
     case TYPE_LONG:
       {
@@ -597,9 +597,9 @@ v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj) {
         std::string strValue = javaObjectToString(env, obj);
         v8::Local<v8::Value> v8Result = v8::NumberObject::New(result);
         v8::NumberObject* v8ResultNumberObject = v8::NumberObject::Cast(*v8Result);
-        v8ResultNumberObject->Set(v8::String::New("longValue"), v8::String::New(strValue.c_str()));
-        v8ResultNumberObject->SetHiddenValue(v8::String::New(V8_HIDDEN_MARKER_JAVA_LONG), v8::Boolean::New(true));
-        return scope.Close(v8Result);
+        v8ResultNumberObject->Set(NanNew<v8::String>("longValue"), NanNew<v8::String>(strValue.c_str()));
+        v8ResultNumberObject->SetHiddenValue(NanNew<v8::String>(V8_HIDDEN_MARKER_JAVA_LONG), NanNew<v8::Boolean>(true));
+        NanReturnValue(v8Result);
       }
     case TYPE_INT:
       {
@@ -607,7 +607,7 @@ v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj) {
         jmethodID integer_intValue = env->GetMethodID(integerClazz, "intValue", "()I");
         jint result = env->CallIntMethod(obj, integer_intValue);
         checkJavaException(env);
-        return scope.Close(v8::Integer::New(result));
+        NanReturnValue(NanNew<v8::Integer>(result));
       }
     case TYPE_SHORT:
       {
@@ -615,7 +615,7 @@ v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj) {
         jmethodID short_shortValue = env->GetMethodID(shortClazz, "shortValue", "()S");
         jshort result = env->CallShortMethod(obj, short_shortValue);
         assert(!env->ExceptionCheck());
-        return scope.Close(v8::Integer::New(result));
+        NanReturnValue(NanNew<v8::Integer>(result));
       }
     case TYPE_DOUBLE:
       {
@@ -623,7 +623,7 @@ v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj) {
         jmethodID double_doubleValue = env->GetMethodID(doubleClazz, "doubleValue", "()D");
         jdouble result = env->CallDoubleMethod(obj, double_doubleValue);
         checkJavaException(env);
-        return scope.Close(v8::Number::New(result));
+        NanReturnValue(NanNew<v8::Number>(result));
       }
     case TYPE_FLOAT:
       {
@@ -631,15 +631,15 @@ v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj) {
         jmethodID float_floatValue = env->GetMethodID(floatClazz, "floatValue", "()F");
         jfloat result = env->CallFloatMethod(obj, float_floatValue);
         assert(!env->ExceptionCheck());
-        return scope.Close(v8::Number::New(result));
+        NanReturnValue(NanNew<v8::Number>(result));
       }
     case TYPE_STRING:
-      return scope.Close(v8::String::New(javaObjectToString(env, obj).c_str()));
+      NanReturnValue(NanNew<v8::String>(javaObjectToString(env, obj).c_str()));
     case TYPE_OBJECT:
-      return scope.Close(JavaObject::New(java, obj));
+      NanReturnValue(JavaObject::New(java, obj));
     default:
       printf("javaToV8: unhandled type: 0x%03x\n", resultType);
-      return scope.Close(JavaObject::New(java, obj));
+      NanReturnValue(JavaObject::New(java, obj));
   }
 
   return v8::Undefined();
