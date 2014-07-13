@@ -872,7 +872,7 @@ NAN_METHOD(Java::instanceOf) {
   jobject instance = v8ToJava(env, obj);
   if (!instance) {
     // not even a Java object
-    NanReturnValue(v8::False());
+    NanReturnValue(NanNew<v8::Boolean>(false));
   }
 
   jclass clazz = javaFindClass(env, className);
@@ -998,5 +998,5 @@ JNIEXPORT void JNICALL Java_node_NodeDynamicProxyClass_unref(JNIEnv *env, jobjec
   if(!dynamicProxyDataVerify(dynamicProxyData)) {
     return;
   }
-  dynamicProxyData->jsObject.Clear();
+  NanDisposePersistent(dynamicProxyData->jsObject);
 }
