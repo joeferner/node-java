@@ -295,7 +295,7 @@ NAN_METHOD(Java::newInstanceSync) {
   }
 
   // run
-  v8::Handle<v8::Value> callback = v8::Null();
+  v8::Handle<v8::Value> callback = NanNull();
   NewInstanceBaton* baton = new NewInstanceBaton(self, clazz, method, methodArgs, callback);
   v8::Handle<v8::Value> result = baton->runSync();
   delete baton;
@@ -350,7 +350,7 @@ NAN_METHOD(Java::newProxy) {
   }
 
   // run constructor
-  v8::Handle<v8::Value> callback = v8::Null();
+  v8::Handle<v8::Value> callback = NanNull();
   NewInstanceBaton* baton = new NewInstanceBaton(self, clazz, method, methodArgs, callback);
   v8::Handle<v8::Value> result = baton->runSync();
   delete baton;
@@ -436,7 +436,7 @@ NAN_METHOD(Java::callStaticMethodSync) {
   }
 
   // run
-  v8::Handle<v8::Value> callback = v8::Null();
+  v8::Handle<v8::Value> callback = NanNull();
   StaticMethodCallBaton* baton = new StaticMethodCallBaton(self, clazz, method, methodArgs, callback);
   v8::Handle<v8::Value> result = baton->runSync();
   delete baton;
