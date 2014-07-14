@@ -97,7 +97,7 @@ std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string method
     return NanThrowError(v8::Exception::TypeError(NanNew<v8::String>(errStr.str().c_str())));   \
   }                                                                                          \
   v8::Local<v8::String> _##ARGNAME##_obj = v8::Local<v8::String>::Cast(args[argsStart]);     \
-  v8::String::AsciiValue _##ARGNAME##_val(_##ARGNAME##_obj);                                 \
+  v8::String::Utf8Value _##ARGNAME##_val(_##ARGNAME##_obj);                                 \
   std::string ARGNAME = *_##ARGNAME##_val;                                                   \
   argsStart++;
 

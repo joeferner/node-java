@@ -122,13 +122,13 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
       return NanThrowTypeError("Classpath must only contain strings");
     }
     v8::Local<v8::String> arrayItem = arrayItemValue->ToString();
-    v8::String::AsciiValue arrayItemStr(arrayItem);
+    v8::String::Utf8Value arrayItemStr(arrayItem);
     classPath << *arrayItemStr;
   }
 
   // set the native binding location
   v8::Local<v8::Value> v8NativeBindingLocation = NanObjectWrapHandle(this)->Get(NanNew<v8::String>("nativeBindingLocation"));
-  v8::String::AsciiValue nativeBindingLocationStr(v8NativeBindingLocation);
+  v8::String::Utf8Value nativeBindingLocationStr(v8NativeBindingLocation);
   s_nativeBindingLocation = *nativeBindingLocationStr;
 
   // get other options
@@ -151,7 +151,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
       return NanThrowTypeError("options must only contain strings");
     }
     v8::Local<v8::String> arrayItem = arrayItemValue->ToString();
-    v8::String::AsciiValue arrayItemStr(arrayItem);
+    v8::String::Utf8Value arrayItemStr(arrayItem);
     vmOptions[i+1].optionString = strdup(*arrayItemStr);
   }
 
@@ -176,7 +176,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
 NAN_GETTER(Java::AccessorProhibitsOverwritingGetter) {
   Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
   NanScope();
-  v8::String::AsciiValue nameStr(property);
+  v8::String::Utf8Value nameStr(property);
   if(!strcmp("classpath", *nameStr)) {
     NanReturnValue(self->m_classPathArray);
   } else if(!strcmp("options", *nameStr)) {
@@ -191,7 +191,7 @@ NAN_GETTER(Java::AccessorProhibitsOverwritingGetter) {
 }
 
 NAN_SETTER(Java::AccessorProhibitsOverwritingSetter) {
-  v8::String::AsciiValue nameStr(property);
+  v8::String::Utf8Value nameStr(property);
   std::ostringstream errStr;
   errStr << "Cannot set " << *nameStr << " after calling any other java function.";
   v8::ThrowException(v8::Exception::Error(NanNew<v8::String>(errStr.str().c_str())));
@@ -573,7 +573,7 @@ NAN_METHOD(Java::newArray) {
       env->SetObjectArrayElement((jobjectArray)results, i, val);
       if(env->ExceptionOccurred()) {
         std::ostringstream errStr;
-        v8::String::AsciiValue valStr(item);
+        v8::String::Utf8Value valStr(item);
         errStr << "Could not add item \"" << *valStr << "\" to array.";
         return NanThrowError(javaExceptionToV8(self, env, errStr.str()));
       }
