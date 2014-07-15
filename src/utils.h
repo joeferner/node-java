@@ -122,7 +122,7 @@ std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string method
   v8::Handle<v8::Value> argv[2];                                                        \
   argv[0] = error;                                                                      \
   argv[1] = NanUndefined();                                                            \
-  v8::Function::Cast(*callback)->Call(v8::Context::GetCurrent()->Global(), 2, argv);
+  v8::Function::Cast(*callback)->Call(NanGetCurrentContext()->Global(), 2, argv);
 
 #define END_CALLBACK_FUNCTION(MSG) \
   if(callbackProvided) {                                     \
