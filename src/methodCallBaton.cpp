@@ -71,9 +71,9 @@ void MethodCallBaton::after(JNIEnv *env) {
   v8::Handle<v8::Value> argv[2];
   if(result->IsNativeError()) {
     argv[0] = result;
-    argv[1] = v8::Undefined();
+    argv[1] = NanUndefined();
   } else {
-    argv[0] = v8::Undefined();
+    argv[0] = NanUndefined();
     argv[1] = result;
   }
   m_callback->Call(2, argv);
