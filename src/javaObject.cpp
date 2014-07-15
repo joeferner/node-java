@@ -115,7 +115,7 @@ NAN_METHOD(JavaObject::methodCall) {
   JNIEnv *env = self->m_java->getJavaEnv();
   JavaScope javaScope(env);
 
-  v8::String::AsciiValue methodName(args.Data());
+  v8::String::Utf8Value methodName(args.Data());
   std::string methodNameStr = *methodName;
 
   int argsStart = 0;
@@ -150,7 +150,7 @@ NAN_METHOD(JavaObject::methodCallSync) {
   JNIEnv *env = self->m_java->getJavaEnv();
   JavaScope javaScope(env);
 
-  v8::String::AsciiValue methodName(args.Data());
+  v8::String::Utf8Value methodName(args.Data());
   std::string methodNameStr = *methodName;
 
   int argsStart = 0;
@@ -166,7 +166,7 @@ NAN_METHOD(JavaObject::methodCallSync) {
   }
 
   // run
-  v8::Handle<v8::Value> callback = v8::Undefined();
+  v8::Handle<v8::Value> callback = NanUndefined();
   InstanceMethodCallBaton* baton = new InstanceMethodCallBaton(self->m_java, self, method, methodArgs, callback);
   v8::Handle<v8::Value> result = baton->runSync();
   delete baton;
@@ -184,7 +184,7 @@ NAN_GETTER(JavaObject::fieldGetter) {
   JNIEnv *env = self->m_java->getJavaEnv();
   JavaScope javaScope(env);
 
-  v8::String::AsciiValue propertyCStr(property);
+  v8::String::Utf8Value propertyCStr(property);
   std::string propertyStr = *propertyCStr;
   jobject field = javaFindField(env, self->m_class, propertyStr);
   if(field == NULL) {
@@ -219,7 +219,7 @@ NAN_SETTER(JavaObject::fieldSetter) {
 
   jobject newValue = v8ToJava(env, value);
 
-  v8::String::AsciiValue propertyCStr(property);
+  v8::String::Utf8Value propertyCStr(property);
   std::string propertyStr = *propertyCStr;
   jobject field = javaFindField(env, self->m_class, propertyStr);
   if(field == NULL) {
