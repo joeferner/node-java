@@ -31,8 +31,8 @@
     "nan": "1.2.0"
   },
   "devDependencies": {
-    "nodeunit": "~0.6.4",
-    "async": "~0.1.22"
+    "async": "~0.1.22",
+    "nodeunit": "0.9.0"
   },
   "scripts": {
     "test": "nodeunit test",
