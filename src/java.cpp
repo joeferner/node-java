@@ -87,15 +87,15 @@ Java::~Java() {
   this->destroyJVM(&this->m_jvm, &this->m_env);
 }
 
-v8::Handle<v8::Value> Java::ensureJvm() {
+v8::Local<v8::Value> Java::ensureJvm() {
   if(!m_jvm) {
     return createJVM(&this->m_jvm, &this->m_env);
   }
 
-  NanReturnUndefined();
+  return NanNull();
 }
 
-v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
+v8::Local<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   JavaVM* jvmTemp;
   JavaVMInitArgs args;
 
@@ -105,7 +105,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
 
   v8::Local<v8::Value> classPathValue = NanObjectWrapHandle(this)->Get(NanNew<v8::String>("classpath"));
   if(!classPathValue->IsArray()) {
-    return NanThrowTypeError("Classpath must be an array");
+    return NanTypeError("Classpath must be an array");
   }
   v8::Handle<v8::Array> classPathArrayTemp = v8::Handle<v8::Array>::Cast(classPathValue);
   NanAssignPersistent(m_classPathArray, classPathArrayTemp);
@@ -119,7 +119,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     }
     v8::Local<v8::Value> arrayItemValue = classPathArrayTemp->Get(i);
     if(!arrayItemValue->IsString()) {
-      return NanThrowTypeError("Classpath must only contain strings");
+      return NanTypeError("Classpath must only contain strings");
     }
     v8::Local<v8::String> arrayItem = arrayItemValue->ToString();
     v8::String::Utf8Value arrayItemStr(arrayItem);
@@ -134,7 +134,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   // get other options
   v8::Local<v8::Value> optionsValue = NanObjectWrapHandle(this)->Get(NanNew<v8::String>("options"));
   if(!optionsValue->IsArray()) {
-    return NanThrowTypeError("options must be an array");
+    return NanTypeError("options must be an array");
   }
   v8::Handle<v8::Array> optionsArrayTemp = v8::Handle<v8::Array>::Cast(optionsValue);
   NanAssignPersistent(m_optionsArray, optionsArrayTemp);
@@ -148,7 +148,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     v8::Local<v8::Value> arrayItemValue = optionsArrayTemp->Get(i);
     if(!arrayItemValue->IsString()) {
       delete[] vmOptions;
-      return NanThrowTypeError("options must only contain strings");
+      return NanTypeError("options must only contain strings");
     }
     v8::Local<v8::String> arrayItem = arrayItemValue->ToString();
     v8::String::Utf8Value arrayItemStr(arrayItem);
@@ -170,7 +170,7 @@ v8::Handle<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   NanObjectWrapHandle(this)->SetAccessor(NanNew<v8::String>("options"), AccessorProhibitsOverwritingGetter, AccessorProhibitsOverwritingSetter);
   NanObjectWrapHandle(this)->SetAccessor(NanNew<v8::String>("nativeBindingLocation"), AccessorProhibitsOverwritingGetter, AccessorProhibitsOverwritingSetter);
 
-  NanReturnUndefined();
+  return NanNull();
 }
 
 NAN_GETTER(Java::AccessorProhibitsOverwritingGetter) {
@@ -194,7 +194,7 @@ NAN_SETTER(Java::AccessorProhibitsOverwritingSetter) {
   v8::String::Utf8Value nameStr(property);
   std::ostringstream errStr;
   errStr << "Cannot set " << *nameStr << " after calling any other java function.";
-  v8::ThrowException(v8::Exception::Error(NanNew<v8::String>(errStr.str().c_str())));
+  NanThrowError(errStr.str().c_str());
 }
 
 void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
@@ -206,8 +206,8 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
 NAN_METHOD(Java::getClassLoader) {
   NanScope();
   Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
-  v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
-  if(!ensureJvmResults->IsUndefined()) {
+  v8::Local<v8::Value> ensureJvmResults = self->ensureJvm();
+  if(!ensureJvmResults->IsNull()) {
     NanReturnValue(ensureJvmResults);
   }
   JNIEnv* env = self->getJavaEnv();
@@ -226,7 +226,7 @@ NAN_METHOD(Java::newInstance) {
   NanScope();
   Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
   v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
-  if(!ensureJvmResults->IsUndefined()) {
+  if(!ensureJvmResults->IsNull()) {
     NanReturnValue(ensureJvmResults);
   }
   JNIEnv* env = self->getJavaEnv();
@@ -266,7 +266,7 @@ NAN_METHOD(Java::newInstanceSync) {
   NanScope();
   Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
   v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
-  if(!ensureJvmResults->IsUndefined()) {
+  if(!ensureJvmResults->IsNull()) {
     NanReturnValue(ensureJvmResults);
   }
   JNIEnv* env = self->getJavaEnv();
@@ -309,7 +309,7 @@ NAN_METHOD(Java::newProxy) {
   NanScope();
   Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
   v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
-  if(!ensureJvmResults->IsUndefined()) {
+  if(!ensureJvmResults->IsNull()) {
     NanReturnValue(ensureJvmResults);
   }
   JNIEnv* env = self->getJavaEnv();
@@ -357,7 +357,7 @@ NAN_METHOD(Java::newProxy) {
   if(result->IsNativeError()) {
     return NanThrowError(result);
   }
-  dynamicProxyData->jsObject = v8::Persistent<v8::Value>::New(result);
+  NanAssignPersistent(dynamicProxyData->jsObject, result);
   NanReturnValue(result);
 }
 
@@ -365,7 +365,7 @@ NAN_METHOD(Java::callStaticMethod) {
   NanScope();
   Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
   v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
-  if(!ensureJvmResults->IsUndefined()) {
+  if(!ensureJvmResults->IsNull()) {
     NanReturnValue(ensureJvmResults);
   }
   JNIEnv* env = self->getJavaEnv();
@@ -406,7 +406,7 @@ NAN_METHOD(Java::callStaticMethodSync) {
   NanScope();
   Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
   v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
-  if(!ensureJvmResults->IsUndefined()) {
+  if(!ensureJvmResults->IsNull()) {
     NanReturnValue(ensureJvmResults);
   }
   JNIEnv* env = self->getJavaEnv();
@@ -450,7 +450,7 @@ NAN_METHOD(Java::findClassSync) {
   NanScope();
   Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
   v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
-  if(!ensureJvmResults->IsUndefined()) {
+  if(!ensureJvmResults->IsNull()) {
     NanReturnValue(ensureJvmResults);
   }
   JNIEnv* env = self->getJavaEnv();
@@ -478,7 +478,7 @@ NAN_METHOD(Java::newArray) {
   NanScope();
   Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
   v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
-  if(!ensureJvmResults->IsUndefined()) {
+  if(!ensureJvmResults->IsNull()) {
     NanReturnValue(ensureJvmResults);
   }
   JNIEnv* env = self->getJavaEnv();
@@ -587,7 +587,7 @@ NAN_METHOD(Java::newByte) {
   NanScope();
   Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
   v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
-  if(!ensureJvmResults->IsUndefined()) {
+  if(!ensureJvmResults->IsNull()) {
     NanReturnValue(ensureJvmResults);
   }
   JNIEnv* env = self->getJavaEnv();
@@ -615,7 +615,7 @@ NAN_METHOD(Java::newShort) {
   NanScope();
   Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
   v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
-  if(!ensureJvmResults->IsUndefined()) {
+  if(!ensureJvmResults->IsNull()) {
     NanReturnValue(ensureJvmResults);
   }
   JNIEnv* env = self->getJavaEnv();
@@ -643,7 +643,7 @@ NAN_METHOD(Java::newLong) {
   NanScope();
   Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
   v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
-  if(!ensureJvmResults->IsUndefined()) {
+  if(!ensureJvmResults->IsNull()) {
     NanReturnValue(ensureJvmResults);
   }
   JNIEnv* env = self->getJavaEnv();
@@ -671,7 +671,7 @@ NAN_METHOD(Java::newChar) {
   NanScope();
   Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
   v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
-  if(!ensureJvmResults->IsUndefined()) {
+  if(!ensureJvmResults->IsNull()) {
     NanReturnValue(ensureJvmResults);
   }
   JNIEnv* env = self->getJavaEnv();
@@ -708,7 +708,7 @@ NAN_METHOD(Java::newFloat) {
   NanScope();
   Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
   v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
-  if(!ensureJvmResults->IsUndefined()) {
+  if(!ensureJvmResults->IsNull()) {
     NanReturnValue(ensureJvmResults);
   }
   JNIEnv* env = self->getJavaEnv();
@@ -732,7 +732,7 @@ NAN_METHOD(Java::newDouble) {
   NanScope();
   Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
   v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
-  if(!ensureJvmResults->IsUndefined()) {
+  if(!ensureJvmResults->IsNull()) {
     NanReturnValue(ensureJvmResults);
   }
   JNIEnv* env = self->getJavaEnv();
@@ -756,7 +756,7 @@ NAN_METHOD(Java::getStaticFieldValue) {
   NanScope();
   Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
   v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
-  if(!ensureJvmResults->IsUndefined()) {
+  if(!ensureJvmResults->IsNull()) {
     NanReturnValue(ensureJvmResults);
   }
   JNIEnv* env = self->getJavaEnv();
@@ -802,7 +802,7 @@ NAN_METHOD(Java::setStaticFieldValue) {
   NanScope();
   Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
   v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
-  if(!ensureJvmResults->IsUndefined()) {
+  if(!ensureJvmResults->IsNull()) {
     NanReturnValue(ensureJvmResults);
   }
   JNIEnv* env = self->getJavaEnv();
@@ -859,7 +859,7 @@ NAN_METHOD(Java::instanceOf) {
   NanScope();
   Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
   v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
-  if(!ensureJvmResults->IsUndefined()) {
+  if(!ensureJvmResults->IsNull()) {
     NanReturnValue(ensureJvmResults);
   }
   JNIEnv* env = self->getJavaEnv();

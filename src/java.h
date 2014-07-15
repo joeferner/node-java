@@ -18,7 +18,7 @@ public:
 private:
   Java();
   ~Java();
-  v8::Handle<v8::Value> createJVM(JavaVM** jvm, JNIEnv** env);
+  v8::Local<v8::Value> createJVM(JavaVM** jvm, JNIEnv** env);
   void destroyJVM(JavaVM** jvm, JNIEnv** env);
 
   static NAN_METHOD(New);
@@ -41,7 +41,7 @@ private:
   static NAN_METHOD(instanceOf);
   static NAN_GETTER(AccessorProhibitsOverwritingGetter);
   static NAN_SETTER(AccessorProhibitsOverwritingSetter);
-  v8::Handle<v8::Value> ensureJvm();
+  v8::Local<v8::Value> ensureJvm();
 
   static v8::Persistent<v8::FunctionTemplate> s_ct;
   JavaVM* m_jvm;
