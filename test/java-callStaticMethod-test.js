@@ -44,7 +44,7 @@ exports['Java - Call Static Method'] = nodeunit.testCase({
     test.ok(Math.abs(parseFloat(result) - 100.1) < 0.0001);
     test.done();
   },
-  
+
   "callStaticMethod bad class name": function(test) {
     java.callStaticMethod("BadClassName", "staticMethod", function(err, result) {
       test.ok(err);

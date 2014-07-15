@@ -67,6 +67,8 @@ v8::Handle<v8::Value> MethodCallBaton::runSync() {
 void MethodCallBaton::after(JNIEnv *env) {
   NanScope();
 
+  //on 0.11 we're getting segfault due to the scope closing.
+  //v8 doesnt' let us create handles without having an open scope as of 0.11.
   v8::Handle<v8::Value> result = resultsToV8(env);
   v8::Handle<v8::Value> argv[2];
   if(result->IsNativeError()) {
@@ -80,7 +82,7 @@ void MethodCallBaton::after(JNIEnv *env) {
 }
 
 v8::Handle<v8::Value> MethodCallBaton::resultsToV8(JNIEnv *env) {
-  NanScope();
+  NanEscapableScope();
 
   if(m_error) {
     jthrowable cause = m_error;
@@ -97,10 +99,10 @@ v8::Handle<v8::Value> MethodCallBaton::resultsToV8(JNIEnv *env) {
     }
 
     v8::Handle<v8::Value> err = javaExceptionToV8(m_java, env, cause, m_errorString);
-    NanReturnValue(err);
+    return NanEscapeScope(err);
   }
 
-  NanReturnValue(javaToV8(m_java, env, m_result));
+  return NanEscapeScope(javaToV8(m_java, env, m_result));
 }
 
 void NewInstanceBaton::execute(JNIEnv *env) {
