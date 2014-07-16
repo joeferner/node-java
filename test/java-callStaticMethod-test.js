@@ -79,7 +79,7 @@ exports['Java - Call Static Method'] = nodeunit.testCase({
   "callStaticMethod bad number of args": function(test) {
     java.callStaticMethod("Test", "staticMethod", 42, "z", function(err, result) {
       test.ok(err);
-      test.ok(!result);
+      test.equals(undefined, result);
       test.done();
     });
   },

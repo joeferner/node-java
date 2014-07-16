@@ -12,7 +12,7 @@
 }
 
 /*static*/ v8::Local<v8::Object> JavaObject::New(Java *java, jobject obj) {
-  NanScope();
+  NanEscapableScope();
 
   JNIEnv *env = java->getJavaEnv();
   JavaScope javaScope(env);
@@ -81,7 +81,7 @@
   JavaObject *self = new JavaObject(java, obj);
   self->Wrap(javaObjectObj);
 
-  return javaObjectObj;
+  return NanEscapeScope(javaObjectObj);
 }
 
 JavaObject::JavaObject(Java *java, jobject obj) {

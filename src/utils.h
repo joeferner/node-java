@@ -111,7 +111,7 @@ std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string method
     argsEnd--;                                            \
     callbackProvided = true;                              \
   } else {                                                \
-    callback = NanNull();                                \
+    callback = NanNull();                                 \
     callbackProvided = false;                             \
   }
 

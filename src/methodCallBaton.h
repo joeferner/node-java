@@ -12,27 +12,22 @@
 class Java;
 class JavaObject;
 
-class MethodCallBaton {
+class MethodCallBaton : public NanAsyncWorker {
 public:
   MethodCallBaton(Java* java, jobject method, jarray args, v8::Handle<v8::Value>& callback);
   virtual ~MethodCallBaton();
 
-  static void EIO_MethodCall(uv_work_t* req);
-#if NODE_MINOR_VERSION >= 10
-  static void EIO_AfterMethodCall(uv_work_t* req, int status);
-#else
-  static void EIO_AfterMethodCall(uv_work_t* req);
-#endif
   void run();
   v8::Handle<v8::Value> runSync();
 
 protected:
-  virtual void execute(JNIEnv *env) = 0;
-  virtual void after(JNIEnv *env);
   v8::Handle<v8::Value> resultsToV8(JNIEnv *env);
+  virtual void Execute();
+  virtual void WorkComplete();
+  virtual void ExecuteInternal() = 0;
 
+  JNIEnv *m_env;
   Java* m_java;
-  NanCallback *m_callback;
   jthrowable m_error;
   std::string m_errorString;
   jarray m_args;
@@ -46,7 +41,7 @@ public:
   virtual ~InstanceMethodCallBaton();
 
 protected:
-  virtual void execute(JNIEnv *env);
+  virtual void ExecuteInternal();
 
   JavaObject* m_javaObject;
 };
@@ -57,7 +52,7 @@ public:
   virtual ~NewInstanceBaton();
 
 protected:
-  virtual void execute(JNIEnv *env);
+  virtual void ExecuteInternal();
 
   jclass m_clazz;
 };
@@ -68,7 +63,7 @@ public:
   virtual ~StaticMethodCallBaton();
 
 protected:
-  virtual void execute(JNIEnv *env);
+  virtual void ExecuteInternal();
 
   jclass m_clazz;
 };
