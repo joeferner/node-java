@@ -152,6 +152,16 @@ exports['Java - Call Static Method'] = nodeunit.testCase({
     });
   },
 
+  "String passed in for Object": function(test) {
+    java.callStaticMethod("Test", "static2Objects", "1", "2", function(err, result) {
+      if (err) {
+        return test.done(err);
+      }
+      test.equal(result, false);
+      test.done();
+    });
+  },
+
   "java.lang.Long addition": function(test) {
     var javaLong = java.newInstanceSync("java.lang.Long", 5);
     test.equal(javaLong.toString(), '5');

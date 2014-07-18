@@ -28,6 +28,8 @@ public class Test {
   public static String staticMethodLongToString(java.lang.Long l) { return l.toString(); }
   public static long staticMethodReturnLong() { return java.lang.Long.MAX_VALUE; }
 
+  public static boolean static2Objects(Object o1, Object o2) { return o1.equals(o2); }
+
   public static int staticByte(byte b) { return (int)b; }
   public static int staticShort(short s) { return (int)s; }
   public static int staticLong(long l) { return (int)l; }
