@@ -195,6 +195,8 @@ __Example__
     var Test = java.import('Test');
     Test.someStaticMethodSync(5);
     console.log(Test.someStaticField);
+    
+    var value1 = Test.NestedEnum.Value1;
 
     var test = new Test();
     list.instanceMethodSync('item1');
