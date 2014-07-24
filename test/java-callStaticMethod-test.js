@@ -191,5 +191,14 @@ exports['Java - Call Static Method'] = nodeunit.testCase({
       test.equal(result.longValue, "9223372036854775807");
       test.done();
     });
+  },
+
+  "Call method with nested enum value": function(test) {
+    var Test = java.import("Test");
+    Test.staticEnumToStringSync(Test.StaticEnum.Value1);
+    var str = Test.staticEnumToStringSync(Test.StaticEnum.Value1); // call it twice to ensure memo-ize is working
+    test.equal(str, "Value1");
+    test.done();
   }
+
 });

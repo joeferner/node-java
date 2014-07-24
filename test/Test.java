@@ -127,4 +127,10 @@ public class Test {
     arr[4] = 5;
     return arr;
   }
+
+  public static enum StaticEnum {
+    Value1,
+    Value2
+  }
+  public static String staticEnumToString(StaticEnum e) { return e.toString(); }
 }
