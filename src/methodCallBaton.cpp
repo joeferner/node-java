@@ -12,7 +12,8 @@ NanCallback* toNanCallback(v8::Handle<v8::Value>& callback) {
 }
 
 MethodCallBaton::MethodCallBaton(Java* java, jobject method, jarray args, v8::Handle<v8::Value>& callback) :
-  NanAsyncWorker(toNanCallback(callback)) {
+  NanAsyncWorker(toNanCallback(callback)),
+  m_methodInvokeMethodId(0) {
   JNIEnv *env = java->getJavaEnv();
   m_java = java;
   m_args = (jarray)env->NewGlobalRef(args);
@@ -32,6 +33,14 @@ MethodCallBaton::~MethodCallBaton() {
   }
   env->DeleteGlobalRef(m_args);
   env->DeleteGlobalRef(m_method);
+}
+
+jmethodID MethodCallBaton::getMethodInvokeMethodId() {
+  if(m_methodInvokeMethodId == 0) {
+    jclass methodClazz = m_env->FindClass("java/lang/reflect/Method");
+    m_methodInvokeMethodId = m_env->GetMethodID(methodClazz, "invoke", "(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;");
+  }
+  return m_methodInvokeMethodId;
 }
 
 void MethodCallBaton::run() {
@@ -112,8 +121,7 @@ void NewInstanceBaton::ExecuteInternal() {
 }
 
 void StaticMethodCallBaton::ExecuteInternal() {
-  jclass methodClazz = m_env->FindClass("java/lang/reflect/Method");
-  jmethodID method_invoke = m_env->GetMethodID(methodClazz, "invoke", "(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;");
+  jmethodID method_invoke = getMethodInvokeMethodId();
 
   /*
   printf("calling %s\n", javaObjectToString(m_env, m_method).c_str());
@@ -137,8 +145,7 @@ void StaticMethodCallBaton::ExecuteInternal() {
 }
 
 void InstanceMethodCallBaton::ExecuteInternal() {
-  jclass methodClazz = m_env->FindClass("java/lang/reflect/Method");
-  jmethodID method_invoke = m_env->GetMethodID(methodClazz, "invoke", "(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;");
+  jmethodID method_invoke = getMethodInvokeMethodId();
 
   /*
   printf("calling %s\n", javaObjectToString(m_env, m_method).c_str());

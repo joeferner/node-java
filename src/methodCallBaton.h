@@ -25,6 +25,7 @@ protected:
   virtual void Execute();
   virtual void WorkComplete();
   virtual void ExecuteInternal() = 0;
+  jmethodID getMethodInvokeMethodId();
 
   JNIEnv *m_env;
   Java* m_java;
@@ -33,6 +34,9 @@ protected:
   jarray m_args;
   jobject m_result;
   jobject m_method;
+
+private:
+  jmethodID m_methodInvokeMethodId;
 };
 
 class InstanceMethodCallBaton : public MethodCallBaton {
