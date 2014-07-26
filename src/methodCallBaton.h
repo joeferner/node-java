@@ -36,7 +36,7 @@ protected:
   jobject m_method;
 
 private:
-  jmethodID m_methodInvokeMethodId;
+  static jmethodID m_methodInvokeMethodId;
 };
 
 class InstanceMethodCallBaton : public MethodCallBaton {

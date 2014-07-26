@@ -4,6 +4,8 @@
 #include "javaObject.h"
 #include "javaScope.h"
 
+jmethodID MethodCallBaton::m_methodInvokeMethodId = 0;
+
 NanCallback* toNanCallback(v8::Handle<v8::Value>& callback) {
   if(callback->IsFunction()) {
     return new NanCallback(callback.As<v8::Function>());
@@ -12,8 +14,7 @@ NanCallback* toNanCallback(v8::Handle<v8::Value>& callback) {
 }
 
 MethodCallBaton::MethodCallBaton(Java* java, jobject method, jarray args, v8::Handle<v8::Value>& callback) :
-  NanAsyncWorker(toNanCallback(callback)),
-  m_methodInvokeMethodId(0) {
+  NanAsyncWorker(toNanCallback(callback)) {
   JNIEnv *env = java->getJavaEnv();
   m_java = java;
   m_args = (jarray)env->NewGlobalRef(args);
