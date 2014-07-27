@@ -24,10 +24,9 @@ protected:
   v8::Handle<v8::Value> resultsToV8(JNIEnv *env);
   virtual void Execute();
   virtual void WorkComplete();
-  virtual void ExecuteInternal() = 0;
-  jmethodID getMethodInvokeMethodId();
+  virtual void ExecuteInternal(JNIEnv* env) = 0;
+  static jmethodID getMethodInvokeMethodId(JNIEnv *env);
 
-  JNIEnv *m_env;
   Java* m_java;
   jthrowable m_error;
   std::string m_errorString;
@@ -45,7 +44,7 @@ public:
   virtual ~InstanceMethodCallBaton();
 
 protected:
-  virtual void ExecuteInternal();
+  virtual void ExecuteInternal(JNIEnv* env);
 
   JavaObject* m_javaObject;
 };
@@ -56,7 +55,7 @@ public:
   virtual ~NewInstanceBaton();
 
 protected:
-  virtual void ExecuteInternal();
+  virtual void ExecuteInternal(JNIEnv* env);
 
   jclass m_clazz;
 };
@@ -67,7 +66,7 @@ public:
   virtual ~StaticMethodCallBaton();
 
 protected:
-  virtual void ExecuteInternal();
+  virtual void ExecuteInternal(JNIEnv* env);
 
   jclass m_clazz;
 };

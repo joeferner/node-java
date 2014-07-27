@@ -28,18 +28,25 @@ MethodCallBaton::~MethodCallBaton() {
 
   if(m_result) {
     env->DeleteGlobalRef(m_result);
+    m_result = NULL;
   }
+
   if(m_error) {
     env->DeleteGlobalRef(m_error);
+    m_error = NULL;
   }
+
   env->DeleteGlobalRef(m_args);
+  m_args = NULL;
+
   env->DeleteGlobalRef(m_method);
+  m_method = NULL;
 }
 
-jmethodID MethodCallBaton::getMethodInvokeMethodId() {
+jmethodID MethodCallBaton::getMethodInvokeMethodId(JNIEnv *env) {
   if(m_methodInvokeMethodId == 0) {
-    jclass methodClazz = m_env->FindClass("java/lang/reflect/Method");
-    m_methodInvokeMethodId = m_env->GetMethodID(methodClazz, "invoke", "(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;");
+    jclass methodClazz = env->FindClass("java/lang/reflect/Method");
+    m_methodInvokeMethodId = env->GetMethodID(methodClazz, "invoke", "(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;");
   }
   return m_methodInvokeMethodId;
 }
@@ -49,20 +56,23 @@ void MethodCallBaton::run() {
 }
 
 v8::Handle<v8::Value> MethodCallBaton::runSync() {
-  m_env = m_java->getJavaEnv();
-  ExecuteInternal();
-  return resultsToV8(m_env);
+  JNIEnv* env = m_java->getJavaEnv();
+  ExecuteInternal(env);
+  return resultsToV8(env);
 }
 
+// called by NanAsyncWorker. This will be on a worker thread
 void MethodCallBaton::Execute() {
-  m_env = javaGetEnv(this->m_java->getJvm(), this->m_java->getClassLoader());
-  ExecuteInternal();
+  JNIEnv* env = javaGetEnv(this->m_java->getJvm(), this->m_java->getClassLoader());
+  ExecuteInternal(env);
 }
 
+// callback from NanAsyncWorker. This will be on the v8 main thread
 void MethodCallBaton::WorkComplete() {
   NanScope();
 
-  v8::Handle<v8::Value> result = resultsToV8(m_env);
+  JNIEnv* env = javaGetEnv(this->m_java->getJvm(), this->m_java->getClassLoader());
+  v8::Handle<v8::Value> result = resultsToV8(env);
   if (result->IsNativeError()) {
     v8::Handle<v8::Value> argv[] = {
       result
@@ -75,6 +85,7 @@ void MethodCallBaton::WorkComplete() {
     };
     callback->Call(2, argv);
   }
+
   delete callback;
   callback = NULL;
 }
@@ -103,65 +114,65 @@ v8::Handle<v8::Value> MethodCallBaton::resultsToV8(JNIEnv *env) {
   return NanEscapeScope(javaToV8(m_java, env, m_result));
 }
 
-void NewInstanceBaton::ExecuteInternal() {
-  jclass constructorClazz = m_env->FindClass("java/lang/reflect/Constructor");
-  jmethodID constructor_newInstance = m_env->GetMethodID(constructorClazz, "newInstance", "([Ljava/lang/Object;)Ljava/lang/Object;");
+void NewInstanceBaton::ExecuteInternal(JNIEnv* env) {
+  jclass constructorClazz = env->FindClass("java/lang/reflect/Constructor");
+  jmethodID constructor_newInstance = env->GetMethodID(constructorClazz, "newInstance", "([Ljava/lang/Object;)Ljava/lang/Object;");
 
-  //printf("invoke: %s\n", javaMethodCallToString(m_env, m_method, constructor_newInstance, m_args).c_str());
+  //printf("invoke: %s\n", javaMethodCallToString(env, m_method, constructor_newInstance, m_args).c_str());
 
-  jobject result = m_env->CallObjectMethod(m_method, constructor_newInstance, m_args);
-  if(m_env->ExceptionCheck()) {
-    jthrowable ex = m_env->ExceptionOccurred();
-    m_env->ExceptionClear();
-    m_error = (jthrowable)m_env->NewGlobalRef(ex);
+  jobject result = env->CallObjectMethod(m_method, constructor_newInstance, m_args);
+  if(env->ExceptionCheck()) {
+    jthrowable ex = env->ExceptionOccurred();
+    env->ExceptionClear();
+    m_error = (jthrowable)env->NewGlobalRef(ex);
     m_errorString = "Error creating class";
     return;
   }
 
-  m_result = m_env->NewGlobalRef(result);
+  m_result = env->NewGlobalRef(result);
 }
 
-void StaticMethodCallBaton::ExecuteInternal() {
-  jmethodID method_invoke = getMethodInvokeMethodId();
+void StaticMethodCallBaton::ExecuteInternal(JNIEnv* env) {
+  jmethodID method_invoke = getMethodInvokeMethodId(env);
 
   /*
-  printf("calling %s\n", javaObjectToString(m_env, m_method).c_str());
+  printf("calling %s\n", javaObjectToString(env, m_method).c_str());
   printf("arguments\n");
-  for(int i=0; i<m_env->GetArrayLength(m_args); i++) {
-    printf("  %s\n", javaObjectToString(m_env, m_env->GetObjectArrayElement((jobjectArray)m_args, i)).c_str());
+  for(int i=0; i<env->GetArrayLength(m_args); i++) {
+    printf("  %s\n", javaObjectToString(env, env->GetObjectArrayElement((jobjectArray)m_args, i)).c_str());
   }
   */
 
-  jobject result = m_env->CallObjectMethod(m_method, method_invoke, NULL, m_args);
+  jobject result = env->CallObjectMethod(m_method, method_invoke, NULL, m_args);
 
-  if(m_env->ExceptionCheck()) {
-    jthrowable ex = m_env->ExceptionOccurred();
-    m_env->ExceptionClear();
-    m_error = (jthrowable)m_env->NewGlobalRef(ex);
+  if(env->ExceptionCheck()) {
+    jthrowable ex = env->ExceptionOccurred();
+    env->ExceptionClear();
+    m_error = (jthrowable)env->NewGlobalRef(ex);
     m_errorString = "Error running static method";
     return;
   }
 
-  m_result = m_env->NewGlobalRef(result);
+  m_result = env->NewGlobalRef(result);
 }
 
-void InstanceMethodCallBaton::ExecuteInternal() {
-  jmethodID method_invoke = getMethodInvokeMethodId();
+void InstanceMethodCallBaton::ExecuteInternal(JNIEnv* env) {
+  jmethodID method_invoke = getMethodInvokeMethodId(env);
 
   /*
-  printf("calling %s\n", javaObjectToString(m_env, m_method).c_str());
+  printf("calling %s\n", javaObjectToString(env, m_method).c_str());
   printf("arguments\n");
-  for(int i=0; i<m_env->GetArrayLength(m_args); i++) {
-    printf("  %s\n", javaObjectToString(m_env, m_env->GetObjectArrayElement((jobjectArray)m_args, i)).c_str());
+  for(int i=0; i<env->GetArrayLength(m_args); i++) {
+    printf("  %s\n", javaObjectToString(env, env->GetObjectArrayElement((jobjectArray)m_args, i)).c_str());
   }
   */
 
-  jobject result = m_env->CallObjectMethod(m_method, method_invoke, m_javaObject->getObject(), m_args);
+  jobject result = env->CallObjectMethod(m_method, method_invoke, m_javaObject->getObject(), m_args);
 
-  if(m_env->ExceptionCheck()) {
-    jthrowable ex = m_env->ExceptionOccurred();
-    m_env->ExceptionClear();
-    m_error = (jthrowable)m_env->NewGlobalRef(ex);
+  if(env->ExceptionCheck()) {
+    jthrowable ex = env->ExceptionOccurred();
+    env->ExceptionClear();
+    m_error = (jthrowable)env->NewGlobalRef(ex);
     m_errorString = "Error running instance method";
     return;
   }
@@ -169,7 +180,7 @@ void InstanceMethodCallBaton::ExecuteInternal() {
   if(result == NULL) {
     m_result = NULL;
   } else {
-    m_result = m_env->NewGlobalRef(result);
+    m_result = env->NewGlobalRef(result);
   }
 }
 
@@ -186,6 +197,7 @@ NewInstanceBaton::NewInstanceBaton(
 NewInstanceBaton::~NewInstanceBaton() {
   JNIEnv *env = m_java->getJavaEnv();
   env->DeleteGlobalRef(m_clazz);
+  m_clazz = NULL;
 }
 
 StaticMethodCallBaton::StaticMethodCallBaton(
@@ -201,6 +213,7 @@ StaticMethodCallBaton::StaticMethodCallBaton(
 StaticMethodCallBaton::~StaticMethodCallBaton() {
   JNIEnv *env = m_java->getJavaEnv();
   env->DeleteGlobalRef(m_clazz);
+  m_clazz = NULL;
 }
 
 InstanceMethodCallBaton::InstanceMethodCallBaton(
