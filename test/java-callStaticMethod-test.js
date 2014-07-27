@@ -106,18 +106,21 @@ exports['Java - Call Static Method'] = nodeunit.testCase({
     test.done();
   },
 
-  "callStaticMethod exception thrown from method": function(test) {
+  "callStaticMethod exception thrown from method (sync)": function(test) {
     var ex = java.newInstanceSync("java.lang.Exception", "my exception");
-    java.callStaticMethod("Test", "staticMethodThrows", ex, function(err, result) {
+    var result;
+    try {
+      result = java.callStaticMethodSync("Test", "staticMethodThrows", ex);
+    } catch (err) {
       test.ok(err);
       test.equals('my exception', err.cause.getMessageSync());
       test.ok(err.toString().match(/my exception/));
       test.ok(!result);
       test.done();
-    });
+    }
   },
 
-  "callStaticMethodSync exception thrown from method": function(test) {
+  "staticMethodThrows exception thrown from method (sync)": function(test) {
     var ex = java.newInstanceSync("java.lang.Exception", "my exception");
     try {
       java.callStaticMethodSync("Test", "staticMethodThrows", ex);
@@ -128,7 +131,38 @@ exports['Java - Call Static Method'] = nodeunit.testCase({
     test.done();
   },
 
-  "callMethodSync exception thrown from method": function(test) {
+  "staticMethodThrows exception thrown from method": function(test) {
+    var ex = java.newInstanceSync("java.lang.Exception", "my exception");
+    java.callStaticMethod("Test", "staticMethodThrows", ex, function(err, result) {
+      test.ok(err);
+      test.equals('my exception', err.cause.getMessageSync());
+      test.ok(err.toString().match(/my exception/));
+      test.ok(!result);
+      test.done();
+    });
+  },
+
+  "staticMethodThrowsNewException exception thrown from method (sync)": function(test) {
+    try {
+      java.callStaticMethodSync("Test", "staticMethodThrowsNewException");
+      test.fail("should throw");
+    } catch (err) {
+      test.ok(err.toString().match(/my exception/));
+    }
+    test.done();
+  },
+
+  "staticMethodThrowsNewException exception thrown from method": function(test) {
+    java.callStaticMethod("Test", "staticMethodThrowsNewException", function(err, result) {
+      test.ok(err);
+      test.equals('my exception', err.cause.getMessageSync());
+      test.ok(err.toString().match(/my exception/));
+      test.ok(!result);
+      test.done();
+    });
+  },
+
+  "methodThrows exception thrown from method (sync)": function(test) {
     var ex = java.newInstanceSync("java.lang.Exception", "my exception");
     var myTest = java.newInstanceSync("Test");
     try {
@@ -138,6 +172,34 @@ exports['Java - Call Static Method'] = nodeunit.testCase({
       test.ok(err.toString().match(/my exception/));
     }
     test.done();
+  },
+
+  "methodThrows exception thrown from method": function(test) {
+    var ex = java.newInstanceSync("java.lang.Exception", "my exception");
+    var myTest = java.newInstanceSync("Test");
+    return myTest.methodThrows(ex, function(err) {
+      test.ok(err.toString().match(/my exception/));
+      test.done();
+    });
+  },
+
+  "methodThrowsNewException exception thrown from method (sync)": function(test) {
+    var myTest = java.newInstanceSync("Test");
+    try {
+      myTest.methodThrowsNewExceptionSync();
+      test.fail("should throw");
+    } catch (err) {
+      test.ok(err.toString().match(/my exception/));
+    }
+    test.done();
+  },
+
+  "methodThrowsNewException exception thrown from method": function(test) {
+    var myTest = java.newInstanceSync("Test");
+    return myTest.methodThrowsNewException(function(err) {
+      test.ok(err.toString().match(/my exception/));
+      test.done();
+    });
   },
 
   "char array": function(test) {
