@@ -71,23 +71,25 @@ void MethodCallBaton::Execute() {
 void MethodCallBaton::WorkComplete() {
   NanScope();
 
-  JNIEnv* env = javaGetEnv(this->m_java->getJvm(), this->m_java->getClassLoader());
-  v8::Handle<v8::Value> result = resultsToV8(env);
-  if (result->IsNativeError()) {
-    v8::Handle<v8::Value> argv[] = {
-      result
-    };
-    callback->Call(1, argv);
-  } else {
-    v8::Handle<v8::Value> argv[] = {
-      NanUndefined(),
-      result
-    };
-    callback->Call(2, argv);
-  }
+  if(callback) {
+    JNIEnv* env = javaGetEnv(this->m_java->getJvm(), this->m_java->getClassLoader());
+    v8::Handle<v8::Value> result = resultsToV8(env);
+    if (result->IsNativeError()) {
+      v8::Handle<v8::Value> argv[] = {
+        result
+      };
+      callback->Call(1, argv);
+    } else {
+      v8::Handle<v8::Value> argv[] = {
+        NanUndefined(),
+        result
+      };
+      callback->Call(2, argv);
+    }
 
-  delete callback;
-  callback = NULL;
+    delete callback;
+    callback = NULL;
+  }
 }
 
 v8::Handle<v8::Value> MethodCallBaton::resultsToV8(JNIEnv *env) {
