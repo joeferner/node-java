@@ -68,6 +68,18 @@ public class Test {
     return b;
   }
 
+  public static double[] staticDoubleArray(double[] arg) {
+    double[] b = new double[arg.length];
+    for(int i=0; i<arg.length; i++) { b[i] = arg[i]; }
+    return b;
+  }
+
+  public static int[] staticIntArray(int[] arg) {
+    int[] b = new int[arg.length];
+    for(int i=0; i<arg.length; i++) { b[i] = arg[i]; }
+    return b;
+  }
+
   public static class SuperClass {
     public int getVal() { return 3; }
   }

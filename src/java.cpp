@@ -619,6 +619,34 @@ NAN_METHOD(Java::newArray) {
     }
   }
 
+  else if(strcmp(className.c_str(), "double") == 0) {
+    results = env->NewDoubleArray(arrayObj->Length());
+    for(uint32_t i=0; i<arrayObj->Length(); i++) {
+      v8::Local<v8::Value> item = arrayObj->Get(i);
+      jobject val = v8ToJava(env, item);
+      jclass doubleClazz = env->FindClass("java/lang/Double");
+      jmethodID double_doubleValue = env->GetMethodID(doubleClazz, "doubleValue", "()D");
+      jdouble doubleValues[1];
+      doubleValues[0] = env->CallDoubleMethod(val, double_doubleValue);
+      assert(!env->ExceptionCheck());
+      env->SetDoubleArrayRegion((jdoubleArray)results, i, 1, doubleValues);
+    }
+  }
+
+  else if(strcmp(className.c_str(), "int") == 0) {
+    results = env->NewIntArray(arrayObj->Length());
+    for(uint32_t i=0; i<arrayObj->Length(); i++) {
+      v8::Local<v8::Value> item = arrayObj->Get(i);
+      jobject val = v8ToJava(env, item);
+      jclass integerClazz = env->FindClass("java/lang/Integer");
+      jmethodID integer_intValue = env->GetMethodID(integerClazz, "intValue", "()I");
+      jint intValues[1];
+      intValues[0] = env->CallIntMethod(val, integer_intValue);
+      assert(!env->ExceptionCheck());
+      env->SetIntArrayRegion((jintArray)results, i, 1, intValues);
+    }
+  }
+
   else if(strcmp(className.c_str(), "boolean") == 0) {
     results = env->NewBooleanArray(arrayObj->Length());
     for(uint32_t i=0; i<arrayObj->Length(); i++) {

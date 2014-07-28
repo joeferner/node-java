@@ -282,6 +282,24 @@ exports['Simple'] = nodeunit.testCase({
     test.done();
   },
 
+  "new int array": function(test) {
+    var intArray = java.newArray("int", [1, 2]);
+    var r = java.callStaticMethodSync("Test", "staticIntArray", intArray);
+    test.equal(r.length, 2);
+    test.equal(r[0], 1);
+    test.equal(r[1], 2);
+    test.done();
+  },
+
+  "new double array": function(test) {
+    var doubleArray = java.newArray("double", [1.2, 4]);
+    var r = java.callStaticMethodSync("Test", "staticDoubleArray", doubleArray);
+    test.equal(r.length, 2);
+    test.equal(r[0], 1.2);
+    test.equal(r[1], 4);
+    test.done();
+  },
+
   "new short array objects": function(test) {
     var shortArray = java.newArray("java.lang.Short", [1, 2].map(function(c) { return java.newShort(c); }));
     var r = java.callStaticMethodSync("Test", "staticShortArray", shortArray);
