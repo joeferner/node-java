@@ -138,6 +138,7 @@ try {
  * [newInstance](#javaNewInstance)
  * [instanceOf](#javaInstanceOf)
  * [callStaticMethod](#javaCallStaticMethod)
+ * [callMethod](#javaCallMethod)
  * [getStaticFieldValue](#javaGetStaticFieldValue)
  * [setStaticFieldValue](#javaSetStaticFieldValue)
  * [newArray](#javaNewArray)
@@ -252,7 +253,7 @@ otherwise it will be the first argument in the callback.
 __Arguments__
 
  * className - The name of the class to call the method on. For subclasses seperate using a '$' (eg. com.nearinfinty.MyClass$SubClass)
- * methodName - The name of the method to call.
+ * methodName - The name of the method to call. The method name can include the full signature (see [Getting the full method signature](#getFullMethodSignature)).
  * callback(err, item) - Callback to be called when the class is created.
 
 __Example__
@@ -260,6 +261,31 @@ __Example__
     var result = java.callStaticMethodSync("com.nearinfinty.MyClass", "doSomething", 42, "test");
 
     java.callStaticMethod("com.nearinfinty.MyClass", "doSomething", 42, "test", function(err, results) {
+      if(err) { console.error(err); return; }
+      // results from doSomething
+    });
+
+<a name="javaCallMethod" />
+**java.callMethod(instance, methodName, [args...], callback)**
+
+**java.callMethodSync(instance, methodName, [args...]) : result**
+
+Calls a method on the specified instance. If you are using the sync method an exception will be throw if an error occures,
+otherwise it will be the first argument in the callback.
+
+__Arguments__
+
+ * instance - An instance of the class from newInstance.
+ * methodName - The name of the method to call. The method name can include the full signature (see [Getting the full method signature](#getFullMethodSignature)).
+ * callback(err, item) - Callback to be called when the class is created.
+
+__Example__
+
+    var instance = java.newInstanceSync("com.nearinfinty.MyClass");
+
+    var result = java.callMethodSync("com.nearinfinty.MyClass", "doSomething", 42, "test");
+
+    java.callMethodSync(instance, "doSomething", 42, "test", function(err, results) {
       if(err) { console.error(err); return; }
       // results from doSomething
     });
@@ -447,6 +473,20 @@ __Example__
     var list = java.newInstanceSync("com.nearinfinty.MyClass");
     list.data = "test";
     var data = list.data;
+
+<a name="getFullMethodSignature" />
+# Getting the Full Method Signature
+
+Run `javap -s -classpath <your-class-path> <your-class-name>`. Find the method name you are looking for. For example:
+
+```
+public int methodAmbiguous(java.lang.Double);
+  Signature: (Ljava/lang/Double;)I
+```
+
+The full method signature would be `methodAmbiguous(Ljava/lang/Double;)I`.
+
+If you have grep, a shortcut is `javap -s -classpath . my.company.MyClass | grep -A1 myMethodName`.
 
 # Signal Handling
 

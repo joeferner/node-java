@@ -656,14 +656,45 @@ jobjectArray javaObjectArrayToClasses(JNIEnv *env, jobjectArray objs) {
 }
 
 jobject javaFindMethod(JNIEnv *env, jclass clazz, std::string& methodName, jobjectArray methodArgs) {
-  jclass methodUtilsClazz = env->FindClass("com/nearinfinity/org/apache/commons/lang3/reflect/MethodUtils");
-  jmethodID methodUtils_getMatchingAccessibleMethod = env->GetStaticMethodID(methodUtilsClazz, "getMatchingAccessibleMethod", "(Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;");
-  const char *methodNameCStr = methodName.c_str();
-  jstring methodNameJavaStr = env->NewStringUTF(methodNameCStr);
-  jobjectArray methodArgClasses = javaObjectArrayToClasses(env, methodArgs);
-  jobject method = env->CallStaticObjectMethod(methodUtilsClazz, methodUtils_getMatchingAccessibleMethod, clazz, methodNameJavaStr, methodArgClasses);
-  checkJavaException(env);
-  return method;
+  std::string::size_type parenLoc = methodName.find("(");
+  if(parenLoc != std::string::npos) {
+    jobject method = NULL;
+
+    std::string methodSig = methodName.substr(parenLoc);
+    methodName = methodName.substr(0, parenLoc);
+    jmethodID methodID = env->GetStaticMethodID(clazz, methodName.c_str(), methodSig.c_str());
+    if(methodID != 0) {
+      method = env->ToReflectedMethod(clazz, methodID, true);
+    } else {
+      methodID = env->GetMethodID(clazz, methodName.c_str(), methodSig.c_str());
+      if(methodID != 0) {
+        method = env->ToReflectedMethod(clazz, methodID, true);
+      }
+    }
+    env->ExceptionClear(); // If GetStaticMethodID can't find the method it throws an exception and we need to just return NULL
+
+    // cast arguments
+    if(method != NULL) {
+      javaCastArguments(env, methodArgs, method);
+    }
+
+    return method;
+  } else {
+    jclass methodUtilsClazz = env->FindClass("com/nearinfinity/org/apache/commons/lang3/reflect/MethodUtils");
+    jmethodID methodUtils_getMatchingAccessibleMethod = env->GetStaticMethodID(methodUtilsClazz, "getMatchingAccessibleMethod", "(Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;");
+    const char *methodNameCStr = methodName.c_str();
+    jstring methodNameJavaStr = env->NewStringUTF(methodNameCStr);
+    jobjectArray methodArgClasses = javaObjectArrayToClasses(env, methodArgs);
+    jobject method = env->CallStaticObjectMethod(methodUtilsClazz, methodUtils_getMatchingAccessibleMethod, clazz, methodNameJavaStr, methodArgClasses);
+    checkJavaException(env);
+    return method;
+  }
+}
+
+void javaCastArguments(JNIEnv *env, jobjectArray methodArgs, jobject method) {
+  jclass castingUtilsClazz = env->FindClass("node/CastingUtils");
+  jmethodID castingUtilsClazz_cast = env->GetStaticMethodID(castingUtilsClazz, "cast", "(Ljava/lang/reflect/Method;[Ljava/lang/Object;)V");
+  env->CallStaticObjectMethod(castingUtilsClazz, castingUtilsClazz_cast, method, methodArgs);
 }
 
 jobject javaFindConstructor(JNIEnv *env, jclass clazz, jobjectArray methodArgs) {

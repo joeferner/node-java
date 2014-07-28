@@ -139,7 +139,9 @@ void StaticMethodCallBaton::ExecuteInternal(JNIEnv* env) {
   printf("calling %s\n", javaObjectToString(env, m_method).c_str());
   printf("arguments\n");
   for(int i=0; i<env->GetArrayLength(m_args); i++) {
-    printf("  %s\n", javaObjectToString(env, env->GetObjectArrayElement((jobjectArray)m_args, i)).c_str());
+    jobject o = env->GetObjectArrayElement((jobjectArray)m_args, i);
+    jclass c = env->GetObjectClass(o);
+    printf("  %s (%s)\n", javaObjectToString(env, o).c_str(), javaObjectToString(env, c).c_str());
   }
   */
 

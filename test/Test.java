@@ -38,6 +38,12 @@ public class Test {
   public static double staticDouble(double s) { return s; }
   public static float staticFloat(float s) { return s; }
 
+  public static int staticMethodAmbiguous(Double a) { return 1; }
+  public static int staticMethodAmbiguous(Integer a) { return 2; }
+
+  public int methodAmbiguous(Double a) { return 1; }
+  public int methodAmbiguous(Integer a) { return 2; }
+
   public static String staticBigDecimalToString(java.math.BigDecimal bigDecimal) { return bigDecimal.toString(); }
   
   public static int staticChar(char ch) { return (int)ch; }

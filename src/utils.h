@@ -76,6 +76,7 @@ jclass javaFindClass(JNIEnv* env, std::string& className);
 jobject javaFindField(JNIEnv* env, jclass clazz, std::string& fieldName);
 jobject javaFindMethod(JNIEnv *env, jclass clazz, std::string& methodName, jobjectArray methodArgs);
 jobject javaFindConstructor(JNIEnv *env, jclass clazz, jobjectArray methodArgs);
+void javaCastArguments(JNIEnv *env, jobjectArray methodArgs, jobject method);
 
 std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string methodName, bool constructor, _NAN_METHOD_ARGS_TYPE args, int argStart, int argEnd);
 

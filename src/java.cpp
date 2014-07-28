@@ -50,6 +50,8 @@ long my_getThreadId() {
   NODE_SET_PROTOTYPE_METHOD(t, "newProxy", newProxy);
   NODE_SET_PROTOTYPE_METHOD(t, "callStaticMethod", callStaticMethod);
   NODE_SET_PROTOTYPE_METHOD(t, "callStaticMethodSync", callStaticMethodSync);
+  NODE_SET_PROTOTYPE_METHOD(t, "callMethod", callMethod);
+  NODE_SET_PROTOTYPE_METHOD(t, "callMethodSync", callMethodSync);
   NODE_SET_PROTOTYPE_METHOD(t, "findClassSync", findClassSync);
   NODE_SET_PROTOTYPE_METHOD(t, "newArray", newArray);
   NODE_SET_PROTOTYPE_METHOD(t, "newByte", newByte);
@@ -444,6 +446,82 @@ NAN_METHOD(Java::callStaticMethodSync) {
     return NanThrowError(result);
   }
   NanReturnValue(result);
+}
+
+NAN_METHOD(Java::callMethodSync) {
+  NanScope();
+  Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
+  v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
+  if(!ensureJvmResults->IsNull()) {
+    NanReturnValue(ensureJvmResults);
+  }
+  JNIEnv* env = self->getJavaEnv();
+  JavaScope javaScope(env);
+
+  int argsStart = 0;
+  int argsEnd = args.Length();
+
+  // arguments
+  ARGS_FRONT_OBJECT(instanceObj);
+  ARGS_FRONT_STRING(methodName);
+
+  JavaObject* javaObj = node::ObjectWrap::Unwrap<JavaObject>(instanceObj);
+
+  // find method
+  jclass clazz = javaObj->getClass();
+  jobjectArray methodArgs = v8ToJava(env, args, argsStart, argsEnd);
+  jobject method = javaFindMethod(env, clazz, methodName, methodArgs);
+  if(method == NULL) {
+    std::string msg = methodNotFoundToString(env, clazz, methodName, false, args, argsStart, argsEnd);
+    return NanThrowError(javaExceptionToV8(self, env, msg));
+  }
+
+  // run
+  v8::Handle<v8::Value> callback = NanNull();
+  InstanceMethodCallBaton* baton = new InstanceMethodCallBaton(self, javaObj, method, methodArgs, callback);
+  v8::Handle<v8::Value> result = baton->runSync();
+  delete baton;
+  if(result->IsNativeError()) {
+    return NanThrowError(result);
+  }
+  NanReturnValue(result);
+}
+
+NAN_METHOD(Java::callMethod) {
+  NanScope();
+  Java* self = node::ObjectWrap::Unwrap<Java>(args.This());
+  v8::Handle<v8::Value> ensureJvmResults = self->ensureJvm();
+  if(!ensureJvmResults->IsNull()) {
+    NanReturnValue(ensureJvmResults);
+  }
+  JNIEnv* env = self->getJavaEnv();
+  JavaScope javaScope(env);
+
+  int argsStart = 0;
+  int argsEnd = args.Length();
+
+  // arguments
+  ARGS_FRONT_OBJECT(instanceObj);
+  ARGS_FRONT_STRING(methodName);
+  ARGS_BACK_CALLBACK();
+
+  JavaObject* javaObj = node::ObjectWrap::Unwrap<JavaObject>(instanceObj);
+
+  // find method
+  jclass clazz = javaObj->getClass();
+  jobjectArray methodArgs = v8ToJava(env, args, argsStart, argsEnd);
+  jobject method = javaFindMethod(env, clazz, methodName, methodArgs);
+  if(method == NULL) {
+    std::string msg = methodNotFoundToString(env, clazz, methodName, false, args, argsStart, argsEnd);
+    EXCEPTION_CALL_CALLBACK(self, msg);
+    NanReturnUndefined();
+  }
+
+  // run
+  InstanceMethodCallBaton* baton = new InstanceMethodCallBaton(self, javaObj, method, methodArgs, callback);
+  baton->run();
+
+  END_CALLBACK_FUNCTION("\"method '" << methodName << "' called without a callback did you mean to use the Sync version?\"");
 }
 
 NAN_METHOD(Java::findClassSync) {

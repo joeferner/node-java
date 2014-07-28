@@ -28,6 +28,8 @@ private:
   static NAN_METHOD(newProxy);
   static NAN_METHOD(callStaticMethod);
   static NAN_METHOD(callStaticMethodSync);
+  static NAN_METHOD(callMethod);
+  static NAN_METHOD(callMethodSync);
   static NAN_METHOD(findClassSync);
   static NAN_METHOD(newArray);
   static NAN_METHOD(newByte);
