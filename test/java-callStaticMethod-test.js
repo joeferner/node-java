@@ -12,6 +12,12 @@ exports['Java - Call Static Method'] = nodeunit.testCase({
     });
   },
 
+  "callStaticMethod without a callback": function(test) {
+    var result = java.callStaticMethod("Test", "staticMethod");
+    console.log("callStaticMethod without a callback result message", result);
+    test.done();
+  },
+
   "callStaticMethodSync": function(test) {
     var result = java.callStaticMethodSync("Test", "staticMethod");
     test.ok(result);
