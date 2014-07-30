@@ -9,7 +9,7 @@ public class CastingUtils {
             throw new Exception("Method argument length mismatch. Expecting " + methodParameterTypes.length + " found " + args.length);
         }
         for (int i = 0; i < methodParameterTypes.length; i++) {
-            args[i] = cast(args[i], methodParameterTypes[0]);
+            args[i] = cast(args[i], methodParameterTypes[i]);
         }
     }
 
