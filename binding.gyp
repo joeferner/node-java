@@ -13,6 +13,12 @@
       }],
       ['OS=="mac"', {
       	'javaver%' : "<!(awk -F/ -v h=`node findJavaHome.js` 'BEGIN {n=split(h, a); print a[2]; exit}')"
+      }],
+      ['OS=="linux" and target_arch=="ia32"', {
+        'javalibdir%': "<!(h=\"`node findJavaHome.js`\" sh -c 'if [ -d \"$h/jre/lib/i386/classic\" ]; then echo $h/jre/lib/i386/classic; else echo $h/jre/lib/i386/server; fi')"
+      }],
+      ['OS=="linux" and target_arch=="x64"', {
+        'javalibdir%': "<!(h=\"`node findJavaHome.js`\" sh -c 'if [ -d \"$h/jre/lib/amd64/classic\" ]; then echo $h/jre/lib/amd64/classic; else echo $h/jre/lib/amd64/server; fi')"
       }]
     ]
   },
@@ -49,8 +55,8 @@
               '<(javahome)/include/linux',
             ],
             'libraries': [
-              '-L<(javahome)/jre/lib/<(arch)/server/',
-              '-Wl,-rpath,<(javahome)/jre/lib/<(arch)/server/',
+              '-L<(javalibdir)',
+              '-Wl,-rpath,<(javalibdir)',
               '-ljvm'
             ]
           }
