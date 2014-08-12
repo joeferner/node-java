@@ -19,6 +19,12 @@
       }],
       ['OS=="linux" and target_arch=="x64"', {
         'javalibdir%': "<!(h=\"`node findJavaHome.js`\" sh -c 'if [ -d \"$h/jre/lib/amd64/classic\" ]; then echo $h/jre/lib/amd64/classic; else echo $h/jre/lib/amd64/server; fi')"
+      }],
+      ['OS=="linux" and (target_arch=="s390x" or target_arch=="s390")', {
+        'javalibdir%': "<!(h=\"`node findJavaHome.js`\" sh -c 'if [ -d \"$h/jre/lib/s390x/classic\" ]; then echo $h/jre/lib/s390x/classic; else echo $h/jre/lib/s390/classic; fi')"
+      }],
+      ['OS=="linux" and target_arch=="ppc64")', {
+        'javalibdir%': "<!(h=\"`node findJavaHome.js`\" sh -c 'if [ -d \"$h/jre/lib/ppc64/classic\" ]; then echo $h/jre/lib/ppc64/classic; fi')"
       }]
     ]
   },
