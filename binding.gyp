@@ -9,6 +9,7 @@
         'target_arch': 's390'
       }],
       ['"<!(uname -m)"=="ppc64" or "<!(uname -m)"=="ppc64le"', {
+        'arch': 'ppc64',
         'target_arch': 'ppc64'
       }],
       ['OS=="win"', {
