@@ -2,7 +2,7 @@
   'variables': {
     'conditions': [
       ['"<!(uname -m)"=="s390" or "<!(uname -m)"=="s390x"', {
-        'arch': 's390'
+        'target_arch': 's390'
       }],
       ['OS=="win"', {
         'javahome%': '<!(node findJavaHome.js)'
