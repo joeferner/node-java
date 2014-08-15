@@ -9,7 +9,6 @@
         'target_arch': 's390'
       }],
       ['"<!(uname -m)"=="ppc64" or "<!(uname -m)"=="ppc64le"', {
-        'arch': 'ppc64',
         'target_arch': 'ppc64'
       }],
       ['OS=="win"', {
@@ -31,7 +30,7 @@
         'javalibdir%': "<!(h=\"`node findJavaHome.js`\" sh -c 'if [ -d \"$h/jre/lib/s390x/classic\" ]; then echo $h/jre/lib/s390x/classic; else echo $h/jre/lib/s390/classic; fi')"
       }],
       ['OS=="linux" and (target_arch=="ppc64" or target_arch=="ppc")', {
-        'javalibdir%': "<!(h=\"`node findJavaHome.js`\" sh -c 'if [ -d \"$h/jre/lib/ppc64/classic\" ]; then echo $h/jre/lib/ppc64/classic; else echo $h/jre/lib/ppc64/classic; fi')"
+        'javalibdir%': "<!(h=\"`node findJavaHome.js`\" sh -c 'if [ -d \"$h/jre/lib/ppc64/classic\" ]; then echo $h/jre/lib/ppc64/classic; fi')"
       }]
     ]
   },
