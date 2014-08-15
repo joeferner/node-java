@@ -1,6 +1,10 @@
 {
   'variables': {
+    'arch%': 'amd64', # linux JVM architecture. See $(JAVA_HOME)/jre/lib/<@(arch)/server/
     'conditions': [
+      ['target_arch=="ia32"', {
+        'arch%': 'i386'
+      }],
       ['"<!(uname -m)"=="s390" or "<!(uname -m)"=="s390x"', {
         'target_arch': 's390'
       }],
