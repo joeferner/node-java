@@ -1,9 +1,8 @@
 {
   'variables': {
-    'arch%': 'amd64', # linux JVM architecture. See $(JAVA_HOME)/jre/lib/<@(arch)/server/
     'conditions': [
-      ['target_arch=="ia32"', {
-        'arch%': 'i386'
+      ['"<!(uname -m)"=="s390" or "<!(uname -m)"=="s390x"', {
+        'arch': 's390'
       }],
       ['OS=="win"', {
         'javahome%': '<!(node findJavaHome.js)'
@@ -23,7 +22,7 @@
       ['OS=="linux" and (target_arch=="s390x" or target_arch=="s390")', {
         'javalibdir%': "<!(h=\"`node findJavaHome.js`\" sh -c 'if [ -d \"$h/jre/lib/s390x/classic\" ]; then echo $h/jre/lib/s390x/classic; else echo $h/jre/lib/s390/classic; fi')"
       }],
-      ['OS=="linux" and target_arch=="ppc64"', {
+      ['OS=="linux" and (target_arch=="ppc64" or target_arch=="ppc64le")', {
         'javalibdir%': "<!(h=\"`node findJavaHome.js`\" sh -c 'if [ -d \"$h/jre/lib/ppc64/classic\" ]; then echo $h/jre/lib/ppc64/classic; fi')"
       }]
     ]
