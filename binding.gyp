@@ -5,12 +5,6 @@
       ['target_arch=="ia32"', {
         'arch%': 'i386'
       }],
-      ['"<!(uname -m)"=="s390" or "<!(uname -m)"=="s390x"', {
-        'target_arch': 's390'
-      }],
-      ['"<!(uname -m)"=="ppc64" or "<!(uname -m)"=="ppc64le"', {
-        'target_arch': 'ppc64'
-      }],
       ['OS=="win"', {
         'javahome%': '<!(node findJavaHome.js)'
       }],
