@@ -1,11 +1,23 @@
 package node;
 
-import java.util.HashSet;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 
 public class NodeDynamicProxyClass implements java.lang.reflect.InvocationHandler {
+  private static final Method EQUALS;
+  private static final Method HASHCODE;
+  static {
+    try {
+      EQUALS = Object.class.getMethod("equals", Object.class);
+      HASHCODE = Object.class.getMethod("hashCode");
+    } catch (NoSuchMethodException e) {
+      throw new ExceptionInInitializerError(e);
+    }
+  }
+
   private native Object callJs(long ptr, java.lang.reflect.Method m, Object[] args) throws Throwable;
   private native void unref(long ptr) throws Throwable;
-  public long ptr;
+  public final long ptr;
 
   public NodeDynamicProxyClass(String path, long ptr) {
     try{
@@ -18,13 +30,25 @@ public class NodeDynamicProxyClass implements java.lang.reflect.InvocationHandle
 
   public Object invoke(Object proxy, java.lang.reflect.Method m, Object[] args) throws Throwable
   {
-    Object result = callJs(this.ptr, m, args);
-    //if(result == null) {
-    //  System.out.println("invoke: null");
-    //} else {
-    //  System.out.println("invoke: " + result + " class: " + result.getClass() + " to string: " + result.toString());
-    //}
-    return result;
+    try {
+      Object result = callJs(this.ptr, m, args);
+      //if(result == null) {
+      //  System.out.println("invoke: null");
+      //} else {
+      //  System.out.println("invoke: " + result + " class: " + result.getClass() + " to string: " + result.toString());
+      //}
+      return result;
+    } catch (NoSuchMethodError e) {
+      // use 'vanilla' implementations otherwise - the object that persists between multiple invocations is
+      // 'this', not the 'proxy' argument, so we operate on this.
+      if (EQUALS.equals(m)) {
+        // need to check if the arg is a Proxy, and if so, if its invocation handler == this!
+        return Proxy.isProxyClass(args[0].getClass()) && Proxy.getInvocationHandler(args[0]) == this;
+      } else if (HASHCODE.equals(m)) {
+        return System.identityHashCode(this);
+      }
+      throw e;
+    }
   }
 
   public void unref() throws Throwable {

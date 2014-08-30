@@ -13,6 +13,10 @@
 #include <sstream>
 #include <nan.h>
 
+#define DYNAMIC_PROXY_NO_SUCH_METHOD_ERROR -1
+#define DYNAMIC_PROXY_NOT_A_FUNCTION_ERROR -2
+#define DYNAMIC_PROXY_NO_ENV_ERROR -3
+
 long v8ThreadId;
 
 /*static*/ v8::Persistent<v8::FunctionTemplate> Java::s_ct;
@@ -1010,58 +1014,65 @@ void EIO_AfterCallJs(uv_work_t* req) {
   int ret = dynamicProxyData->java->getJvm()->GetEnv((void**)&env, JNI_VERSION_1_6);
   if (ret != JNI_OK) {
       printf("ERROR: jvm->GetEnv returned %d\n", ret);
-      goto CleanUp;
-  }
-
-  {
-    NanScope();
-    v8::Array* v8Args;
-    v8::Function* fn;
-    v8::Handle<v8::Value>* argv;
-    int argc;
-    int i;
-    v8::Local<v8::Value> v8Result;
-    jobject javaResult;
-  
-    v8::Local<v8::Object> dynamicProxyDataFunctions = NanNew(dynamicProxyData->functions);
-    v8::Local<v8::Value> fnObj = dynamicProxyDataFunctions->Get(NanNew<v8::String>(dynamicProxyData->methodName.c_str()));
-    if(fnObj->IsUndefined() || fnObj->IsNull()) {
-      printf("ERROR: Could not find method %s\n", dynamicProxyData->methodName.c_str());
-      goto CleanUp;
-    }
-    if(!fnObj->IsFunction()) {
-      printf("ERROR: %s is not a function.\n", dynamicProxyData->methodName.c_str());
-      goto CleanUp;
-    }
-  
-    fn = v8::Function::Cast(*fnObj);
-  
-    if(dynamicProxyData->args) {
-      v8Args = v8::Array::Cast(*javaArrayToV8(dynamicProxyData->java, env, dynamicProxyData->args));
-      argc = v8Args->Length();
-    } else {
-      argc = 0;
-    }
-    argv = new v8::Handle<v8::Value>[argc];
-    for(i=0; i<argc; i++) {
-      argv[i] = v8Args->Get(i);
-    }
-    v8Result = fn->Call(dynamicProxyDataFunctions, argc, argv);
-    delete[] argv;
-    if(!dynamicProxyDataVerify(dynamicProxyData)) {
+      dynamicProxyData->done = DYNAMIC_PROXY_NO_ENV_ERROR;
       return;
-    }
-  
-    javaResult = v8ToJava(env, v8Result);
-    if(javaResult == NULL) {
-      dynamicProxyData->result = NULL;
-    } else {
-      dynamicProxyData->result = env->NewGlobalRef(javaResult);
-    }
   }
 
-CleanUp:
+  NanScope();
+  v8::Array* v8Args;
+  v8::Function* fn;
+  v8::Handle<v8::Value>* argv;
+  int argc;
+  int i;
+  v8::Local<v8::Value> v8Result;
+  jobject javaResult;
+
+  v8::Local<v8::Object> dynamicProxyDataFunctions = NanNew(dynamicProxyData->functions);
+  v8::Local<v8::Value> fnObj = dynamicProxyDataFunctions->Get(NanNew<v8::String>(dynamicProxyData->methodName.c_str()));
+  if(fnObj->IsUndefined() || fnObj->IsNull()) {
+    dynamicProxyData->done = DYNAMIC_PROXY_NO_SUCH_METHOD_ERROR;
+    return;
+  }
+  if(!fnObj->IsFunction()) {
+    dynamicProxyData->done = DYNAMIC_PROXY_NOT_A_FUNCTION_ERROR;
+    return;
+  }
+
+  fn = v8::Function::Cast(*fnObj);
+
+  if(dynamicProxyData->args) {
+    v8Args = v8::Array::Cast(*javaArrayToV8(dynamicProxyData->java, env, dynamicProxyData->args));
+    argc = v8Args->Length();
+  } else {
+    argc = 0;
+  }
+  argv = new v8::Handle<v8::Value>[argc];
+  for(i=0; i<argc; i++) {
+    argv[i] = v8Args->Get(i);
+  }
+  v8Result = fn->Call(dynamicProxyDataFunctions, argc, argv);
+  delete[] argv;
+  if(!dynamicProxyDataVerify(dynamicProxyData)) {
+    return;
+  }
+
+  javaResult = v8ToJava(env, v8Result);
+  if(javaResult == NULL) {
+    dynamicProxyData->result = NULL;
+  } else {
+    dynamicProxyData->result = env->NewGlobalRef(javaResult);
+  }
+
   dynamicProxyData->done = true;
+}
+
+void throwNewThrowable(JNIEnv* env, const char * excClassName, std::string msg) {
+    jclass newExcCls = env->FindClass(excClassName);
+    jthrowable throwable = env->ExceptionOccurred();
+    if (throwable != NULL) {
+       env->Throw(throwable); // this should only be Errors, according to the docs
+    }
+    env->ThrowNew(newExcCls, msg.c_str());
 }
 
 JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jobject src, jlong ptr, jobject method, jobjectArray args) {
@@ -1102,10 +1113,22 @@ JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jo
   }
 
   if(!dynamicProxyDataVerify(dynamicProxyData)) {
-    return NULL;
+    throwNewThrowable(env, "java/lang/IllegalStateException", "dynamicProxyData was corrupted");
   }
   if(hasArgsGlobalRef) {
     env->DeleteGlobalRef(dynamicProxyData->args);
+  }
+
+  switch (dynamicProxyData->done) {
+  case DYNAMIC_PROXY_NO_SUCH_METHOD_ERROR:
+    throwNewThrowable(env, "java/lang/NoSuchMethodError", "Could not find js function " + dynamicProxyData->methodName);
+    break;
+  case DYNAMIC_PROXY_NOT_A_FUNCTION_ERROR:
+    throwNewThrowable(env, "java/lang/IllegalStateException", dynamicProxyData->methodName + " is not a function");
+    break;
+  case DYNAMIC_PROXY_NO_ENV_ERROR:
+    throwNewThrowable(env, "java/lang/IllegalStateException", "Could not retrieve JNIEnv");
+    break;
   }
 
   jobject result = NULL;

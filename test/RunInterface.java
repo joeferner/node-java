@@ -41,4 +41,26 @@ public class RunInterface {
     latch.await();
     return result[0];
   }
+
+  public boolean runEquals(final InterfaceWithReturn r) {
+    return r.equals(Boolean.FALSE);
+  }
+
+  public int runHashCode(final InterfaceWithReturn r) {
+    return r.hashCode();
+  }
+
+  private InterfaceWithReturn prev;
+
+  public void setInstance(final InterfaceWithReturn r) {
+    prev = r;
+  }
+
+  public boolean runEqualsInstance(final InterfaceWithReturn r) {
+    return r.equals(prev);
+  }
+
+  public String runToString(final InterfaceWithReturn r) {
+    return r.toString();
+  }
 }
