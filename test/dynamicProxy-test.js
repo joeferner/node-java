@@ -80,5 +80,20 @@ exports['Dynamic Proxy'] = nodeunit.testCase({
     }
 
     waitForThread();
+  },
+
+  "thread issue #143": function (test) {
+    var myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {
+      run: function (i) {
+        return i - 1;
+      }
+    });
+
+    var runInterface = java.newInstanceSync("RunInterface");
+    runInterface.runInAnotherThread(myProxy, function(err, result) {
+        test.equals(result, 45);
+
+        test.done();
+    });
   }
 });

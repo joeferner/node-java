@@ -1006,53 +1006,58 @@ void EIO_AfterCallJs(uv_work_t* req) {
   }
   dynamicProxyData->result = NULL;
 
-  JNIEnv* env = dynamicProxyData->env;
-
-  NanScope();
-  v8::Array* v8Args;
-  v8::Function* fn;
-  v8::Handle<v8::Value>* argv;
-  int argc;
-  int i;
-  v8::Local<v8::Value> v8Result;
-  jobject javaResult;
-
-  v8::Local<v8::Object> dynamicProxyDataFunctions = NanNew(dynamicProxyData->functions);
-  v8::Local<v8::Value> fnObj = dynamicProxyDataFunctions->Get(NanNew<v8::String>(dynamicProxyData->methodName.c_str()));
-  if(fnObj->IsUndefined() || fnObj->IsNull()) {
-    printf("ERROR: Could not find method %s\n", dynamicProxyData->methodName.c_str());
-    goto CleanUp;
-  }
-  if(!fnObj->IsFunction()) {
-    printf("ERROR: %s is not a function.\n", dynamicProxyData->methodName.c_str());
-    goto CleanUp;
+  JNIEnv* env;
+  int ret = dynamicProxyData->java->getJvm()->GetEnv((void**)&env, JNI_VERSION_1_6);
+  if (ret != JNI_OK) {
+      printf("ERROR: jvm->GetEnv returned %d\n", ret);
+      goto CleanUp;
   }
 
-  fn = v8::Function::Cast(*fnObj);
-
-  if(dynamicProxyData->args) {
-    v8Args = v8::Array::Cast(*javaArrayToV8(dynamicProxyData->java, env, dynamicProxyData->args));
-    argc = v8Args->Length();
-  } else {
-    argc = 0;
-  }
-  argv = new v8::Handle<v8::Value>[argc];
-  for(i=0; i<argc; i++) {
-    argv[i] = v8Args->Get(i);
-  }
-  v8Result = fn->Call(dynamicProxyDataFunctions, argc, argv);
-  delete[] argv;
-  if(!dynamicProxyDataVerify(dynamicProxyData)) {
-    return;
-  }
-
-  javaResult = v8ToJava(env, v8Result);
-  if(javaResult == NULL) {
-    dynamicProxyData->result = NULL;
-    dynamicProxyData->resultGlobalRef = NULL;
-  } else {
-    dynamicProxyData->result = javaResult;
-    dynamicProxyData->resultGlobalRef = env->NewGlobalRef(javaResult);
+  {
+    NanScope();
+    v8::Array* v8Args;
+    v8::Function* fn;
+    v8::Handle<v8::Value>* argv;
+    int argc;
+    int i;
+    v8::Local<v8::Value> v8Result;
+    jobject javaResult;
+  
+    v8::Local<v8::Object> dynamicProxyDataFunctions = NanNew(dynamicProxyData->functions);
+    v8::Local<v8::Value> fnObj = dynamicProxyDataFunctions->Get(NanNew<v8::String>(dynamicProxyData->methodName.c_str()));
+    if(fnObj->IsUndefined() || fnObj->IsNull()) {
+      printf("ERROR: Could not find method %s\n", dynamicProxyData->methodName.c_str());
+      goto CleanUp;
+    }
+    if(!fnObj->IsFunction()) {
+      printf("ERROR: %s is not a function.\n", dynamicProxyData->methodName.c_str());
+      goto CleanUp;
+    }
+  
+    fn = v8::Function::Cast(*fnObj);
+  
+    if(dynamicProxyData->args) {
+      v8Args = v8::Array::Cast(*javaArrayToV8(dynamicProxyData->java, env, dynamicProxyData->args));
+      argc = v8Args->Length();
+    } else {
+      argc = 0;
+    }
+    argv = new v8::Handle<v8::Value>[argc];
+    for(i=0; i<argc; i++) {
+      argv[i] = v8Args->Get(i);
+    }
+    v8Result = fn->Call(dynamicProxyDataFunctions, argc, argv);
+    delete[] argv;
+    if(!dynamicProxyDataVerify(dynamicProxyData)) {
+      return;
+    }
+  
+    javaResult = v8ToJava(env, v8Result);
+    if(javaResult == NULL) {
+      dynamicProxyData->result = NULL;
+    } else {
+      dynamicProxyData->result = env->NewGlobalRef(javaResult);
+    }
   }
 
 CleanUp:
@@ -1061,13 +1066,13 @@ CleanUp:
 
 JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jobject src, jlong ptr, jobject method, jobjectArray args) {
   long myThreadId = my_getThreadId();
+  bool hasArgsGlobalRef = false;
 
+  // args needs to be global, you can't send env across thread boundaries
   DynamicProxyData* dynamicProxyData = (DynamicProxyData*)ptr;
-  dynamicProxyData->env = env;
   dynamicProxyData->args = args;
   dynamicProxyData->done = false;
   dynamicProxyData->result = NULL;
-  dynamicProxyData->resultGlobalRef = NULL;
 
   jclass methodClazz = env->FindClass("java/lang/reflect/Method");
   jmethodID method_getName = env->GetMethodID(methodClazz, "getName", "()Ljava/lang/String;");
@@ -1083,6 +1088,12 @@ JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jo
     EIO_AfterCallJs(req);
 #endif
   } else {
+    if (args) {
+      // if args is not null and we have to kick this across the thread boundary, make it a global ref
+      dynamicProxyData->args = (jobjectArray) env->NewGlobalRef(args);
+      hasArgsGlobalRef = true;
+    }
+
     uv_queue_work(uv_default_loop(), req, EIO_CallJs, (uv_after_work_cb)EIO_AfterCallJs);
 
     while(!dynamicProxyData->done) {
@@ -1093,10 +1104,17 @@ JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jo
   if(!dynamicProxyDataVerify(dynamicProxyData)) {
     return NULL;
   }
-  if(dynamicProxyData->result) {
-    env->DeleteGlobalRef(dynamicProxyData->resultGlobalRef);
+  if(hasArgsGlobalRef) {
+    env->DeleteGlobalRef(dynamicProxyData->args);
   }
-  return dynamicProxyData->result;
+
+  jobject result = NULL;
+  if(dynamicProxyData->result) {
+    // need to retain a local ref so that we can return it, otherwise the returned object gets corrupted
+    result = env->NewLocalRef(dynamicProxyData->result);
+    env->DeleteGlobalRef(dynamicProxyData->result);
+  }
+  return result;
 }
 
 JNIEXPORT void JNICALL Java_node_NodeDynamicProxyClass_unref(JNIEnv *env, jobject src, jlong ptr) {

@@ -12,7 +12,7 @@ class Java : public node::ObjectWrap {
 public:
   static void Init(v8::Handle<v8::Object> target);
   JavaVM* getJvm() { return m_jvm; }
-  JNIEnv* getJavaEnv() { return m_env; }
+  JNIEnv* getJavaEnv() { return m_env; } // can only be used safely by the main thread as this is the thread it belongs to
   jobject getClassLoader() { return m_classLoader; }
 
 private:
@@ -47,7 +47,7 @@ private:
 
   static v8::Persistent<v8::FunctionTemplate> s_ct;
   JavaVM* m_jvm;
-  JNIEnv* m_env;
+  JNIEnv* m_env; // can only be used safely by the main thread as this is the thread it belongs to
   jobject m_classLoader;
   std::string m_classPath;
   static std::string s_nativeBindingLocation;

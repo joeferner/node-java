@@ -32,7 +32,6 @@ typedef enum _jvalueType {
 
 struct DynamicProxyData {
   unsigned int markerStart;
-  JNIEnv* env;
   Java* java;
   std::string interfaceName;
   v8::Persistent<v8::Object> functions;
@@ -40,7 +39,6 @@ struct DynamicProxyData {
   std::string methodName;
   jobjectArray args;
   jobject result;
-  jobject resultGlobalRef;
   int done;
   unsigned int markerEnd;
 };
