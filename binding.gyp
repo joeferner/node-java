@@ -1,14 +1,18 @@
 {
   'variables': {
     'arch%': 'amd64', # linux JVM architecture. See $(JAVA_HOME)/jre/lib/<@(arch)/server/
+    'uname_m': '',
     'conditions': [
       ['target_arch=="ia32"', {
         'arch%': 'i386'
       }],
-      ['"<!(uname -m)"=="s390" or "<!(uname -m)"=="s390x"', {
+      ['OS!="win"', {
+        'uname_m': '<!(uname -m)'
+      }],
+      ['uname_m=="s390" or uname_m=="s390x"', {
         'target_arch': 's390'
       }],
-      ['"<!(uname -m)"=="ppc64" or "<!(uname -m)"=="ppc64le"', {
+      ['uname_m=="ppc64" or uname_m=="ppc64le"', {
         'target_arch': 'ppc64'
       }],
       ['OS=="win"', {

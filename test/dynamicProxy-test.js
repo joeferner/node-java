@@ -80,5 +80,127 @@ exports['Dynamic Proxy'] = nodeunit.testCase({
     }
 
     waitForThread();
+  },
+
+  "thread issue #143": function (test) {
+    var myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {
+      run: function (i) {
+        return i - 1;
+      }
+    });
+
+    var runInterface = java.newInstanceSync("RunInterface");
+    runInterface.runInAnotherThread(myProxy, function(err, result) {
+        test.equals(result, 45);
+
+        test.done();
+    });
+  },
+
+  "java equals()": function (test) {
+    var myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {
+    });
+
+    var runInterface = java.newInstanceSync("RunInterface");
+    var result = runInterface.runEqualsSync(myProxy);
+
+    test.equals(result, false);
+
+    test.done();
+  },
+
+  "java equals() same instance": function (test) {
+    var myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {
+    });
+
+    var runInterface = java.newInstanceSync("RunInterface");
+    runInterface.setInstanceSync(myProxy);
+    var result = runInterface.runEqualsInstanceSync(myProxy);
+
+    test.equals(result, true);
+
+    test.done();
+  },
+
+  "java equals() different instance": function (test) {
+    var myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {});
+    var myProxy2 = java.newProxy('RunInterface$InterfaceWithReturn', {});
+
+    var runInterface = java.newInstanceSync("RunInterface");
+    runInterface.setInstanceSync(myProxy);
+    var result = runInterface.runEqualsInstanceSync(myProxy2);
+
+    test.equals(result, false);
+
+    test.done();
+  },
+
+  "js equals()": function (test) {
+    var myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {
+      equals: function (obj) {
+        return true;
+      }
+    });
+
+    var runInterface = java.newInstanceSync("RunInterface");
+    var result = runInterface.runEqualsSync(myProxy);
+
+    test.equals(result, true);
+
+    test.done();
+  },
+
+  "java hashCode()": function (test) {
+    var myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {
+    });
+
+    var runInterface = java.newInstanceSync("RunInterface");
+    var result = runInterface.runHashCodeSync(myProxy);
+    var result2 = runInterface.runHashCodeSync(myProxy);
+
+    test.equals(result, result2);
+
+    test.done();
+  },
+
+  "js hashCode()": function (test) {
+    var myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {
+      hashCode: function() {
+        return 1234;
+      }
+    });
+
+    var runInterface = java.newInstanceSync("RunInterface");
+    var result = runInterface.runHashCodeSync(myProxy);
+
+    test.equals(result, 1234);
+
+    test.done();
+  },
+
+  "java toString()": function (test) {
+    var myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {});
+
+    var runInterface = java.newInstanceSync("RunInterface");
+    var result = runInterface.runToStringSync(myProxy);
+
+    test.equals(result, "[object Object]");
+
+    test.done();
+  },
+
+  "js toString()": function (test) {
+    var myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {
+      toString: function() {
+        return "myRunInterface";
+      }
+    });
+
+    var runInterface = java.newInstanceSync("RunInterface");
+    var result = runInterface.runToStringSync(myProxy);
+
+    test.equals(result, "myRunInterface");
+
+    test.done();
   }
 });

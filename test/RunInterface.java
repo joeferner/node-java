@@ -1,3 +1,4 @@
+import java.util.concurrent.CountDownLatch;
 
 public class RunInterface {
   public static interface Interface0Arg {
@@ -24,5 +25,42 @@ public class RunInterface {
 
   public int runWithReturn(InterfaceWithReturn r) {
     return r.run(42);
+  }
+
+  public int runInAnotherThread(final InterfaceWithReturn r) throws InterruptedException {
+    final int[] result = {0};
+    final CountDownLatch latch = new CountDownLatch(1);
+    Thread t = new Thread(new Runnable() {
+      @Override
+      public void run() {
+        result[0] = r.run(46);
+        latch.countDown();
+      }
+    });
+    t.start();
+    latch.await();
+    return result[0];
+  }
+
+  public boolean runEquals(final InterfaceWithReturn r) {
+    return r.equals(Boolean.FALSE);
+  }
+
+  public int runHashCode(final InterfaceWithReturn r) {
+    return r.hashCode();
+  }
+
+  private InterfaceWithReturn prev;
+
+  public void setInstance(final InterfaceWithReturn r) {
+    prev = r;
+  }
+
+  public boolean runEqualsInstance(final InterfaceWithReturn r) {
+    return r.equals(prev);
+  }
+
+  public String runToString(final InterfaceWithReturn r) {
+    return r.toString();
   }
 }
