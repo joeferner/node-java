@@ -24,7 +24,11 @@ public class RunInterface {
   }
 
   public int runWithReturn(InterfaceWithReturn r) {
-    return r.run(42);
+    try {
+      return r.run(42);
+    } catch (RuntimeException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public int runInAnotherThread(final InterfaceWithReturn r) throws InterruptedException {

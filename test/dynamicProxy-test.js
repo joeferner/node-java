@@ -202,5 +202,43 @@ exports['Dynamic Proxy'] = nodeunit.testCase({
     test.equals(result, "myRunInterface");
 
     test.done();
+  },
+
+  "js string error": function (test) {
+    var myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {
+      run: function (i) {
+        throw 'myError';
+      }
+    });
+
+    var runInterface = java.newInstanceSync("RunInterface");
+    try {
+      runInterface.runWithReturnSync(myProxy);
+      test.fail("Exception was not thrown");
+    } catch (e) {
+      test.equals(e.cause.getClassSync().getNameSync(), "java.lang.RuntimeException");
+      test.ok(/Caused by: node\.NodeJsException: myError/.test(e.message));
+    }
+
+    test.done();
+  },
+
+  "js Error": function (test) {
+    var myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {
+      run: function (i) {
+        throw new Error('newError');
+      }
+    });
+
+    var runInterface = java.newInstanceSync("RunInterface");
+    try {
+        runInterface.runWithReturnSync(myProxy);
+        test.fail("Exception was not thrown");
+    } catch (e) {
+        test.equals(e.cause.getClassSync().getNameSync(), "java.lang.RuntimeException");
+        test.ok(/Caused by: node\.NodeJsException: Error: newError/.test(e.message));
+    }
+
+    test.done();
   }
 });
