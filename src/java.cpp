@@ -1159,4 +1159,5 @@ JNIEXPORT void JNICALL Java_node_NodeDynamicProxyClass_unref(JNIEnv *env, jobjec
     return;
   }
   NanDisposePersistent(dynamicProxyData->jsObject);
+  NanDisposePersistent(dynamicProxyData->functions);
 }
