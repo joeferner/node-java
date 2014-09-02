@@ -13,9 +13,7 @@
 #include <sstream>
 #include <nan.h>
 
-#define DYNAMIC_PROXY_NO_SUCH_METHOD_ERROR -1
-#define DYNAMIC_PROXY_NOT_A_FUNCTION_ERROR -2
-#define DYNAMIC_PROXY_NO_ENV_ERROR -3
+#define DYNAMIC_PROXY_JS_ERROR -4
 
 long v8ThreadId;
 
@@ -999,6 +997,15 @@ NAN_METHOD(Java::instanceOf) {
 void EIO_CallJs(uv_work_t* req) {
 }
 
+jthrowable newThrowable(JNIEnv* env, const char * excClassName, std::string msg) {
+    jclass newExcCls = env->FindClass(excClassName);
+    jthrowable throwable = env->ExceptionOccurred();
+    if (throwable != NULL) {
+       return throwable; // this should only be Errors, according to the docs
+    }
+    env->ThrowNew(newExcCls, msg.c_str());
+}
+
 #if NODE_MINOR_VERSION >= 10
 void EIO_AfterCallJs(uv_work_t* req, int status) {
 #else
@@ -1013,9 +1020,10 @@ void EIO_AfterCallJs(uv_work_t* req) {
   JNIEnv* env;
   int ret = dynamicProxyData->java->getJvm()->GetEnv((void**)&env, JNI_VERSION_1_6);
   if (ret != JNI_OK) {
-      printf("ERROR: jvm->GetEnv returned %d\n", ret);
-      dynamicProxyData->done = DYNAMIC_PROXY_NO_ENV_ERROR;
-      return;
+    dynamicProxyData->throwableClass = "java/lang/IllegalStateException";
+    dynamicProxyData->throwableMessage = "Could not retrieve JNIEnv: jvm->GetEnv returned " + ret;
+    dynamicProxyData->done = DYNAMIC_PROXY_JS_ERROR;
+    return;
   }
 
   NanScope();
@@ -1030,11 +1038,15 @@ void EIO_AfterCallJs(uv_work_t* req) {
   v8::Local<v8::Object> dynamicProxyDataFunctions = NanNew(dynamicProxyData->functions);
   v8::Local<v8::Value> fnObj = dynamicProxyDataFunctions->Get(NanNew<v8::String>(dynamicProxyData->methodName.c_str()));
   if(fnObj->IsUndefined() || fnObj->IsNull()) {
-    dynamicProxyData->done = DYNAMIC_PROXY_NO_SUCH_METHOD_ERROR;
+    dynamicProxyData->throwableClass = "java/lang/NoSuchMethodError";
+    dynamicProxyData->throwableMessage = "Could not find js function " + dynamicProxyData->methodName;
+    dynamicProxyData->done = DYNAMIC_PROXY_JS_ERROR;
     return;
   }
   if(!fnObj->IsFunction()) {
-    dynamicProxyData->done = DYNAMIC_PROXY_NOT_A_FUNCTION_ERROR;
+    dynamicProxyData->throwableClass = "java/lang/IllegalStateException";
+    dynamicProxyData->throwableMessage = dynamicProxyData->methodName + " is not a function";
+    dynamicProxyData->done = DYNAMIC_PROXY_JS_ERROR;
     return;
   }
 
@@ -1050,8 +1062,24 @@ void EIO_AfterCallJs(uv_work_t* req) {
   for(i=0; i<argc; i++) {
     argv[i] = v8Args->Get(i);
   }
+
+  v8::TryCatch tryCatch;
   v8Result = fn->Call(dynamicProxyDataFunctions, argc, argv);
   delete[] argv;
+  if (tryCatch.HasCaught()) {
+    dynamicProxyData->throwableClass = "node/NodeJsException";
+    v8::String::Utf8Value stackTrace(tryCatch.StackTrace());
+    if (stackTrace.length() > 0) {
+      dynamicProxyData->throwableMessage = std::string(*stackTrace);
+    } else {
+      v8::String::Utf8Value exception(tryCatch.Exception());
+      dynamicProxyData->throwableMessage = std::string(*exception);
+    }
+    tryCatch.Reset();
+    dynamicProxyData->done = DYNAMIC_PROXY_JS_ERROR;
+    return;
+  }
+
   if(!dynamicProxyDataVerify(dynamicProxyData)) {
     return;
   }
@@ -1084,6 +1112,8 @@ JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jo
   dynamicProxyData->args = args;
   dynamicProxyData->done = false;
   dynamicProxyData->result = NULL;
+  dynamicProxyData->throwableClass = "";
+  dynamicProxyData->throwableMessage = "";
 
   jclass methodClazz = env->FindClass("java/lang/reflect/Method");
   jmethodID method_getName = env->GetMethodID(methodClazz, "getName", "()Ljava/lang/String;");
@@ -1119,16 +1149,8 @@ JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jo
     env->DeleteGlobalRef(dynamicProxyData->args);
   }
 
-  switch (dynamicProxyData->done) {
-  case DYNAMIC_PROXY_NO_SUCH_METHOD_ERROR:
-    throwNewThrowable(env, "java/lang/NoSuchMethodError", "Could not find js function " + dynamicProxyData->methodName);
-    break;
-  case DYNAMIC_PROXY_NOT_A_FUNCTION_ERROR:
-    throwNewThrowable(env, "java/lang/IllegalStateException", dynamicProxyData->methodName + " is not a function");
-    break;
-  case DYNAMIC_PROXY_NO_ENV_ERROR:
-    throwNewThrowable(env, "java/lang/IllegalStateException", "Could not retrieve JNIEnv");
-    break;
+  if (dynamicProxyData->done == DYNAMIC_PROXY_JS_ERROR) {
+    throwNewThrowable(env, dynamicProxyData->throwableClass.c_str(), dynamicProxyData->throwableMessage);
   }
 
   jobject result = NULL;

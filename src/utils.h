@@ -39,6 +39,8 @@ struct DynamicProxyData {
   std::string methodName;
   jobjectArray args;
   jobject result;
+  std::string throwableClass;
+  std::string throwableMessage;
   int done;
   unsigned int markerEnd;
 };
