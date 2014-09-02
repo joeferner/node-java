@@ -7,3 +7,4 @@ npm-debug.log
 .idea
 node-java.cbp
 *.iml
+*.kdev4
