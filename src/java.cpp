@@ -997,15 +997,6 @@ NAN_METHOD(Java::instanceOf) {
 void EIO_CallJs(uv_work_t* req) {
 }
 
-jthrowable newThrowable(JNIEnv* env, const char * excClassName, std::string msg) {
-    jclass newExcCls = env->FindClass(excClassName);
-    jthrowable throwable = env->ExceptionOccurred();
-    if (throwable != NULL) {
-       return throwable; // this should only be Errors, according to the docs
-    }
-    env->ThrowNew(newExcCls, msg.c_str());
-}
-
 #if NODE_MINOR_VERSION >= 10
 void EIO_AfterCallJs(uv_work_t* req, int status) {
 #else
@@ -1095,12 +1086,12 @@ void EIO_AfterCallJs(uv_work_t* req) {
 }
 
 void throwNewThrowable(JNIEnv* env, const char * excClassName, std::string msg) {
-    jclass newExcCls = env->FindClass(excClassName);
-    jthrowable throwable = env->ExceptionOccurred();
-    if (throwable != NULL) {
-       env->Throw(throwable); // this should only be Errors, according to the docs
-    }
-    env->ThrowNew(newExcCls, msg.c_str());
+  jclass newExcCls = env->FindClass(excClassName);
+  jthrowable throwable = env->ExceptionOccurred();
+  if (throwable != NULL) {
+    env->Throw(throwable); // this should only be Errors, according to the docs
+  }
+  env->ThrowNew(newExcCls, msg.c_str());
 }
 
 JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jobject src, jlong ptr, jobject method, jobjectArray args) {
