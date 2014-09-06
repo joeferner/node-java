@@ -11,11 +11,11 @@ require('find-java-home')(function(err, home){
 
   if(home){
     dll = glob.sync('**/jvm.dll', {cwd: home})[0];
-    soFiles = glob.sync('**/libjvm.so', {cwd: home});
     dylib = glob.sync('**/libjvm.dylib', {cwd: home})[0];
-    binary = dll || dylib || so;
-
+    soFiles = glob.sync('**/libjvm.so', {cwd: home});
     so = getCorrectSoForPlatform(soFiles);
+
+    binary = dll || dylib || so;
 
     fs.writeFileSync(
       path.resolve(__dirname, './build/jvm_dll_path.json'),
