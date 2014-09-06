@@ -30,12 +30,12 @@ require('find-java-home')(function(err, home){
 });
 
 function getCorrectSoForPlatform(soFiles){
-  var so = getCorrectSoForPlatform(soFiles);
+  var so = _getCorrectSoForPlatform(soFiles);
   return removeDuplicateJre(so);
 }
 
 function removeDuplicateJre(filePath){
-  while(filePath.indexOf('jre/jre')>0){
+  while(filePath.indexOf('jre/jre')>=0){
     filePath = filePath.replace('jre/jre','jre');
   }
   return filePath;
