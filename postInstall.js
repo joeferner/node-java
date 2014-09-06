@@ -47,8 +47,10 @@ function getCorrectSoForPlatform(soFiles){
     console.log('so',so,requiredFolderName);
 
     if(so.indexOf('server'))
-      if(so.indexOf(requiredFolderName))
+      if(so.indexOf(requiredFolderName)) {
+        console.log('match',so)
         return so;
+      }
   }
 
   return soFiles[0];
