@@ -83,6 +83,18 @@
             ]
           }
         ],
+        ['OS=="solaris"',
+          {
+            'include_dirs': [
+              '<(javahome)/include/solaris',
+            ],
+            'libraries': [
+              '-L<(javalibdir)',
+              '-Wl,-rpath,<(javalibdir)',
+              '-ljvm'
+            ]
+          }
+        ],
         ['OS=="freebsd"',
           {
             'include_dirs': [
