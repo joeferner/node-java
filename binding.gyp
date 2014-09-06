@@ -41,7 +41,7 @@
       }],
       ['OS=="solaris" and target_arch=="x64"', {
         'javalibdir%': "<!(h=\"`node findJavaHome.js`\" sh -c 'if [ -d \"$h/jre/lib/amd64/classic\" ]; then echo $h/jre/lib/amd64/classic; else echo $h/jre/lib/amd64/server; fi')"
-      }]
+      }],
     ]
   },
   'targets': [
@@ -89,8 +89,8 @@
               '<(javahome)/include/solaris',
             ],
             'libraries': [
-              '-L<(javalibdir)',
-              '-Wl,-rpath,<(javalibdir)',
+               '-L<(javahome)/jre/lib/<(arch)/server/',
+              '-Wl,-rpath,<(javahome)/jre/lib/<(arch)/server/',
               '-ljvm'
             ]
           }
