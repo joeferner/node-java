@@ -36,7 +36,7 @@ function getCorrectSoForPlatform(soFiles){
 
 function removeDuplicateJre(filePath){
   while(filePath.indexOf('jre/jre')>0){
-    filePath = filePath.replace('jre','');
+    filePath = filePath.replace('jre/jre','jre');
   }
   return filePath;
 }
