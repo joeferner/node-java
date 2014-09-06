@@ -30,6 +30,18 @@ require('find-java-home')(function(err, home){
 });
 
 function getCorrectSoForPlatform(soFiles){
+  var so = getCorrectSoForPlatform(soFiles);
+  return removeDuplicateJre(so);
+}
+
+function removeDuplicateJre(filePath){
+  while(filePath.indexOf('jre/jre')>0){
+    filePath = filePath.replace('jre','');
+  }
+  return filePath;
+}
+
+function _getCorrectSoForPlatform(soFiles){
   
   var architectureFolderNames = {
     'ia32': 'i386',
@@ -43,14 +55,10 @@ function getCorrectSoForPlatform(soFiles){
 
   for (var i = 0; i < soFiles.length; i++) {
     var so = soFiles[i];
-    
-    console.log('so',so,requiredFolderName);
 
-    if(so.indexOf('server'))
-      if(so.indexOf(requiredFolderName)) {
-        console.log('match',so)
+    if(so.indexOf('server')>0)
+      if(so.indexOf(requiredFolderName)>0)
         return so;
-      }
   }
 
   return soFiles[0];
