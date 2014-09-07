@@ -157,8 +157,10 @@ exports['Dynamic Proxy'] = nodeunit.testCase({
     var runInterface = java.newInstanceSync("RunInterface");
     var result = runInterface.runHashCodeSync(myProxy);
     var result2 = runInterface.runHashCodeSync(myProxy);
+    var systemHashCode = java.callStaticMethodSync("java.lang.System", "identityHashCode", myProxy);
 
     test.equals(result, result2);
+    test.equals(result, systemHashCode);
 
     test.done();
   },

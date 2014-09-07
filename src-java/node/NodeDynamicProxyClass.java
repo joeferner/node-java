@@ -1,7 +1,6 @@
 package node;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 
 public class NodeDynamicProxyClass implements java.lang.reflect.InvocationHandler {
   private static final Method EQUALS;
@@ -43,9 +42,9 @@ public class NodeDynamicProxyClass implements java.lang.reflect.InvocationHandle
       // 'this', not the 'proxy' argument, so we operate on this.
       if (EQUALS.equals(m)) {
         // need to check if the arg is a Proxy, and if so, if its invocation handler == this!
-        return Proxy.isProxyClass(args[0].getClass()) && Proxy.getInvocationHandler(args[0]) == this;
+        return args[0] == proxy;
       } else if (HASHCODE.equals(m)) {
-        return System.identityHashCode(this);
+        return System.identityHashCode(proxy);
       }
       throw e;
     }

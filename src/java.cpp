@@ -353,14 +353,66 @@ NAN_METHOD(Java::newProxy) {
     return NanThrowError(javaExceptionToV8(self, env, errStr.str()));
   }
 
+  // create the NodeDynamicProxyClass
+  jclass constructorClazz = env->FindClass("java/lang/reflect/Constructor");
+  jmethodID constructor_newInstance = env->GetMethodID(constructorClazz, "newInstance", "([Ljava/lang/Object;)Ljava/lang/Object;");
+
+  //printf("invoke: %s\n", javaMethodCallToString(env, m_method, constructor_newInstance, m_args).c_str());
+
   // run constructor
-  v8::Handle<v8::Value> callback = NanNull();
-  NewInstanceBaton* baton = new NewInstanceBaton(self, clazz, method, methodArgs, callback);
-  v8::Handle<v8::Value> result = baton->runSync();
-  delete baton;
-  if(result->IsNativeError()) {
-    return NanThrowError(result);
+  jobject dynamicProxy = env->CallObjectMethod(method, constructor_newInstance, methodArgs);
+  if(env->ExceptionCheck()) {
+    std::ostringstream errStr;
+    errStr << "Error creating class";
+    return NanThrowError(javaExceptionToV8(self, env, errStr.str()));
   }
+
+  jclass dynamicInterface = javaFindClass(env, interfaceName);
+  if(dynamicInterface == NULL) {
+    std::ostringstream errStr;
+    errStr << "Could not find interface ";
+    errStr << interfaceName;
+    return NanThrowError(javaExceptionToV8(self, env, errStr.str()));
+  }
+  jclass classClazz = env->FindClass("java/lang/Class");
+  jobjectArray classArray = env->NewObjectArray(1, classClazz, NULL);
+  if(classArray == NULL) {
+    std::ostringstream errStr;
+    errStr << "Could not create class array for Proxy";
+    return NanThrowError(javaExceptionToV8(self, env, errStr.str()));
+  }
+  env->SetObjectArrayElement(classArray, 0, dynamicInterface);
+
+  jmethodID class_getClassLoader = env->GetMethodID(classClazz, "getClassLoader", "()Ljava/lang/ClassLoader;");
+  jobject classLoader = env->CallObjectMethod(dynamicInterface, class_getClassLoader);
+  assert(!env->ExceptionCheck());
+
+  if(classLoader == NULL) {
+    jclass objectClazz = env->FindClass("java/lang/Object");
+    jmethodID object_getClass = env->GetMethodID(objectClazz, "getClass", "()Ljava/lang/Class;");
+    jobject jobjClass = env->CallObjectMethod(dynamicProxy, object_getClass);
+    checkJavaException(env);
+    classLoader = env->CallObjectMethod(jobjClass, class_getClassLoader);
+    checkJavaException(env);
+  }
+  if(classLoader == NULL) {
+    std::ostringstream errStr;
+    errStr << "Could not get classloader for Proxy";
+    return NanThrowError(javaExceptionToV8(self, env, errStr.str()));
+  }
+
+  // create proxy instance
+  jclass proxyClass = env->FindClass("java/lang/reflect/Proxy");
+  jmethodID proxy_newProxyInstance = env->GetStaticMethodID(proxyClass, "newProxyInstance", "(Ljava/lang/ClassLoader;[Ljava/lang/Class;Ljava/lang/reflect/InvocationHandler;)Ljava/lang/Object;");
+  jobject proxyInstance = env->CallStaticObjectMethod(proxyClass, proxy_newProxyInstance, classLoader, classArray, dynamicProxy);
+  if(env->ExceptionCheck()) {
+    std::ostringstream errStr;
+    errStr << "Error creating java.lang.reflect.Proxy";
+    return NanThrowError(javaExceptionToV8(self, env, errStr.str()));
+  }
+
+  v8::Handle<v8::Value> result = javaToV8(self, env, proxyInstance);
+
   NanAssignPersistent(dynamicProxyData->jsObject, result);
   NanReturnValue(result);
 }
