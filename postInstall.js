@@ -31,7 +31,10 @@ require('find-java-home')(function(err, home){
 
 function getCorrectSoForPlatform(soFiles){
   var so = _getCorrectSoForPlatform(soFiles);
-  return removeDuplicateJre(so);
+  if (so) {
+    so = removeDuplicateJre(so);
+  }
+  return so;
 }
 
 function removeDuplicateJre(filePath){
