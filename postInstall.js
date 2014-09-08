@@ -13,7 +13,9 @@ require('find-java-home')(function(err, home){
     dll = glob.sync('**/jvm.dll', {cwd: home})[0];
     dylib = glob.sync('**/libjvm.dylib', {cwd: home})[0];
     soFiles = glob.sync('**/libjvm.so', {cwd: home});
-    so = getCorrectSoForPlatform(soFiles);
+    
+    if(soFiles.length>0)
+      so = getCorrectSoForPlatform(soFiles);
 
     binary = dll || dylib || so;
 
