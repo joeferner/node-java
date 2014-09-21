@@ -242,5 +242,39 @@ exports['Dynamic Proxy'] = nodeunit.testCase({
     }
 
     test.done();
+  },
+
+  "invocationHandler": function (test) {
+    var myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {
+      run: function (i) {
+        return i + 2;
+      }
+    });
+
+    var result = myProxy.invocationHandler.run(42);
+
+    test.equals(result, 44);
+
+    test.done();
+  },
+
+  "unref": function (test) {
+    var myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {
+      run: function (i) {
+        return i + 1;
+      }
+    });
+
+    myProxy.unref();
+
+    try {
+      myProxy.invocationHandler.run(42);
+    } catch (e) {
+      test.equals(e.message, "dynamicProxyData has been destroyed or corrupted");
+    }
+
+    // call again
+    myProxy.unref();
+    test.done();
   }
 });

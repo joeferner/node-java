@@ -1,4 +1,3 @@
-
 #include "java.h"
 #include <string.h>
 #ifdef WIN32
@@ -67,6 +66,8 @@ long my_getThreadId() {
   NODE_SET_PROTOTYPE_METHOD(t, "instanceOf", instanceOf);
 
   target->Set(NanNew<v8::String>("Java"), t->GetFunction());
+
+  JavaProxyObject::init();
 }
 
 NAN_METHOD(Java::New) {
@@ -411,7 +412,7 @@ NAN_METHOD(Java::newProxy) {
     return NanThrowError(javaExceptionToV8(self, env, errStr.str()));
   }
 
-  v8::Handle<v8::Value> result = javaToV8(self, env, proxyInstance);
+  v8::Handle<v8::Value> result = javaToV8(self, env, proxyInstance, dynamicProxyData);
 
   NanAssignPersistent(dynamicProxyData->jsObject, result);
   NanReturnValue(result);
@@ -1207,9 +1208,5 @@ JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jo
 
 JNIEXPORT void JNICALL Java_node_NodeDynamicProxyClass_unref(JNIEnv *env, jobject src, jlong ptr) {
   DynamicProxyData* dynamicProxyData = (DynamicProxyData*)ptr;
-  if(!dynamicProxyDataVerify(dynamicProxyData)) {
-    return;
-  }
-  NanDisposePersistent(dynamicProxyData->jsObject);
-  NanDisposePersistent(dynamicProxyData->functions);
+  unref(dynamicProxyData);
 }

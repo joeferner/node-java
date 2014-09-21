@@ -27,6 +27,7 @@ public class NodeDynamicProxyClass implements java.lang.reflect.InvocationHandle
     this.ptr = ptr;
   }
 
+  @Override
   public Object invoke(Object proxy, java.lang.reflect.Method m, Object[] args) throws Throwable
   {
     try {
@@ -45,6 +46,8 @@ public class NodeDynamicProxyClass implements java.lang.reflect.InvocationHandle
         return args[0] == proxy;
       } else if (HASHCODE.equals(m)) {
         return System.identityHashCode(proxy);
+      } else if ("unref".equals(m.getName()) && m.getParameterTypes().length == 0 && m.getReturnType() == Void.TYPE) {
+        this.unref();
       }
       throw e;
     }
