@@ -1,4 +1,3 @@
-
 #include "utils.h"
 #include <string.h>
 #include <algorithm>
@@ -498,6 +497,10 @@ v8::Handle<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArr
 }
 
 v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj) {
+  return javaToV8(java, env, obj, NULL);
+}
+
+v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj, DynamicProxyData* dynamicProxyData) {
   if(obj == NULL) {
     return NanNull();
   }
@@ -579,6 +582,9 @@ v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj) {
     case TYPE_STRING:
       return NanNew<v8::String>(javaObjectToString(env, obj).c_str());
     case TYPE_OBJECT:
+      if (dynamicProxyData != NULL) {
+        return JavaProxyObject::New(java, obj, dynamicProxyData);
+      }
       return JavaObject::New(java, obj);
     default:
       printf("javaToV8: unhandled type: 0x%03x\n", resultType);
@@ -728,4 +734,15 @@ std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string method
   }
 
   return msg.str();
+}
+
+void unref(DynamicProxyData* dynamicProxyData) {
+  if(!dynamicProxyDataVerify(dynamicProxyData)) {
+    return;
+  }
+  NanDisposePersistent(dynamicProxyData->jsObject);
+  NanDisposePersistent(dynamicProxyData->functions);
+  dynamicProxyData->markerStart = 0;
+  dynamicProxyData->markerEnd = 0;
+  delete dynamicProxyData;
 }

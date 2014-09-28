@@ -69,6 +69,7 @@ std::string javaExceptionToString(JNIEnv* env, jthrowable ex);
 void checkJavaException(JNIEnv* env);
 v8::Handle<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArray);
 v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj);
+v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj, DynamicProxyData* dynamicProxyData);
 jobjectArray javaObjectArrayToClasses(JNIEnv *env, jobjectArray objs);
 jobject longToJavaLongObj(JNIEnv *env, jlong l);
 
@@ -79,6 +80,8 @@ jobject javaFindConstructor(JNIEnv *env, jclass clazz, jobjectArray methodArgs);
 void javaCastArguments(JNIEnv *env, jobjectArray methodArgs, jobject method);
 
 std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string methodName, bool constructor, _NAN_METHOD_ARGS_TYPE args, int argStart, int argEnd);
+
+void unref(DynamicProxyData* dynamicProxyData);
 
 #define UNUSED_VARIABLE(var) var = var;
 

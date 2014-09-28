@@ -1,4 +1,3 @@
-
 #include "javaObject.h"
 #include "java.h"
 #include "javaScope.h"
@@ -93,18 +92,6 @@ JavaObject::JavaObject(Java *java, jobject obj) {
 
 JavaObject::~JavaObject() {
   JNIEnv *env = m_java->getJavaEnv();
-
-  jclass nodeDynamicProxyClass = env->FindClass("node/NodeDynamicProxyClass");
-  if(env->IsInstanceOf(m_obj, nodeDynamicProxyClass)) {
-    jfieldID ptrField = env->GetFieldID(nodeDynamicProxyClass, "ptr", "J");
-    DynamicProxyData* proxyData = (DynamicProxyData*)(long)env->GetLongField(m_obj, ptrField);
-    if(dynamicProxyDataVerify(proxyData)) {
-      proxyData->markerStart = 0;
-      proxyData->markerEnd = 0;
-      delete proxyData;
-    }
-  }
-
   env->DeleteGlobalRef(m_obj);
   env->DeleteGlobalRef(m_class);
 }
@@ -244,4 +231,60 @@ NAN_SETTER(JavaObject::fieldSetter) {
     NanThrowError(error);
     return;
   }
+}
+
+/*static*/ v8::Persistent<v8::FunctionTemplate> JavaProxyObject::s_proxyCt;
+
+/*static*/ void JavaProxyObject::init() {
+  v8::Local<v8::FunctionTemplate> t = NanNew<v8::FunctionTemplate>();
+  NanAssignPersistent(s_proxyCt, t);
+  t->InstanceTemplate()->SetInternalFieldCount(1);
+  t->SetClassName(NanNew<v8::String>("NodeDynamicProxy"));
+
+  v8::Handle<v8::String> methodName = NanNew<v8::String>("unref");
+  v8::Local<v8::FunctionTemplate> methodCallTemplate = NanNew<v8::FunctionTemplate>(doUnref);
+  t->PrototypeTemplate()->Set(methodName, methodCallTemplate->GetFunction());
+
+  v8::Handle<v8::String> fieldName = NanNew<v8::String>("invocationHandler");
+  t->InstanceTemplate()->SetAccessor(fieldName, invocationHandlerGetter);
+}
+
+v8::Local<v8::Object> JavaProxyObject::New(Java *java, jobject obj, DynamicProxyData* dynamicProxyData) {
+  NanEscapableScope();
+
+  v8::Local<v8::Function> ctor = s_proxyCt->GetFunction();
+  v8::Local<v8::Object> javaObjectObj = ctor->NewInstance();
+  javaObjectObj->SetHiddenValue(NanNew<v8::String>(V8_HIDDEN_MARKER_JAVA_OBJECT), NanNew<v8::Boolean>(true));
+  JavaProxyObject *self = new JavaProxyObject(java, obj, dynamicProxyData);
+  self->Wrap(javaObjectObj);
+
+  return NanEscapeScope(javaObjectObj);
+}
+
+JavaProxyObject::JavaProxyObject(Java *java, jobject obj, DynamicProxyData* dynamicProxyData) : JavaObject(java, obj) {
+  m_dynamicProxyData = dynamicProxyData;
+}
+
+JavaProxyObject::~JavaProxyObject() {
+  if(dynamicProxyDataVerify(m_dynamicProxyData)) {
+    unref(m_dynamicProxyData);
+  }
+}
+
+NAN_METHOD(JavaProxyObject::doUnref) {
+  JavaProxyObject* self = node::ObjectWrap::Unwrap<JavaProxyObject>(args.This());
+  if (dynamicProxyDataVerify(self->m_dynamicProxyData)) {
+    unref(self->m_dynamicProxyData);
+  }
+  NanReturnUndefined();
+}
+
+NAN_GETTER(JavaProxyObject::invocationHandlerGetter) {
+ NanScope();
+
+ JavaProxyObject* self = node::ObjectWrap::Unwrap<JavaProxyObject>(args.This());
+ if (!dynamicProxyDataVerify(self->m_dynamicProxyData)) {
+   return NanThrowError("dynamicProxyData has been destroyed or corrupted");
+ }
+ NanReturnValue(self->m_dynamicProxyData->functions);
 }
