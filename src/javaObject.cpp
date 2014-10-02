@@ -252,7 +252,7 @@ NAN_SETTER(JavaObject::fieldSetter) {
 v8::Local<v8::Object> JavaProxyObject::New(Java *java, jobject obj, DynamicProxyData* dynamicProxyData) {
   NanEscapableScope();
 
-  v8::Local<v8::Function> ctor = s_proxyCt->GetFunction();
+  v8::Local<v8::Function> ctor = NanNew(s_proxyCt)->GetFunction();
   v8::Local<v8::Object> javaObjectObj = ctor->NewInstance();
   javaObjectObj->SetHiddenValue(NanNew<v8::String>(V8_HIDDEN_MARKER_JAVA_OBJECT), NanNew<v8::Boolean>(true));
   JavaProxyObject *self = new JavaProxyObject(java, obj, dynamicProxyData);
