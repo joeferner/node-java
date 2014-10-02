@@ -58,6 +58,18 @@ npm test
 
 _NOTE: You will need node-gyp installed using "npm install -g node-gyp"_
 
+## Installation node-webkit
+
+```bash
+npm install -g nw-gyp
+npm install java
+cd node_modules/java
+nw-gyp configure --target=0.10.5
+nw-gyp build
+```
+
+_See testIntegration/webkit for a working example_
+
 ## Quick Examples
 
 ```javascript
