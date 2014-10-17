@@ -161,7 +161,7 @@ v8::Local<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   }
 
   JNI_GetDefaultJavaVMInitArgs(&args);
-  args.version = JNI_VERSION_1_8;
+  args.version = JNI_BEST_VERSION;
   args.ignoreUnrecognized = false;
   args.options = vmOptions;
   args.nOptions = vmOptionsCount;
@@ -1068,7 +1068,7 @@ void EIO_AfterCallJs(uv_work_t* req) {
   dynamicProxyData->result = NULL;
 
   JNIEnv* env;
-  int ret = dynamicProxyData->java->getJvm()->GetEnv((void**)&env, JNI_VERSION_1_8);
+  int ret = dynamicProxyData->java->getJvm()->GetEnv((void**)&env, JNI_BEST_VERSION);
   if (ret != JNI_OK) {
     dynamicProxyData->throwableClass = "java/lang/IllegalStateException";
     dynamicProxyData->throwableMessage = "Could not retrieve JNIEnv: jvm->GetEnv returned " + int_to_string(ret);

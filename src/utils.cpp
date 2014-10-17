@@ -127,11 +127,11 @@ std::string javaMethodCallToString(JNIEnv *env, jobject obj, jmethodID methodId,
 
 JNIEnv* javaGetEnv(JavaVM* jvm, jobject classLoader) {
   JNIEnv *env = NULL;
-  int ret = jvm->GetEnv((void**)&env, JNI_VERSION_1_8);
+  int ret = jvm->GetEnv((void**)&env, JNI_BEST_VERSION);
 
   if (ret == JNI_EDETACHED) {
     JavaVMAttachArgs attachArgs;
-    attachArgs.version = JNI_VERSION_1_8;
+    attachArgs.version = JNI_BEST_VERSION;
     attachArgs.name = NULL;
     attachArgs.group = NULL;
     jvm->AttachCurrentThread((void**)&env, &attachArgs);

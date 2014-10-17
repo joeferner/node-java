@@ -8,6 +8,12 @@
 #include <string>
 #include <nan.h>
 
+#ifdef JNI_VERSION_1_8
+#define JNI_BEST_VERSION JNI_VERSION_1_8
+#else
+#define JNI_BEST_VERSION JNI_VERSION_1_6
+#endif
+
 class Java : public node::ObjectWrap {
 public:
   static void Init(v8::Handle<v8::Object> target);
