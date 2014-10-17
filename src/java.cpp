@@ -161,7 +161,7 @@ v8::Local<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   }
 
   JNI_GetDefaultJavaVMInitArgs(&args);
-  args.version = JNI_VERSION_1_6;
+  args.version = JNI_BEST_VERSION;
   args.ignoreUnrecognized = false;
   args.options = vmOptions;
   args.nOptions = vmOptionsCount;
@@ -1050,6 +1050,12 @@ NAN_METHOD(Java::instanceOf) {
 void EIO_CallJs(uv_work_t* req) {
 }
 
+static std::string int_to_string(int i) {
+  char buf[32];
+  snprintf(buf, sizeof(buf), "%d", i);
+  return std::string(buf);
+}
+
 #if NODE_MINOR_VERSION >= 10
 void EIO_AfterCallJs(uv_work_t* req, int status) {
 #else
@@ -1062,10 +1068,10 @@ void EIO_AfterCallJs(uv_work_t* req) {
   dynamicProxyData->result = NULL;
 
   JNIEnv* env;
-  int ret = dynamicProxyData->java->getJvm()->GetEnv((void**)&env, JNI_VERSION_1_6);
+  int ret = dynamicProxyData->java->getJvm()->GetEnv((void**)&env, JNI_BEST_VERSION);
   if (ret != JNI_OK) {
     dynamicProxyData->throwableClass = "java/lang/IllegalStateException";
-    dynamicProxyData->throwableMessage = "Could not retrieve JNIEnv: jvm->GetEnv returned " + ret;
+    dynamicProxyData->throwableMessage = "Could not retrieve JNIEnv: jvm->GetEnv returned " + int_to_string(ret);
     dynamicProxyData->done = DYNAMIC_PROXY_JS_ERROR;
     return;
   }
