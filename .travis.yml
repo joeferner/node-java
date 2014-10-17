@@ -6,8 +6,3 @@ node_js:
 notifications:
   email:
     on_success: "never"
-language: java
-jdk:
-  - oraclejdk8
-  - oraclejdk7
-  - openjdk6
