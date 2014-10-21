@@ -58,6 +58,20 @@ npm test
 
 _NOTE: You will need node-gyp installed using "npm install -g node-gyp"_
 
+### Java 1.8 support
+
+Manual compilation for Java 1.8 support requires additional steps:
+
+```bash
+./compile-java-code.sh
+./compile-java8-code.sh
+node-gyp configure build
+npm test
+npm test8
+```
+
+Java 1.8 language features can be used in Java classes only if a Java 1.8 JRE is available. The script compile-java8-code.sh is used only to compile java classes used in the 'test8' unit tests, but these classes are checked into the test8/ directory. Note that unit tests in the test8/ directory will pass (by design) if run against a Java 1.6 or 1.7 JRE, provided that a java.lang.UnsupportedClassVersionError is caught with the message 'Unsupported major.minor version 52.0' (the expected behavior when Java 1.8 language features are used in an older JRE).
+
 ## Installation node-webkit
 
 ```bash
@@ -208,7 +222,7 @@ __Example__
     var Test = java.import('Test');
     Test.someStaticMethodSync(5);
     console.log(Test.someStaticField);
-    
+
     var value1 = Test.NestedEnum.Value1;
 
     var test = new Test();
