@@ -1,5 +1,5 @@
 #include "java.h"
-#include <string.h>
+#include <string>
 #ifdef WIN32
 #else
   #include <unistd.h>
@@ -1050,12 +1050,6 @@ NAN_METHOD(Java::instanceOf) {
 void EIO_CallJs(uv_work_t* req) {
 }
 
-static std::string int_to_string(int i) {
-  char buf[32];
-  snprintf(buf, sizeof(buf), "%d", i);
-  return std::string(buf);
-}
-
 #if NODE_MINOR_VERSION >= 10
 void EIO_AfterCallJs(uv_work_t* req, int status) {
 #else
@@ -1071,7 +1065,7 @@ void EIO_AfterCallJs(uv_work_t* req) {
   int ret = dynamicProxyData->java->getJvm()->GetEnv((void**)&env, JNI_BEST_VERSION);
   if (ret != JNI_OK) {
     dynamicProxyData->throwableClass = "java/lang/IllegalStateException";
-    dynamicProxyData->throwableMessage = "Could not retrieve JNIEnv: jvm->GetEnv returned " + int_to_string(ret);
+    dynamicProxyData->throwableMessage = "Could not retrieve JNIEnv: jvm->GetEnv returned " + std::to_string(ret);
     dynamicProxyData->done = DYNAMIC_PROXY_JS_ERROR;
     return;
   }
