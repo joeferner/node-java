@@ -1050,6 +1050,13 @@ NAN_METHOD(Java::instanceOf) {
 void EIO_CallJs(uv_work_t* req) {
 }
 
+template <typename T>
+std::string to_string(T value) {
+  std::ostringstream os;
+  os << value;
+  return os.str();
+}
+
 #if NODE_MINOR_VERSION >= 10
 void EIO_AfterCallJs(uv_work_t* req, int status) {
 #else
@@ -1065,7 +1072,7 @@ void EIO_AfterCallJs(uv_work_t* req) {
   int ret = dynamicProxyData->java->getJvm()->GetEnv((void**)&env, JNI_BEST_VERSION);
   if (ret != JNI_OK) {
     dynamicProxyData->throwableClass = "java/lang/IllegalStateException";
-    dynamicProxyData->throwableMessage = "Could not retrieve JNIEnv: jvm->GetEnv returned " + std::to_string(ret);
+    dynamicProxyData->throwableMessage = "Could not retrieve JNIEnv: jvm->GetEnv returned " + to_string<int>(ret);
     dynamicProxyData->done = DYNAMIC_PROXY_JS_ERROR;
     return;
   }
