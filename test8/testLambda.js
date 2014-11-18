@@ -14,7 +14,7 @@ exports['Java8'] = nodeunit.testCase({
       test.equal(diff, -19);
     }
     catch (err) {
-      var unsupportedVersion = err.toString().match(/Unsupported major.minor version 52.0/)
+      var unsupportedVersion = java.instanceOf(err.cause, 'java.lang.UnsupportedClassVersionError');
       test.ok(unsupportedVersion);
       if (unsupportedVersion)
         console.log('JRE 1.8 not available');
