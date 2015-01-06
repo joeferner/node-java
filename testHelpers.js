@@ -7,4 +7,9 @@ java.classpath.push("test/");
 java.classpath.push("test/commons-lang3-3.1.jar");
 java.classpath.push("test8/");
 
+java.asyncOptions = {
+  suffix: 'Promise',
+  promisify: require('bluebird').promisify
+};
+
 module.exports.java = java;

@@ -79,6 +79,7 @@ NAN_METHOD(Java::New) {
   NanObjectWrapHandle(self)->Set(NanNew<v8::String>("classpath"), NanNew<v8::Array>());
   NanObjectWrapHandle(self)->Set(NanNew<v8::String>("options"), NanNew<v8::Array>());
   NanObjectWrapHandle(self)->Set(NanNew<v8::String>("nativeBindingLocation"), NanNew<v8::String>("Not Set"));
+  NanObjectWrapHandle(self)->Set(NanNew<v8::String>("asyncOptions"), NanNull());
 
   NanReturnValue(args.This());
 }
@@ -103,6 +104,21 @@ v8::Local<v8::Value> Java::ensureJvm() {
 v8::Local<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   JavaVM* jvmTemp;
   JavaVMInitArgs args;
+
+  v8::Local<v8::Value> asyncOptions = NanObjectWrapHandle(this)->Get(NanNew<v8::String>("asyncOptions"));
+  if (asyncOptions->IsObject()) {
+    v8::Local<v8::Object> asyncOptionsObj = asyncOptions->ToObject();
+    v8::Local<v8::Value> promisify = asyncOptionsObj->Get(NanNew<v8::String>("promisify"));
+    if (!promisify->IsFunction()) {
+      return NanTypeError("asyncOptions.promisify must be a function");
+    }
+    v8::Local<v8::Value> suffix = asyncOptionsObj->Get(NanNew<v8::String>("suffix"));
+    if (!suffix->IsString()) {
+      return NanTypeError("asyncOptions.suffix must be a string");
+    }
+    v8::Handle<v8::Object> asyncOptionsObjTemp = v8::Handle<v8::Object>::Cast(asyncOptionsObj);
+    NanAssignPersistent(m_asyncOptions, asyncOptionsObjTemp);
+  }
 
   // setup classpath
   std::ostringstream classPath;
