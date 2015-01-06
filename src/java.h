@@ -59,6 +59,7 @@ private:
   static std::string s_nativeBindingLocation;
   v8::Persistent<v8::Array> m_classPathArray;
   v8::Persistent<v8::Array> m_optionsArray;
+  v8::Persistent<v8::Object> m_asyncOptions;
 };
 
 #endif

@@ -27,6 +27,19 @@
   std::replace(className.begin(), className.end(), '[', 'a');
   className = "nodeJava_" + className;
 
+  // Set up promisification
+  v8::Local<v8::Object> asyncOptions = NanObjectWrapHandle(java)->Get(NanNew<v8::String>("asyncOptions"))->ToObject();
+  v8::Local<v8::Function> promisify;
+  std::string promiseSuffix;
+  bool promisifying = asyncOptions->IsObject();
+  if(promisifying) {
+    v8::Local<v8::Value> promisifyValue = asyncOptions->Get(NanNew<v8::String>("promisify"));
+    promisify = v8::Function::Cast(*promisifyValue);
+    v8::Local<v8::String> suffix = asyncOptions->Get(NanNew<v8::String>("suffix"))->ToString();
+    v8::String::Utf8Value utf8(suffix);
+    promiseSuffix.assign(*utf8);
+  }
+
   v8::Local<v8::FunctionTemplate> funcTemplate;
   if(sFunctionTemplates.find(className) != sFunctionTemplates.end()) {
     //printf("existing className: %s\n", className.c_str());
@@ -54,6 +67,18 @@
       v8::Handle<v8::String> methodNameSync = NanNew<v8::String>((methodNameStr + "Sync").c_str());
       v8::Local<v8::FunctionTemplate> methodCallSyncTemplate = NanNew<v8::FunctionTemplate>(methodCallSync, methodName);
       funcTemplate->PrototypeTemplate()->Set(methodNameSync, methodCallSyncTemplate->GetFunction());
+
+      if (promisifying) {
+        v8::Local<v8::Object> recv = asyncOptions; // just a dummy receiver
+        v8::Local<v8::Value> argv[] = { methodCallTemplate->GetFunction() };
+        v8::Local<v8::Value> result = promisify->Call(recv, 1, argv);
+        if (!result->IsFunction()) {
+          printf("Promisified result is not a function.\n");
+        }
+        v8::Local<v8::Function> promFunction = v8::Function::Cast(*result);
+        v8::Handle<v8::String> methodNamePromise = NanNew<v8::String>((methodNameStr + promiseSuffix).c_str());\
+        funcTemplate->PrototypeTemplate()->Set(methodNamePromise, promFunction);
+      }
     }
 
     std::list<jobject> fields;
