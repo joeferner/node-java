@@ -34,7 +34,7 @@
   bool promisifying = asyncOptions->IsObject();
   if(promisifying) {
     v8::Local<v8::Value> promisifyValue = asyncOptions->Get(NanNew<v8::String>("promisify"));
-    promisify = v8::Function::Cast(*promisifyValue);
+    promisify = promisifyValue.As<v8::Function>();
     v8::Local<v8::String> suffix = asyncOptions->Get(NanNew<v8::String>("suffix"))->ToString();
     v8::String::Utf8Value utf8(suffix);
     promiseSuffix.assign(*utf8);
@@ -75,7 +75,7 @@
         if (!result->IsFunction()) {
           printf("Promisified result is not a function.\n");
         }
-        v8::Local<v8::Function> promFunction = v8::Function::Cast(*result);
+        v8::Local<v8::Function> promFunction = result.As<v8::Function>();
         v8::Handle<v8::String> methodNamePromise = NanNew<v8::String>((methodNameStr + promiseSuffix).c_str());\
         funcTemplate->PrototypeTemplate()->Set(methodNamePromise, promFunction);
       }
