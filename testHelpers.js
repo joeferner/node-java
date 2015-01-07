@@ -9,7 +9,7 @@ java.classpath.push("test8/");
 
 java.asyncOptions = {
   suffix: 'Promise',
-  promisify: require('bluebird').promisify
+  promisify: require('when/node').lift
 };
 
 module.exports.java = java;
