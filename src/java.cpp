@@ -107,7 +107,7 @@ v8::Local<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
 
   v8::Local<v8::Value> asyncOptions = NanObjectWrapHandle(this)->Get(NanNew<v8::String>("asyncOptions"));
   if (asyncOptions->IsObject()) {
-    v8::Local<v8::Object> asyncOptionsObj = asyncOptions->ToObject();
+    v8::Local<v8::Object> asyncOptionsObj = asyncOptions.As<v8::Object>();
     v8::Local<v8::Value> promisify = asyncOptionsObj->Get(NanNew<v8::String>("promisify"));
     if (!promisify->IsFunction()) {
       return NanTypeError("asyncOptions.promisify must be a function");
@@ -116,8 +116,7 @@ v8::Local<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     if (!suffix->IsString()) {
       return NanTypeError("asyncOptions.suffix must be a string");
     }
-    v8::Handle<v8::Object> asyncOptionsObjTemp = v8::Handle<v8::Object>::Cast(asyncOptionsObj);
-    NanAssignPersistent(m_asyncOptions, asyncOptionsObjTemp);
+    NanAssignPersistent(m_asyncOptions, asyncOptionsObj);
   }
 
   // setup classpath
@@ -190,6 +189,7 @@ v8::Local<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   NanObjectWrapHandle(this)->SetAccessor(NanNew<v8::String>("classpath"), AccessorProhibitsOverwritingGetter, AccessorProhibitsOverwritingSetter);
   NanObjectWrapHandle(this)->SetAccessor(NanNew<v8::String>("options"), AccessorProhibitsOverwritingGetter, AccessorProhibitsOverwritingSetter);
   NanObjectWrapHandle(this)->SetAccessor(NanNew<v8::String>("nativeBindingLocation"), AccessorProhibitsOverwritingGetter, AccessorProhibitsOverwritingSetter);
+  NanObjectWrapHandle(this)->SetAccessor(NanNew<v8::String>("asyncOptions"), AccessorProhibitsOverwritingGetter, AccessorProhibitsOverwritingSetter);
 
   return NanNull();
 }
@@ -204,6 +204,8 @@ NAN_GETTER(Java::AccessorProhibitsOverwritingGetter) {
     NanReturnValue(self->m_optionsArray);
   } else if(!strcmp("nativeBindingLocation", *nameStr)) {
     NanReturnValue(NanNew<v8::String>(Java::s_nativeBindingLocation.c_str()));
+  } else if(!strcmp("asyncOptions", *nameStr)) {
+    NanReturnValue(self->m_asyncOptions);
   }
 
   std::ostringstream errStr;

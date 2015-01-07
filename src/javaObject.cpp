@@ -28,7 +28,7 @@
   className = "nodeJava_" + className;
 
   // Set up promisification
-  v8::Local<v8::Object> asyncOptions = NanObjectWrapHandle(java)->Get(NanNew<v8::String>("asyncOptions"))->ToObject();
+  v8::Local<v8::Object> asyncOptions = NanObjectWrapHandle(java)->Get(NanNew<v8::String>("asyncOptions")).As<v8::Object>();
   v8::Local<v8::Function> promisify;
   std::string promiseSuffix;
   bool promisifying = asyncOptions->IsObject();
@@ -76,7 +76,7 @@
           printf("Promisified result is not a function.\n");
         }
         v8::Local<v8::Function> promFunction = result.As<v8::Function>();
-        v8::Handle<v8::String> methodNamePromise = NanNew<v8::String>((methodNameStr + promiseSuffix).c_str());\
+        v8::Handle<v8::String> methodNamePromise = NanNew<v8::String>((methodNameStr + promiseSuffix).c_str());
         funcTemplate->PrototypeTemplate()->Set(methodNamePromise, promFunction);
       }
     }
