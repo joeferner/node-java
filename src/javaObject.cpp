@@ -69,7 +69,7 @@
       funcTemplate->PrototypeTemplate()->Set(methodNameSync, methodCallSyncTemplate->GetFunction());
 
       if (promisifying) {
-        v8::Local<v8::Object> recv = asyncOptions; // just a dummy receiver
+        v8::Local<v8::Object> recv = NanNew<v8::Object>();
         v8::Local<v8::Value> argv[] = { methodCallTemplate->GetFunction() };
         v8::Local<v8::Value> result = promisify->Call(recv, 1, argv);
         if (!result->IsFunction()) {
