@@ -112,9 +112,9 @@ v8::Local<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     if (!promisify->IsFunction()) {
       return NanTypeError("asyncOptions.promisify must be a function");
     }
-    v8::Local<v8::Value> suffix = asyncOptionsObj->Get(NanNew<v8::String>("suffix"));
+    v8::Local<v8::Value> suffix = asyncOptionsObj->Get(NanNew<v8::String>("promiseSuffix"));
     if (!suffix->IsString()) {
-      return NanTypeError("asyncOptions.suffix must be a string");
+      return NanTypeError("asyncOptions.promiseSuffix must be a string");
     }
     NanAssignPersistent(m_asyncOptions, asyncOptionsObj);
   }
