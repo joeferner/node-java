@@ -8,7 +8,7 @@ java.classpath.push("test/commons-lang3-3.1.jar");
 java.classpath.push("test8/");
 
 java.asyncOptions = {
-  suffix: 'Promise',
+  promiseSuffix: 'Promise',
   promisify: require('when/node').lift
 };
 
