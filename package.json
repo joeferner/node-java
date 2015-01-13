@@ -32,7 +32,8 @@
   },
   "devDependencies": {
     "async": "~0.1.22",
-    "nodeunit": "0.9.0"
+    "nodeunit": "0.9.0",
+    "when": "~3.6.4"
   },
   "scripts": {
     "test": "nodeunit test test8",

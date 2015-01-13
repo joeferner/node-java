@@ -147,6 +147,48 @@ try {
 }
 ```
 
+### Promises
+
+As of release 0.4.5 it is possible to create async methods that return promises by setting the asyncOptions property of the java object.
+
+Example:
+
+```javascript
+var java = require("java");
+java.asyncOptions = {
+  promiseSuffix: 'Promise',
+  promisify: require('when/node').lift
+};
+java.classpath.push("commons-lang3-3.1.jar");
+java.classpath.push("commons-io.jar");
+
+java.newInstancePromise("java.util.ArrayList")
+    .then(function(list) { return list.addPromise("item1"); })
+    .then(function(list) { return list.addPromise("item2"); })
+    .catch(function(err) { /* handle error */ });
+```
+
+* If you don't need promise-returning methods, simply leave java.asyncOptions unset.
+* Sync and standard async methods are still generated as in previous releases. In the future we may provide the option to disable generation of standard async methods.
+* You are free to choose whatever non-empty suffix you want for the promise-returning methods, but you must specify a value.
+* asyncOptions.promisify must be a function that given a node.js style async function as input returns a function that returns a promise that is resolved (or rejected) when the async function has completed. Several Promises libraries provide such functions. This *should* just work, but at the moment one prominent promises library doesn't.
+* Note that it should be possible to mix use of two different Promises/A+ conforming libraries. You may be able to use one library for installing the asyncOptions.promisify function, and then use another library everywhere else in your application.
+
+#### Tested Promises Libraries
+
+##### [when](https://www.npmjs.com/package/when)
+We use this package in our unit tests, and it passes under all 9 cases of our [test matrix](https://travis-ci.org/joeferner/node-java).
+
+`promisify: require('when/node').lift`
+
+##### [bluebird](https://www.npmjs.com/package/bluebird)
+Does not work with node 0.8, but works with node 0.10 and 0.11.
+
+`promisify: require('bluebird').promisify`
+
+##### [Q](https://www.npmjs.com/package/q)
+Unfortunately, the popular Q promises library currently does **NOT** work.
+
 # Release Notes
 
 ### v0.2.0
