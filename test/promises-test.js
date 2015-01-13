@@ -62,6 +62,70 @@ exports['Promises'] = nodeunit.testCase({
         test.expect(3);
         test.done();
       });
+  },
+
+  "run chained promisified methods (of class java.util.ArrayList)": function (test) {
+    var list;
+    var it;
+    java.newInstancePromise("java.util.ArrayList")
+      .then(function(_list) {
+        test.ok(_list);
+        list = _list;
+        return list.getClassPromise();
+      })
+      .then(function(clazz) {
+        test.ok(clazz);
+        return clazz.getNamePromise();
+      })
+      .then(function(name) {
+        test.equal(name, "java.util.ArrayList");
+      })
+      .then(function() {
+        list.addPromise('hello');
+      })
+      .then(function() {
+        list.addPromise('world');
+      })
+      .then(function() {
+        list.addPromise('boo');
+      })
+      .then(function() {
+        return list.iteratorPromise();
+      })
+      .then(function(_it) {
+        test.ok(_it);
+        it = _it;
+        return it.nextPromise();
+      })
+      .then(function(val) {
+        test.ok(val);
+        test.equal(val, 'hello');
+        return it.nextPromise();
+      })
+      .then(function(val) {
+        test.ok(val);
+        test.equal(val, 'world');
+        return it.nextPromise();
+      })
+      .then(function(val) {
+        test.ok(val);
+        test.equal(val, 'boo');
+        return it.hasNextPromise();
+      })
+      .catch(function(err) {
+        test.ifError(err);
+      })
+      .then(function(more) {
+        test.equal(more, false);
+        return it.nextPromise();
+      })
+      .catch(function(err) {
+        test.ok(/java\.util\.NoSuchElementException/.test(err.toString()));
+      })
+      .then(function() {
+        test.expect(12);
+        test.done();
+      });
   }
 });
 
