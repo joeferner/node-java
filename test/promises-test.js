@@ -116,7 +116,7 @@ exports['Promises'] = nodeunit.testCase({
         test.ifError(err);
       })
       .then(function(more) {
-        test.equal(more, false);
+        test.ok(!more);
         return it.nextPromise();
       })
       .catch(function(err) {
@@ -181,7 +181,7 @@ exports['Promises'] = nodeunit.testCase({
         test.ifError(err);
       })
       .then(function(more) {
-        test.equal(more, false);
+        test.ok(!more);
         return it.nextPromise();
       })
       .catch(function(err) {
