@@ -79,6 +79,7 @@ NAN_METHOD(Java::New) {
   NanObjectWrapHandle(self)->Set(NanNew<v8::String>("classpath"), NanNew<v8::Array>());
   NanObjectWrapHandle(self)->Set(NanNew<v8::String>("options"), NanNew<v8::Array>());
   NanObjectWrapHandle(self)->Set(NanNew<v8::String>("nativeBindingLocation"), NanNew<v8::String>("Not Set"));
+  NanObjectWrapHandle(self)->Set(NanNew<v8::String>("asyncOptions"), NanNull());
 
   NanReturnValue(args.This());
 }
@@ -103,6 +104,20 @@ v8::Local<v8::Value> Java::ensureJvm() {
 v8::Local<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   JavaVM* jvmTemp;
   JavaVMInitArgs args;
+
+  v8::Local<v8::Value> asyncOptions = NanObjectWrapHandle(this)->Get(NanNew<v8::String>("asyncOptions"));
+  if (asyncOptions->IsObject()) {
+    v8::Local<v8::Object> asyncOptionsObj = asyncOptions.As<v8::Object>();
+    v8::Local<v8::Value> promisify = asyncOptionsObj->Get(NanNew<v8::String>("promisify"));
+    if (!promisify->IsFunction()) {
+      return NanTypeError("asyncOptions.promisify must be a function");
+    }
+    v8::Local<v8::Value> suffix = asyncOptionsObj->Get(NanNew<v8::String>("promiseSuffix"));
+    if (!suffix->IsString()) {
+      return NanTypeError("asyncOptions.promiseSuffix must be a string");
+    }
+    NanAssignPersistent(m_asyncOptions, asyncOptionsObj);
+  }
 
   // setup classpath
   std::ostringstream classPath;
@@ -170,10 +185,20 @@ v8::Local<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
 
   m_classLoader = getSystemClassLoader(*env);
 
+  v8::Local<v8::Value> onJvmCreated = NanObjectWrapHandle(this)->Get(NanNew<v8::String>("onJvmCreated"));
+
   // TODO: this handles sets put doesn't prevent modifing the underlying data. So java.classpath.push will still work which is invalid.
   NanObjectWrapHandle(this)->SetAccessor(NanNew<v8::String>("classpath"), AccessorProhibitsOverwritingGetter, AccessorProhibitsOverwritingSetter);
   NanObjectWrapHandle(this)->SetAccessor(NanNew<v8::String>("options"), AccessorProhibitsOverwritingGetter, AccessorProhibitsOverwritingSetter);
   NanObjectWrapHandle(this)->SetAccessor(NanNew<v8::String>("nativeBindingLocation"), AccessorProhibitsOverwritingGetter, AccessorProhibitsOverwritingSetter);
+  NanObjectWrapHandle(this)->SetAccessor(NanNew<v8::String>("asyncOptions"), AccessorProhibitsOverwritingGetter, AccessorProhibitsOverwritingSetter);
+  NanObjectWrapHandle(this)->SetAccessor(NanNew<v8::String>("onJvmCreated"), AccessorProhibitsOverwritingGetter, AccessorProhibitsOverwritingSetter);
+
+  if (onJvmCreated->IsFunction()) {
+    v8::Local<v8::Function> onJvmCreatedFunc = onJvmCreated.As<v8::Function>();
+    v8::Local<v8::Object> context = NanNew<v8::Object>();
+    onJvmCreatedFunc->Call(context, 0, NULL);
+  }
 
   return NanNull();
 }
@@ -188,6 +213,10 @@ NAN_GETTER(Java::AccessorProhibitsOverwritingGetter) {
     NanReturnValue(self->m_optionsArray);
   } else if(!strcmp("nativeBindingLocation", *nameStr)) {
     NanReturnValue(NanNew<v8::String>(Java::s_nativeBindingLocation.c_str()));
+  } else if(!strcmp("asyncOptions", *nameStr)) {
+    NanReturnValue(self->m_asyncOptions);
+  } else if(!strcmp("onJvmCreated", *nameStr)) {
+    // There is no good reason to get onJvmCreated, so just fall through to error below.
   }
 
   std::ostringstream errStr;
