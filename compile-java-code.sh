@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-JAVA_VERSION=1.6
+JAVA_VERSION=1.7
 JAVAC_OPTS="-source ${JAVA_VERSION} -target ${JAVA_VERSION} -bootclasspath /opt/jdk1.6.0_45/jre/lib/rt.jar"
 
 cd test
