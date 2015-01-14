@@ -316,6 +316,32 @@ exports['Simple'] = nodeunit.testCase({
     test.equal(r[0], 1);
     test.equal(r[1], 2);
     test.done();
+  },
+
+  "ArrayList Iterator (sync)": function (test) {
+    var list = java.newInstanceSync("java.util.ArrayList");
+    list.addSync('hello');
+    var it = list.iteratorSync();
+    var val = it.nextSync();
+    test.equal(val, 'hello');
+    test.done();
+  },
+
+  "ArrayList Iterator (async)": function (test) {
+    var list = java.newInstance("java.util.ArrayList", function(err, list) {
+      test.ifError(err);
+      list.add('hello', function (err) {
+        test.ifError(err);
+        list.iterator(function(err, it) {
+          test.ifError(err);
+          it.next(function(err, val) {
+            test.ifError(err);
+            test.equal(val, 'hello');
+            test.done();
+          });
+        });
+      });
+    });
   }
 });
 
