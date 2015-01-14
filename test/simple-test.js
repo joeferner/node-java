@@ -323,7 +323,8 @@ exports['Simple'] = nodeunit.testCase({
     list.addSync('hello');
     var it = list.iteratorSync();
     var val = it.nextSync();
-    test.equal(val, 'hello');
+    console.log(typeof val, val);
+    test.strictEqual(val, 'hello');
     test.done();
   },
 
@@ -336,7 +337,8 @@ exports['Simple'] = nodeunit.testCase({
           test.ifError(err);
           it.next(function(err, val) {
             test.ifError(err);
-            test.equal(val, 'hello');
+            console.log(typeof val, val);
+            test.strictEqual(val, 'hello');
             test.done();
           });
         });
