@@ -156,11 +156,13 @@ Example:
 ```javascript
 var java = require("java");
 java.asyncOptions = {
-  promiseSuffix: 'Promise',
-  promisify: require('when/node').lift
+  promiseSuffix: "Promise",
+  promisify: require("when/node").lift
 };
 java.classpath.push("commons-lang3-3.1.jar");
 java.classpath.push("commons-io.jar");
+
+java.import("java.util.ArrayList"); // see NOTE below
 
 java.newInstancePromise("java.util.ArrayList")
     .then(function(list) { return list.addPromise("item1"); })
@@ -168,26 +170,13 @@ java.newInstancePromise("java.util.ArrayList")
     .catch(function(err) { /* handle error */ });
 ```
 
-* If you don't need promise-returning methods, simply leave java.asyncOptions unset.
+* If you don't want promise-returning methods, simply leave `java.asyncOptions` unset.
 * Sync and standard async methods are still generated as in previous releases. In the future we may provide the option to disable generation of standard async methods.
-* You are free to choose whatever non-empty suffix you want for the promise-returning methods, but you must specify a value.
-* asyncOptions.promisify must be a function that given a node.js style async function as input returns a function that returns a promise that is resolved (or rejected) when the async function has completed. Several Promises libraries provide such functions. This *should* just work, but at the moment one prominent promises library doesn't.
-* Note that it should be possible to mix use of two different Promises/A+ conforming libraries. You may be able to use one library for installing the asyncOptions.promisify function, and then use another library everywhere else in your application.
+* `asyncOptions.promisify` must be a function that given a node.js style async function as input returns a function that returns a promise that is resolved (or rejected) when the async function has completed. Several Promises/A+ libraries provide such functions, but it may be necessary to provide a wrapper function. See `testHelpers.js` for an example.
+* You are free to choose whatever non-empty `promiseSuffix` you want for the promise-returning methods, but you must specify a value.
+* We've tested with five Promises/A+ implementations. See `testHelpers.js` for more information.
+* NOTE: Due to specifics of initialization order, the methods  `java.newInstancePromise`, `java.callMethodPromise`, and `java.callStaticMethodPromise` are not available until some other java method is called. You may need to call some other java method such as `java.import()` to finalize java initialization.
 
-#### Tested Promises Libraries
-
-##### [when](https://www.npmjs.com/package/when)
-We use this package in our unit tests, and it passes under all 9 cases of our [test matrix](https://travis-ci.org/joeferner/node-java).
-
-`promisify: require('when/node').lift`
-
-##### [bluebird](https://www.npmjs.com/package/bluebird)
-Does not work with node 0.8, but works with node 0.10 and 0.11.
-
-`promisify: require('bluebird').promisify`
-
-##### [Q](https://www.npmjs.com/package/q)
-Unfortunately, the popular Q promises library currently does **NOT** work.
 
 # Release Notes
 

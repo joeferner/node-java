@@ -6,21 +6,24 @@ java.classpath.push("test/");
 java.classpath.push("test/commons-lang3-3.1.jar");
 java.classpath.push("test8/");
 
+function promisifyQ(f) {
+  // Q doesn't provide a promisify function that works directly on a method.
+  // The .denodeify() (aka .nfbind()) function requires a bound function.
+  return function(/* arguments */) {
+    return require('q').nbind(f, this).apply(undefined, arguments);
+  }
+}
+
 java.asyncOptions = {
   promiseSuffix: 'Promise',
-  promisify: require('when/node').lift         // when works with all three node versions
+  promisify: require('when/node').lift         // https://github.com/cujojs/when
 
-// PASSES in all three node versions: 0.8.28, 0.10.35, 0.11.14
-//   promisify: require('when/node').lift         // when works with all three node versions
-//   promisify: require('promise').denodeify      // promise works with all three node versions
-//   promisify: require('vow-node').promisify     // vow-node works with all three node versions
-
-// PASSES in Node 0.10, 0.11.   (incompatible with Node 0.8).
-//   promisify: require('bluebird').promisify     // bluebird requires node >=0.10
-
-// FAILS:
-//   promisify: require('q').denodeify            // FAILS: Q triggers assertion failure in node_object_wrap.h, line 61
-//   promisify: require('p-promise').denodeify    // FAILS: P-promise does not implement catch().
+// We've tested with 5 different Promises/A+ implementations:
+//   promisify: require('bluebird').promisify     // https://github.com/petkaantonov/bluebird/
+//   promisify: require('promise').denodeify      // https://github.com/then/promise
+//   promisify: require('vow-node').promisify     // https://github.com/dfilatov/vow-node
+//   promisify: require('when/node').lift         // https://github.com/cujojs/when
+//   promisify: promisifyQ                        // https://github.com/kriskowal/q requires wrapper promisifyQ.
 };
 
 module.exports.java = java;
