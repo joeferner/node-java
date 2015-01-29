@@ -746,3 +746,19 @@ void unref(DynamicProxyData* dynamicProxyData) {
   dynamicProxyData->markerEnd = 0;
   delete dynamicProxyData;
 }
+
+jarray javaGetArgsForMethod(JNIEnv *env, jobject method, jarray args) {
+  jclass varArgsClazz = env->FindClass("node/VarArgs");
+  jmethodID method_getVarArgs = env->GetStaticMethodID(varArgsClazz, "getVarArgs", "(Ljava/lang/reflect/Method;[Ljava/lang/Object;)[Ljava/lang/Object;");
+  jarray result = (jarray)env->CallStaticObjectMethod(varArgsClazz, method_getVarArgs, method, args);
+  checkJavaException(env);
+  return result;
+}
+
+jarray javaGetArgsForConstructor(JNIEnv *env, jobject method, jarray args) {
+  jclass varArgsClazz = env->FindClass("node/VarArgs");
+  jmethodID method_getVarArgs = env->GetStaticMethodID(varArgsClazz, "getVarArgs", "(Ljava/lang/reflect/Constructor;[Ljava/lang/Object;)[Ljava/lang/Object;");
+  jarray result = (jarray)env->CallStaticObjectMethod(varArgsClazz, method_getVarArgs, method, args);
+  checkJavaException(env);
+  return result;
+}

@@ -56,7 +56,7 @@ exports['Java - New Instance'] = nodeunit.testCase({
   },
 
   "newInstance bad arg types": function(test) {
-    java.newInstance("Test", "z", function(err, result) {
+    java.newInstance("Test", 'a', function(err, result) {
       test.ok(err);
       test.ok(!result);
       test.done();
@@ -65,13 +65,13 @@ exports['Java - New Instance'] = nodeunit.testCase({
 
   "newInstanceSync bad arg types": function(test) {
     test.throws(function() {
-      java.newInstanceSync("Test", "z");
+      java.newInstanceSync("Test", 'a');
     });
     test.done();
   },
 
   "newInstance bad number of args": function(test) {
-    java.newInstance("Test", 42, "z", function(err, result) {
+    java.newInstance("Test", 42, 15, function(err, result) {
       test.ok(err);
       test.ok(!result);
       test.done();
@@ -80,7 +80,7 @@ exports['Java - New Instance'] = nodeunit.testCase({
 
   "newInstanceSync bad number of args": function(test) {
     test.throws(function() {
-      java.newInstanceSync("Test", 42, "z");
+      java.newInstanceSync("Test", 42, 15);
     });
     test.done();
   },
@@ -105,4 +105,17 @@ exports['Java - New Instance'] = nodeunit.testCase({
     }
     test.done();
   },
+  
+  "newInstanceSync with varargs": function(test) {
+    var result = java.newInstanceSync("Test", 42, java.newArray('java.lang.String', ["a", "b"]));
+    test.ok(result);
+
+    result = java.newInstanceSync("Test", 42, "a");
+    test.ok(result);
+
+    result = java.newInstanceSync("Test", 42, "a", "b", "c");
+    test.ok(result);
+
+    test.done();
+  }
 });

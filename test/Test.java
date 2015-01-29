@@ -7,7 +7,8 @@ public class Test {
   public static Test[] staticArrayObjects = null;
 
   public Test() {}
-  public Test(int i) { this.i = i; }
+  public Test(Integer i) { this.i = i; }
+  public Test(Integer i, String... other) { this.i = i; }
 
   public int getInt() { return i; }
 

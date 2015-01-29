@@ -72,6 +72,8 @@ v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj);
 v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj, DynamicProxyData* dynamicProxyData);
 jobjectArray javaObjectArrayToClasses(JNIEnv *env, jobjectArray objs);
 jobject longToJavaLongObj(JNIEnv *env, jlong l);
+jarray javaGetArgsForMethod(JNIEnv *env, jobject method, jarray args);
+jarray javaGetArgsForConstructor(JNIEnv *env, jobject method, jarray args);
 
 jclass javaFindClass(JNIEnv* env, std::string& className);
 jobject javaFindField(JNIEnv* env, jclass clazz, std::string& fieldName);
