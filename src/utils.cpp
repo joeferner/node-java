@@ -636,7 +636,7 @@ jobject javaFindMethod(JNIEnv *env, jclass clazz, std::string& methodName, jobje
 
     return method;
   } else {
-    jclass methodUtilsClazz = env->FindClass("com/nearinfinity/org/apache/commons/lang3/reflect/MethodUtils");
+    jclass methodUtilsClazz = env->FindClass("nodejava/org/apache/commons/lang3/reflect/MethodUtils");
     jmethodID methodUtils_getMatchingAccessibleMethod = env->GetStaticMethodID(methodUtilsClazz, "getMatchingAccessibleMethod", "(Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;");
     const char *methodNameCStr = methodName.c_str();
     jstring methodNameJavaStr = env->NewStringUTF(methodNameCStr);
@@ -654,7 +654,7 @@ void javaCastArguments(JNIEnv *env, jobjectArray methodArgs, jobject method) {
 }
 
 jobject javaFindConstructor(JNIEnv *env, jclass clazz, jobjectArray methodArgs) {
-  jclass constructorUtilsClazz = env->FindClass("com/nearinfinity/org/apache/commons/lang3/reflect/ConstructorUtils");
+  jclass constructorUtilsClazz = env->FindClass("nodejava/org/apache/commons/lang3/reflect/ConstructorUtils");
   jmethodID constructorUtils_getMatchingAccessibleConstructor = env->GetStaticMethodID(constructorUtilsClazz, "getMatchingAccessibleConstructor", "(Ljava/lang/Class;[Ljava/lang/Class;)Ljava/lang/reflect/Constructor;");
   jobjectArray methodArgClasses = javaObjectArrayToClasses(env, methodArgs);
   jobject method = env->CallStaticObjectMethod(constructorUtilsClazz, constructorUtils_getMatchingAccessibleConstructor, clazz, methodArgClasses);
