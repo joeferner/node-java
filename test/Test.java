@@ -44,6 +44,15 @@ public class Test {
   public int methodAmbiguous(Double a) { return 1; }
   public int methodAmbiguous(Integer a) { return 2; }
 
+  public static String staticVarargs(Integer i, String... args) {
+    java.lang.StringBuilder result = new java.lang.StringBuilder();
+    result.append(i);
+    for(String arg : args) {
+      result.append(arg);
+    }
+    return result.toString();
+  }
+  
   public static String staticBigDecimalToString(java.math.BigDecimal bigDecimal) { return bigDecimal.toString(); }
   
   public static int staticChar(char ch) { return (int)ch; }

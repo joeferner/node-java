@@ -267,6 +267,18 @@ exports['Java - Call Static Method'] = nodeunit.testCase({
     var str = Test.staticEnumToStringSync(Test.StaticEnum.Value1); // call it twice to ensure memo-ize is working
     test.equal(str, "Value1");
     test.done();
+  },
+  
+  "Call static method with varargs": function(test) {
+    var Test = java.import("Test");
+
+    var str = Test.staticVarargsSync(5, java.newArray('java.lang.String', ['a', 'b', 'c']));
+    test.equal(str, "5abc");
+
+    str = Test.staticVarargsSync(5, 'a', 'b', 'c');
+    test.equal(str, "5abc");
+
+    test.done();
   }
 
 });
