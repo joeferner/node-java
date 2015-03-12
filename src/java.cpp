@@ -87,6 +87,12 @@ NAN_METHOD(Java::New) {
 Java::Java() {
   this->m_jvm = NULL;
   this->m_env = NULL;
+
+  m_SyncSuffix = "Sync";
+  m_AsyncSuffix = "";
+  doSync = true;
+  doAsync = true;
+  doPromise = false;
 }
 
 Java::~Java() {
@@ -95,10 +101,64 @@ Java::~Java() {
 
 v8::Local<v8::Value> Java::ensureJvm() {
   if(!m_jvm) {
-    return createJVM(&this->m_jvm, &this->m_env);
+    v8::Local<v8::Value> result = createJVM(&this->m_jvm, &this->m_env);
+    assert(result->IsNull());
+    return result;
   }
 
   return NanNull();
+}
+
+void Java::configureAsync(v8::Local<v8::Value>& asyncOptions) {
+  v8::Local<v8::Object> asyncOptionsObj = asyncOptions.As<v8::Object>();
+
+  m_SyncSuffix = "invalid";
+  m_AsyncSuffix = "invalid";
+  m_PromiseSuffix = "invalid";
+  doSync = false;
+  doAsync = false;
+  doPromise = false;
+
+  v8::Local<v8::Value> suffixValue = asyncOptionsObj->Get(NanNew<v8::String>("syncSuffix"));
+  if (suffixValue->IsString()) {
+    v8::Local<v8::String> suffix = suffixValue->ToString();
+    v8::String::Utf8Value utf8(suffix);
+    m_SyncSuffix.assign(*utf8);
+    doSync = true;
+  }
+
+  suffixValue = asyncOptionsObj->Get(NanNew<v8::String>("asyncSuffix"));
+  if (suffixValue->IsString()) {
+    v8::Local<v8::String> suffix = suffixValue->ToString();
+    v8::String::Utf8Value utf8(suffix);
+    m_AsyncSuffix.assign(*utf8);
+    doAsync = true;
+  }
+
+  suffixValue = asyncOptionsObj->Get(NanNew<v8::String>("promiseSuffix"));
+  if (suffixValue->IsString()) {
+    v8::Local<v8::String> suffix = suffixValue->ToString();
+    v8::String::Utf8Value utf8(suffix);
+    m_PromiseSuffix.assign(*utf8);
+    v8::Local<v8::Value> promisify = asyncOptionsObj->Get(NanNew<v8::String>("promisify"));
+    if (!promisify->IsFunction()) {
+      fprintf(stderr, "asyncOptions.promisify must be a function");
+      assert(promisify->IsFunction());
+    }
+    doPromise = true;
+  }
+
+  if (doSync && doAsync) {
+    assert(m_SyncSuffix != m_AsyncSuffix);
+  }
+  if (doSync && doPromise) {
+    assert(m_SyncSuffix != m_PromiseSuffix);
+  }
+  if (doAsync && doPromise) {
+    assert(m_AsyncSuffix != m_PromiseSuffix);
+  }
+
+  NanAssignPersistent(m_asyncOptions, asyncOptionsObj);
 }
 
 v8::Local<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
@@ -107,16 +167,7 @@ v8::Local<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
 
   v8::Local<v8::Value> asyncOptions = NanObjectWrapHandle(this)->Get(NanNew<v8::String>("asyncOptions"));
   if (asyncOptions->IsObject()) {
-    v8::Local<v8::Object> asyncOptionsObj = asyncOptions.As<v8::Object>();
-    v8::Local<v8::Value> promisify = asyncOptionsObj->Get(NanNew<v8::String>("promisify"));
-    if (!promisify->IsFunction()) {
-      return NanTypeError("asyncOptions.promisify must be a function");
-    }
-    v8::Local<v8::Value> suffix = asyncOptionsObj->Get(NanNew<v8::String>("promiseSuffix"));
-    if (!suffix->IsString()) {
-      return NanTypeError("asyncOptions.promiseSuffix must be a string");
-    }
-    NanAssignPersistent(m_asyncOptions, asyncOptionsObj);
+    configureAsync(asyncOptions);
   }
 
   // setup classpath
