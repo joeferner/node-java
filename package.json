@@ -37,7 +37,7 @@
     "when": "3.6.4"
   },
   "scripts": {
-    "test": "nodeunit test test8",
+    "test": "node testRunner.js",
     "postinstall": "node postInstall.js"
   },
   "main": "./index.js"
