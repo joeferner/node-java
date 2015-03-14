@@ -21,11 +21,20 @@ public:
   JNIEnv* getJavaEnv() { return m_env; } // can only be used safely by the main thread as this is the thread it belongs to
   jobject getClassLoader() { return m_classLoader; }
 
+public:
+  bool DoSync() const { return doSync; }
+  bool DoAsync() const { return doAsync; }
+  bool DoPromise() const { return doPromise; }
+  std::string SyncSuffix() const { return m_SyncSuffix; }
+  std::string AsyncSuffix() const { return m_AsyncSuffix; }
+  std::string PromiseSuffix() const { return m_PromiseSuffix; }
+
 private:
   Java();
   ~Java();
   v8::Local<v8::Value> createJVM(JavaVM** jvm, JNIEnv** env);
   void destroyJVM(JavaVM** jvm, JNIEnv** env);
+  void configureAsync(v8::Local<v8::Value>& asyncOptions);
 
   static NAN_METHOD(New);
   static NAN_METHOD(getClassLoader);
@@ -60,6 +69,14 @@ private:
   v8::Persistent<v8::Array> m_classPathArray;
   v8::Persistent<v8::Array> m_optionsArray;
   v8::Persistent<v8::Object> m_asyncOptions;
+
+  std::string m_SyncSuffix;
+  std::string m_AsyncSuffix;
+  std::string m_PromiseSuffix;
+
+  bool doSync;
+  bool doAsync;
+  bool doPromise;
 };
 
 #endif

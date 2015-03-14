@@ -15,8 +15,11 @@ function promisifyQ(f) {
 }
 
 java.asyncOptions = {
+  syncSuffix: "Sync",
+  asyncSuffix: "",
   promiseSuffix: 'Promise',
   promisify: require('when/node').lift         // https://github.com/cujojs/when
+
 
 // We've tested with 5 different Promises/A+ implementations:
 //   promisify: require('bluebird').promisify     // https://github.com/petkaantonov/bluebird/
