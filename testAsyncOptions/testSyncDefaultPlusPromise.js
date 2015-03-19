@@ -28,12 +28,51 @@ module.exports = {
     test.done();
   },
 
+  testImportClass: function(test) {
+    test.expect(3);
+    // Note: java.import executes javascript code in lib/nodeJavaBridge that makes sync calls to java classes.
+    // This test verifies the import runs without error.
+    var ArrayList = java.import("java.util.ArrayList");
+    test.ok(ArrayList);
+    var arrayList = new ArrayList();
+    test.ok(arrayList);
+    test.strictEqual(arrayList.size(), 0);
+    test.done();
+  },
+
+  testStaticAPI: function(test) {
+    test.expect(6);
+    var String = java.import("java.lang.String");
+    test.ok(String);
+
+    var api = _.functions(String);
+    test.ok(_.includes(api, 'join'), 'Expected `join` to be present, but it is NOT.');
+    test.ok(_.includes(api, 'joinP'), 'Expected `joinP` to be present, but it is NOT.');
+    test.ok(!_.includes(api, 'joinSync'), 'Expected `joinSync` to NOT be present, but it is.');
+    test.ok(!_.includes(api, 'joinAsync'), 'Expected `joinAsync` to NOT be present, but it is.');
+    test.ok(!_.includes(api, 'joinundefined'), 'Expected `joinundefined` to NOT be present, but it is.');
+    test.done();
+  },
+
   testSyncCalls: function(test) {
     test.expect(1);
     var arrayList = java.newInstanceSync("java.util.ArrayList");
     arrayList.add("hello");
     arrayList.add("world");
     test.strictEqual(arrayList.size(), 2);
+    test.done();
+  },
+
+  testStaticSyncCalls: function(test) {
+    test.expect(1);
+    // Note: java.import executes javascript code in lib/nodeJavaBridge that makes sync calls to java classes.
+    // Among other things, java.import creates Sync functions for static methods.
+    var ArrayList = java.import("java.util.ArrayList");
+    var arrayList = new ArrayList();
+    arrayList.add("hello");
+    arrayList.add("world");
+    var String = java.import("java.lang.String");
+    test.strictEqual(String.join( '--', arrayList), "hello--world");
     test.done();
   },
 
@@ -48,4 +87,5 @@ module.exports = {
         test.done();
       });
   }
+
 }
