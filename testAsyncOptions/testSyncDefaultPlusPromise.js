@@ -46,11 +46,11 @@ module.exports = {
     test.ok(String);
 
     var api = _.functions(String);
-    test.ok(_.includes(api, 'join'), 'Expected `join` to be present, but it is NOT.');
-    test.ok(_.includes(api, 'joinP'), 'Expected `joinP` to be present, but it is NOT.');
-    test.ok(!_.includes(api, 'joinSync'), 'Expected `joinSync` to NOT be present, but it is.');
-    test.ok(!_.includes(api, 'joinAsync'), 'Expected `joinAsync` to NOT be present, but it is.');
-    test.ok(!_.includes(api, 'joinundefined'), 'Expected `joinundefined` to NOT be present, but it is.');
+    test.ok(_.includes(api, 'format'), 'Expected `format` to be present, but it is NOT.');
+    test.ok(_.includes(api, 'formatP'), 'Expected `formatP` to be present, but it is NOT.');
+    test.ok(!_.includes(api, 'formatSync'), 'Expected `formatSync` to NOT be present, but it is.');
+    test.ok(!_.includes(api, 'formatAsync'), 'Expected `formatAsync` to NOT be present, but it is.');
+    test.ok(!_.includes(api, 'formatundefined'), 'Expected `formatundefined` to NOT be present, but it is.');
     test.done();
   },
 
@@ -67,12 +67,8 @@ module.exports = {
     test.expect(1);
     // Note: java.import executes javascript code in lib/nodeJavaBridge that makes sync calls to java classes.
     // Among other things, java.import creates Sync functions for static methods.
-    var ArrayList = java.import("java.util.ArrayList");
-    var arrayList = new ArrayList();
-    arrayList.add("hello");
-    arrayList.add("world");
     var String = java.import("java.lang.String");
-    test.strictEqual(String.join( '--', arrayList), "hello--world");
+    test.strictEqual(String.format( '%s--%s', "hello", "world"), "hello--world");
     test.done();
   },
 

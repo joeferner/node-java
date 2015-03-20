@@ -42,11 +42,11 @@ module.exports = {
     test.ok(String);
 
     var api = _.functions(String);
-    test.ok(_.includes(api, 'join'), 'Expected `join` to be present, but it is NOT.');
-    test.ok(_.includes(api, 'joinSync'), 'Expected `joinSync` to be present, but it is NOT.');
-    test.ok(!_.includes(api, 'joinAsync'), 'Expected `joinAsync` to NOT be present, but it is.');
-    test.ok(!_.includes(api, 'joinPromise'), 'Expected `joinPromise` to NOT be present, but it is.');
-    test.ok(!_.includes(api, 'joinundefined'), 'Expected `joinundefined` to NOT be present, but it is.');
+    test.ok(_.includes(api, 'format'), 'Expected `format` to be present, but it is NOT.');
+    test.ok(_.includes(api, 'formatSync'), 'Expected `formatSync` to be present, but it is NOT.');
+    test.ok(!_.includes(api, 'formatAsync'), 'Expected `formatAsync` to NOT be present, but it is.');
+    test.ok(!_.includes(api, 'formatPromise'), 'Expected `formatPromise` to NOT be present, but it is.');
+    test.ok(!_.includes(api, 'formatundefined'), 'Expected `formatundefined` to NOT be present, but it is.');
     test.done();
   },
 
@@ -56,6 +56,15 @@ module.exports = {
     arrayList.addSync("hello");
     arrayList.addSync("world");
     test.strictEqual(arrayList.sizeSync(), 2);
+    test.done();
+  },
+
+  testStaticSyncCalls: function(test) {
+    test.expect(1);
+    // Note: java.import executes javascript code in lib/nodeJavaBridge that makes sync calls to java classes.
+    // Among other things, java.import creates Sync functions for static methods.
+    var String = java.import("java.lang.String");
+    test.strictEqual(String.formatSync( '%s--%s', "hello", "world"), "hello--world");
     test.done();
   },
 
