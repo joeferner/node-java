@@ -1,13 +1,31 @@
 #!/bin/bash -e
 
 JAVA_VERSION=1.7
-JAVAC_OPTS="-source ${JAVA_VERSION} -target ${JAVA_VERSION} -bootclasspath /opt/jdk/jre/lib/rt.jar"
 
-cd test
-javac ${JAVAC_OPTS} *.java
+if [ -x /usr/libexec/java_home ]; then
+  # On MacOS we can do this to choose the Java 1.7 JDK
+  # and then let the JDK default -source and -target to 1.7
+  JAVA_HOME=$(/usr/libexec/java_home -v ${JAVA_VERSION})
 
-cd ../src-java/node
-javac ${JAVAC_OPTS} *.java
+  cd test
+  ${JAVA_HOME}/bin/javac *.java
 
-cd ../../
-javah -classpath src-java -d ./src node.NodeDynamicProxyClass
+  cd ../src-java/node
+  ${JAVA_HOME}/bin/javac *.java
+
+  cd ../../
+  ${JAVA_HOME}/bin/javah -classpath src-java -d ./src node.NodeDynamicProxyClass
+else
+  JAVAC_OPTS="-source ${JAVA_VERSION} -target ${JAVA_VERSION} -bootclasspath /opt/jdk/jre/lib/rt.jar"
+
+  cd test
+  javac ${JAVAC_OPTS} *.java
+
+  cd ../src-java/node
+  javac ${JAVAC_OPTS} *.java
+
+  cd ../../
+  javah -classpath src-java -d ./src node.NodeDynamicProxyClass
+fi
+
+
