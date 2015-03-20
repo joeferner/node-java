@@ -62,7 +62,7 @@ module.exports = {
     // Note: java.import executes javascript code in lib/nodeJavaBridge that makes sync calls to java classes.
     // Among other things, java.import creates Sync functions for static methods.
     var String = java.import("java.lang.String");
-    test.strictEqual(String.formatSync('%s--%s', java.newArray("java.lang.String", ["hello", "world"])), "hello--world");
+    test.strictEqual(String.formatSync('%s--%s', "hello", "world"), "hello--world");
     test.done();
   },
 
