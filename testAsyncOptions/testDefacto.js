@@ -25,12 +25,46 @@ module.exports = {
     test.done();
   },
 
+  testImportClass: function(test) {
+    test.expect(3);
+    // Note: java.import executes javascript code in lib/nodeJavaBridge that makes sync calls to java classes.
+    var ArrayList = java.import("java.util.ArrayList");
+    test.ok(ArrayList);
+    var arrayList = new ArrayList();
+    test.ok(arrayList);
+    test.strictEqual(arrayList.sizeSync(), 0);
+    test.done();
+  },
+
+  testStaticAPI: function(test) {
+    test.expect(6);
+    var String = java.import("java.lang.String");
+    test.ok(String);
+
+    var api = _.functions(String);
+    test.ok(_.includes(api, 'format'), 'Expected `format` to be present, but it is NOT.');
+    test.ok(_.includes(api, 'formatSync'), 'Expected `formatSync` to be present, but it is NOT.');
+    test.ok(!_.includes(api, 'formatAsync'), 'Expected `formatAsync` to NOT be present, but it is.');
+    test.ok(!_.includes(api, 'formatPromise'), 'Expected `formatPromise` to NOT be present, but it is.');
+    test.ok(!_.includes(api, 'formatundefined'), 'Expected `formatundefined` to NOT be present, but it is.');
+    test.done();
+  },
+
   testSyncCalls: function(test) {
     test.expect(1);
     var arrayList = java.newInstanceSync("java.util.ArrayList");
     arrayList.addSync("hello");
     arrayList.addSync("world");
     test.strictEqual(arrayList.sizeSync(), 2);
+    test.done();
+  },
+
+  testStaticSyncCalls: function(test) {
+    test.expect(1);
+    // Note: java.import executes javascript code in lib/nodeJavaBridge that makes sync calls to java classes.
+    // Among other things, java.import creates Sync functions for static methods.
+    var String = java.import("java.lang.String");
+    test.strictEqual(String.formatSync('%s--%s', java.newArray("java.lang.String", ["hello", "world"])), "hello--world");
     test.done();
   },
 
