@@ -64,6 +64,7 @@ v8::Handle<v8::Value> MethodCallBaton::runSync() {
 // called by NanAsyncWorker. This will be on a worker thread
 void MethodCallBaton::Execute() {
   JNIEnv* env = javaGetEnv(this->m_java->getJvm(), this->m_java->getClassLoader());
+  JavaScope javaScope(env);
   ExecuteInternal(env);
 }
 
@@ -73,6 +74,7 @@ void MethodCallBaton::WorkComplete() {
 
   if(callback) {
     JNIEnv* env = javaGetEnv(this->m_java->getJvm(), this->m_java->getClassLoader());
+    JavaScope javaScope(env);
     v8::Handle<v8::Value> result = resultsToV8(env);
     if (result->IsNativeError()) {
       v8::Handle<v8::Value> argv[] = {
