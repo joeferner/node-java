@@ -185,7 +185,27 @@ java.newInstancePromise("java.util.ArrayList")
 These methods come in both async and sync variants. If you provide the `promisify` and `promiseSuffix` attributes in asyncOptions then you'll also get the Promises/A+ variant for these three functions. However, if you change the defacto
 conventions for the `syncSuffix` (i.e. 'Sync') and/or `asyncSuffix` (i.e. '') it will not affect the naming for these three functions. I.e. no matter what you specify in asyncOptions, the async variants are named `newInstance`, `callMethod`, and `callStaticMethod`, and the sync variants are named `newInstanceSync`, `callMethodSync`, and `callStaticMethodSync`.
 
+## Varargs support
+
+With v0.5.0 node-java now supports methods with variadic arguments (varargs). Prior to v0.5.0,
+a javascript call to a Java varargs method had to construct an array of the variadic arguments using `java.newArray()`. With v0.5.0 javascript applications can simply use the variadic style.
+
+In most cases it is still acceptable to use `java.newArray()`. But it is now possible to pass a plain javascript array, or use the variadic style. For example, consider these snippets from the unit test file `test/varargs-test.js`:
+
+```
+    test.equal(Test.staticVarargsSync(5, 'a', 'b', 'c'), '5abc');
+    test.equal(Test.staticVarargsSync(5, ['a', 'b', 'c']), '5abc');
+    test.equal(Test.staticVarargsSync(5, java.newArray('java.lang.String', ['a', 'b', 'c'])), '5abc');
+
+```
+
+Note that when passing a Javascript array (e.g. `['a', 'b', 'c']`) for a varargs parameter, node-java must infer the Java type of the array. If all of the elements are of the same javascript primitive type (`string` in this example) then node-java will create a Java array of the corresponding type (e.g. `java.lang.String`). The Java types that node-java can infer are: `java.lang.String`, `java.lang.Boolean`, `java.lang.Integer`, `java.lang.Long`, and `java.lang.Double`. If an array has a mix of `Integer`, `Long`, and `Double`, then the inferred type will be `java.lang.Number`. Any other mix will result in an inferred type of `java.lang.Object`.
+
 # Release Notes
+
+### v0.5.0
+
+* Support for varargs. This change is not 100% backwards compatible, but the fix is generally easy and results in more natural code.
 
 ### v0.2.0
 
