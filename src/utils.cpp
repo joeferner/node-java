@@ -2,6 +2,7 @@
 #include <string.h>
 #include <algorithm>
 #include <sstream>
+#include <set>
 #include "javaObject.h"
 #include "java.h"
 
@@ -244,6 +245,67 @@ jobject javaFindField(JNIEnv* env, jclass clazz, std::string& fieldName) {
   return result;
 }
 
+const std::string kObject("java/lang/Object");
+const std::string kString("java/lang/String");
+const std::string kInteger("java/lang/Integer");
+const std::string kNumber("java/lang/Number");
+const std::string kLong("java/lang/Long");
+const std::string kDouble("java/lang/Double");
+const std::string kBoolean("java/lang/Boolean");
+
+static std::string getArrayElementType(v8::Local<v8::Array> array, uint32_t arraySize) {
+  std::set<std::string> types;
+
+  if (arraySize == 0) {
+    return kObject;
+  }
+
+  for(uint32_t i=0; i<arraySize; i++) {
+    v8::Local<v8::Value> arg = array->Get(i);
+    if (arg->IsArray()) {
+      return kObject; // We can exit as soon as we know java/lang/Object is required.
+    }
+    else if(arg->IsString()) {
+      types.insert(kString);
+    }
+    else if(arg->IsInt32() || arg->IsUint32()) {
+      types.insert(kInteger);
+    }
+    else if(arg->IsNumber()) {
+      types.insert(kDouble);
+    }
+    else if(arg->IsBoolean()) {
+      types.insert(kBoolean);
+    }
+    else if(arg->IsObject()) {
+      v8::Local<v8::Object> obj = v8::Local<v8::Object>::Cast(arg);
+      v8::Local<v8::Value> isJavaLong = obj->GetHiddenValue(NanNew<v8::String>(V8_HIDDEN_MARKER_JAVA_LONG));
+      if(!isJavaLong.IsEmpty() && isJavaLong->IsBoolean()) {
+        types.insert(kLong);
+      }
+      else {
+        return kObject; // We can exit as soon as we know java/lang/Object is required.
+      }
+    }
+  }
+
+  if(types.size() == 1) {
+    return *(types.begin());
+  }
+
+  assert(types.size() >= 1);
+  assert(types.find(kObject)==types.end());
+
+  // We have an array with two or more types. All types can be converted to Object, but there is one other
+  // case we support, which is when all the types are numeric types.
+  // We currently have only two non-numeric types. If neither is present in the set, the rest must be numeric.
+  if (types.find(kString)==types.end() && types.find(kBoolean)==types.end()) {
+    return kNumber;
+  }
+
+  return kObject;
+}
+
 jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
   if(arg.IsEmpty() || arg->IsNull() || arg->IsUndefined()) {
     return NULL;
@@ -252,7 +314,8 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
   if(arg->IsArray()) {
     v8::Local<v8::Array> array = v8::Local<v8::Array>::Cast(arg);
     uint32_t arraySize = array->Length();
-    jclass objectClazz = env->FindClass("java/lang/Object");
+    std::string arrayType = getArrayElementType(array, arraySize);
+    jclass objectClazz = env->FindClass(arrayType.c_str());
     jobjectArray result = env->NewObjectArray(arraySize, objectClazz, NULL);
     for(uint32_t i=0; i<arraySize; i++) {
       jobject val = v8ToJava(env, array->Get(i));
