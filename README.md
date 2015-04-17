@@ -253,6 +253,7 @@ All items must be added to the classpath before calling any other node-java meth
 __Example__
 
     java.classpath.push('commons.io.jar');
+    java.classpath.pathDir('lib');
 
 <a name="javaOptions" />
 **java.options**
