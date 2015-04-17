@@ -53,9 +53,9 @@ public class Test {
     }
     return result.toString();
   }
-  
+
   public static String staticBigDecimalToString(java.math.BigDecimal bigDecimal) { return bigDecimal.toString(); }
-  
+
   public static int staticChar(char ch) { return (int)ch; }
   public static short[] staticShortArray(Short[] arg) {
     short[] b = new short[arg.length];
@@ -163,4 +163,12 @@ public class Test {
     Value2
   }
   public static String staticEnumToString(StaticEnum e) { return e.toString(); }
+
+  public static String varArgsSignature(Object... args) { return "Object..."; }
+  public static String varArgsSignature(Boolean... args) { return "Boolean..."; }
+  public static String varArgsSignature(Double... args) { return "Double..."; }
+  public static String varArgsSignature(Integer... args) { return "Integer..."; }
+  public static String varArgsSignature(Long... args) { return "Long..."; }
+  public static String varArgsSignature(Number... args) { return "Number..."; }
+  public static String varArgsSignature(String... args) { return "String..."; }
 }
