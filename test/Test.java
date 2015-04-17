@@ -7,7 +7,8 @@ public class Test {
   public static Test[] staticArrayObjects = null;
 
   public Test() {}
-  public Test(int i) { this.i = i; }
+  public Test(Integer i) { this.i = i; }
+  public Test(Integer i, String... other) { this.i = i; }
 
   public int getInt() { return i; }
 
@@ -44,8 +45,17 @@ public class Test {
   public int methodAmbiguous(Double a) { return 1; }
   public int methodAmbiguous(Integer a) { return 2; }
 
+  public static String staticVarargs(Integer i, String... args) {
+    java.lang.StringBuilder result = new java.lang.StringBuilder();
+    result.append(i);
+    for(String arg : args) {
+      result.append(arg);
+    }
+    return result.toString();
+  }
+
   public static String staticBigDecimalToString(java.math.BigDecimal bigDecimal) { return bigDecimal.toString(); }
-  
+
   public static int staticChar(char ch) { return (int)ch; }
   public static short[] staticShortArray(Short[] arg) {
     short[] b = new short[arg.length];
@@ -153,4 +163,12 @@ public class Test {
     Value2
   }
   public static String staticEnumToString(StaticEnum e) { return e.toString(); }
+
+  public static String varArgsSignature(Object... args) { return "Object..."; }
+  public static String varArgsSignature(Boolean... args) { return "Boolean..."; }
+  public static String varArgsSignature(Double... args) { return "Double..."; }
+  public static String varArgsSignature(Integer... args) { return "Integer..."; }
+  public static String varArgsSignature(Long... args) { return "Long..."; }
+  public static String varArgsSignature(Number... args) { return "Number..."; }
+  public static String varArgsSignature(String... args) { return "String..."; }
 }

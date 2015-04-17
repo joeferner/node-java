@@ -6,7 +6,7 @@ if [ -d build/commons-lang ]; then
 else
   mkdir -p build
   cd build
-  git clone --depth 1 git@github.com:apache/commons-lang.git
+  git clone --depth 1 git@github.com:joeferner/commons-lang.git
   cd commons-lang
 fi
 
