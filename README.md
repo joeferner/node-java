@@ -179,7 +179,7 @@ java.newInstancePromise("java.util.ArrayList")
 * If you provide `asyncOptions.promisify` then you must provide a *non-empty* string for `asyncOptions.promiseSuffix`.
 * Either (but not both) `asyncSuffix` or `syncSuffix` can be the empty string. If you want the defacto standard behavior for no suffix on async methods, you must provide an empty string for `asyncSuffix`.
 * We've tested promises with five Promises/A+ implementations. See `testHelpers.js` for more information.
-* NOTE: Due to specifics of initialization order, the methods  `java.newInstancePromise`, `java.callMethodPromise`, and `java.callStaticMethodPromise` are not available until some other java method is called. You may need to call some other java method such as `java.import()` to finalize java initialization.
+* NOTE: Due to specifics of initialization order, the methods  `java.newInstancePromise`, `java.callMethodPromise`, and `java.callStaticMethodPromise` are not available until the JVM has been created. You may need to call some other java method such as `java.import()` to finalize java initialization, or even better, the function `java.ensureJVM()`.
 
 ##### Special note about the exported module functions `newInstance`, `callMethod`, and `callStaticMethod`.
 These methods come in both async and sync variants. If you provide the `promisify` and `promiseSuffix` attributes in asyncOptions then you'll also get the Promises/A+ variant for these three functions. However, if you change the defacto
@@ -200,6 +200,10 @@ In most cases it is still acceptable to use `java.newArray()`. But it is now pos
 ```
 
 Note that when passing a Javascript array (e.g. `['a', 'b', 'c']`) for a varargs parameter, node-java must infer the Java type of the array. If all of the elements are of the same javascript primitive type (`string` in this example) then node-java will create a Java array of the corresponding type (e.g. `java.lang.String`). The Java types that node-java can infer are: `java.lang.String`, `java.lang.Boolean`, `java.lang.Integer`, `java.lang.Long`, and `java.lang.Double`. If an array has a mix of `Integer`, `Long`, and `Double`, then the inferred type will be `java.lang.Number`. Any other mix will result in an inferred type of `java.lang.Object`.
+
+## JVM Creation
+
+With v0.5.1 a new API is available to make it easier for a complex application to have full control over JVM creation. In particular, it is now easier to compose an application from several modules, each of which must add to the Java classpath and possibly do other operations just before or just after the JVM has been created. See the methods [ensureJvm](#javaEnsureJvm) and [registerClient](#javaRegisterClient). See also several of the tests in the testAsyncOptions directory.
 
 # Release Notes
 
@@ -233,6 +237,10 @@ Note that when passing a Javascript array (e.g. `['a', 'b', 'c']`) for a varargs
  * [newDouble](#javaNewDouble)
  * [newFloat](#javaNewFloat)
  * [newProxy](#javaNewProxy)
+ * [isJvmCreated](#javaIsJvmCreated)
+ * [registerClient](#javaRegisterClient)
+ * [registerClientP](#javaRegisterClientP)
+ * [ensureJvm](#javaEnsureJvm)
 
 ## java objects
  * [Call Method](#javaObjectCallMethod)
@@ -520,6 +528,28 @@ __Example__
 
     var thread = java.newInstanceSync("java.lang.Thread", myProxy);
     thread.start();
+ 
+<a name="javaisJvmCreated" />
+**java.isJvmCreated()**
+
+Returns true if the JVM has been created. The JVM can only be created once.
+
+<a name="javaRegisterClient" />
+**java.registerClient(before, after)**
+
+Register that a client wants to be called back immediately before and/or immediately after the JVM is created. If used, this function must be called before the JVM has been created. The before function is typically used to add to the classpath. The function may execute asynchronous operations (such as a async glob function). The after function is sometimes useful for doing one-time initialization that requires the JVM to first be initialized. If either function is unnecessary, use `null` or `undefined`. See also `registerClientP` and `ensureJvm`. See the unit tests in `testAsyncOptions` for examples.
+
+<a name="javaRegisterClientP" />
+**java.registerClientP(before, after)**
+
+Like java.registerClient, but before and after are assumed to be functions returning promises.
+
+<a name="javaEnsureJvm" />
+**java.ensureJvm(callback)**
+
+If the JVM has not yet been created, execute the full JVM initialization process, then call callback function when initialization is complete. If the JVM has been created, just call the callback. Note that the full initialization process includes: 1) executing all registered client *before* hooks, 2) creating the JVM, then 3) executing all registered client *after* hooks.
+
+
 
 <a name="javaObject"/>
 ## java object
