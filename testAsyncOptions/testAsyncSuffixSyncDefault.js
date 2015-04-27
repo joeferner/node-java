@@ -110,7 +110,7 @@ module.exports = {
   // See testUnusableMethodName.js for the purpose of these last two tests.
   // In that test, Test.name_alt() is an async method.
   // In this test, it is a sync method.
-  testUnusableNameThrows: function(test) {
+  testUnusableMethodNameThrows: function(test) {
     test.expect(1);
     var Test = java.import("Test");
     test.ok(Test);
@@ -130,11 +130,29 @@ module.exports = {
     );
   },
 
-  testAlternateNameWorks: function(test) {
+  testAlternateMethodNameWorks: function(test) {
     test.expect(1);
     var Test = java.import("Test");
     test.ok(Test);
     Test.name_alt();
     test.done();
-  }
+  },
+
+  testReservedFieldName: function(test) {
+    test.expect(5);
+    var TestEnum = java.import("Test$Enum");
+    test.ok(TestEnum);
+
+    // 'foo' and 'bar' are valid enum names
+    test.strictEqual(TestEnum.foo.toString(), "foo");
+    test.strictEqual(TestEnum.bar.toString(), "bar");
+
+    // TestEnum.name is actually the name of the proxy constructor function.
+    test.strictEqual(TestEnum.name, "javaClassConstructorProxy");
+
+    // Instead we need to acccess TestEnum.name_alt
+    test.strictEqual(TestEnum.name_alt.toString(), "name");
+
+    test.done();
+  },
 }

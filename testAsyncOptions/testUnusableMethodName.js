@@ -41,7 +41,7 @@ module.exports = {
     });
   },
 
-  testUnusableNameThrows: function(test) {
+  testUnusableMethodNameThrows: function(test) {
     test.expect(1);
     var Test = java.import("Test");
     test.ok(Test);
@@ -63,7 +63,7 @@ module.exports = {
     );
   },
 
-  testAlternateNameWorks: function(test) {
+  testAlternateMethodNameWorks: function(test) {
     test.expect(2);
     var Test = java.import("Test");
     test.ok(Test);
@@ -71,5 +71,23 @@ module.exports = {
       test.ifError(err);
       test.done();
     });
-  }
+  },
+
+  testReservedFieldName: function(test) {
+    test.expect(5);
+    var TestEnum = java.import("Test$Enum");
+    test.ok(TestEnum);
+
+    // 'foo' and 'bar' are valid enum names
+    test.strictEqual(TestEnum.foo.toStringSync(), "foo");
+    test.strictEqual(TestEnum.bar.toStringSync(), "bar");
+
+    // TestEnum.name is actually the name of the proxy constructor function.
+    test.strictEqual(TestEnum.name, "javaClassConstructorProxy");
+
+    // Instead we need to acccess TestEnum.name_alt
+    test.strictEqual(TestEnum.name_alt.toString(), "name");
+
+    test.done();
+  },
 }
