@@ -6,12 +6,35 @@ var java = require("../");
 var assert = require("assert");
 var _ = require('lodash');
 
-java.asyncOptions = {
-  syncSuffix: "",
-  asyncSuffix: "Async"
-};
-
 module.exports = {
+  launch: function(test) {
+    test.expect(4);
+    java.asyncOptions = {
+      syncSuffix: "",
+      asyncSuffix: "Async",
+      ifReadOnlySuffix: "_alt"
+    };
+
+    function before(callback) {
+      java.classpath.push('test/');
+      test.ok(!java.isJvmCreated());
+      callback();
+    }
+
+    function after(callback) {
+      test.ok(java.isJvmCreated());
+      callback();
+    }
+
+    java.registerClient(before, after);
+
+    java.ensureJvm(function(err) {
+      test.ifError(err);
+      test.ok(java.isJvmCreated());
+      test.done();
+    });
+  },
+
   testAPI: function(test) {
     test.expect(5);
     var arrayList = java.newInstanceSync("java.util.ArrayList");
@@ -82,5 +105,36 @@ module.exports = {
         });
       });
     });
+  },
+
+  // See testUnusableMethodName.js for the purpose of these last two tests.
+  // In that test, Test.name_alt() is an async method.
+  // In this test, it is a sync method.
+  testUnusableNameThrows: function(test) {
+    test.expect(1);
+    var Test = java.import("Test");
+    test.ok(Test);
+    test.throws(
+      function() {
+        Test.name();
+      },
+      function(err) {
+        if (err instanceof TypeError) {
+          test.done();
+          return true;
+        } else {
+          test.done(err);
+          return false;
+        }
+      }
+    );
+  },
+
+  testAlternateNameWorks: function(test) {
+    test.expect(1);
+    var Test = java.import("Test");
+    test.ok(Test);
+    Test.name_alt();
+    test.done();
   }
 }
