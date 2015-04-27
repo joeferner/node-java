@@ -171,4 +171,7 @@ public class Test {
   public static String varArgsSignature(Long... args) { return "Long..."; }
   public static String varArgsSignature(Number... args) { return "Number..."; }
   public static String varArgsSignature(String... args) { return "String..."; }
+  // Test readonly properties on functions that throw errors in certain versions of
+  // node.
+  public static void name() {}
 }
