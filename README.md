@@ -157,7 +157,7 @@ Example:
 var java = require("java");
 java.asyncOptions = {
   asyncSuffix: undefined,     // Don't generate node-style methods taking callbacks
-  syncSuffix: ""              // Sync methods use the base name(!!)
+  syncSuffix: "",              // Sync methods use the base name(!!)
   promiseSuffix: "Promise",   // Generate methods returning promises, using the suffix Promise.
   promisify: require("when/node").lift
 };
