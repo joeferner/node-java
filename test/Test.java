@@ -174,4 +174,6 @@ public class Test {
   // Test readonly properties on functions that throw errors in certain versions of
   // node.
   public static void name() {}
+
+  public enum Enum { foo, bar, name };
 }
