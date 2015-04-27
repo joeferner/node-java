@@ -84,6 +84,49 @@ nw-gyp build
 
 _See testIntegration/webkit for a working example_
 
+## Using node-java in existing maven projects
+
+When using node-java in existing maven projects, all the dependencies and the class files of the project have to be pushed to the classpath. 
+
+One possible solution would be:
+
+Issue the command:
+
+> mvn dependency:copy-dependencies
+
+Then create the following module javaInit:
+
+```javascript
+"use strict";
+var fs = require("fs");
+var java = require("java");
+var baseDir = "./target/dependency";
+var dependencies = fs.readdirSync(baseDir);
+
+dependencies.forEach(function(dependency){
+    java.classpath.push(baseDir + "/" + dependency);
+})
+
+java.classpath.push("./target/classes");
+java.classpath.push("./target/test-classes");
+
+exports.getJavaInstance = function() {
+    return java;
+}
+```
+
+and then in the consuming class write:
+
+```javascript
+
+var javaInit = require('./javaInit');
+var java = javaInit.getJavaInstance();
+
+//your code goes here
+```
+
+
+
 ## Quick Examples
 
 ```javascript
