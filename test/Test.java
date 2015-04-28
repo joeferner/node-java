@@ -171,7 +171,22 @@ public class Test {
   public static String varArgsSignature(Long... args) { return "Long..."; }
   public static String varArgsSignature(Number... args) { return "Number..."; }
   public static String varArgsSignature(String... args) { return "String..."; }
-  // Test readonly properties on functions that throw errors in certain versions of
-  // node.
-  public static void name() {}
+
+  // The Javascript object returned by java.import(classname) is a Function object
+  // so that it can be used as a constructor.
+  // Javascript reserves some properties of Function as non-writable: 'name', 'attributes', 'caller'.
+  // This means we can't expose a static member such as 'name()' with that name.
+  // We instead append a suffix (asyncOptions.ifReadOnlySuffix)
+  // The following static members are used for unit tests involving these cases.
+
+  // For testing static member functions with reserved names
+  public static String name() { return "name"; }
+  public static String attributes() { return "attributes"; }
+  public static String caller() { return "caller"; }
+
+  // For testing public static fields with reserved names
+  public enum Enum {
+    foo, bar,                 // non-reserved
+    name, attributes, caller  // reserved
+  };
 }
