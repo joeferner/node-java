@@ -41,7 +41,7 @@ module.exports = {
     });
   },
 
-  testUnusableMethodNameThrows: function(test) {
+  testUnusableMethodName_nameThrows: function(test) {
     test.expect(1);
     var Test = java.import("Test");
     test.ok(Test);
@@ -63,18 +63,52 @@ module.exports = {
     );
   },
 
-  testAlternateMethodNameWorks: function(test) {
-    test.expect(2);
+  testUnusableMethodName_callerThrows: function(test) {
+    test.expect(1);
     var Test = java.import("Test");
     test.ok(Test);
-    Test.name_alt(function(err) {
+    test.throws(
+      function() {
+        Test.caller(function(err) {
+          test.fail();  // should not get here
+        });
+      },
+      function(err) {
+        if (err instanceof TypeError) {
+          test.done();
+          return true;
+        } else {
+          test.done(err);
+          return false;
+        }
+      }
+    );
+  },
+
+  testAlternateMethodName_name_altWorks: function(test) {
+    test.expect(3);
+    var Test = java.import("Test");
+    test.ok(Test);
+    Test.name_alt(function(err, val) {
       test.ifError(err);
+      test.strictEqual(val, "name");
+      test.done();
+    });
+  },
+
+  testAlternateMethodName_caller_altWorks: function(test) {
+    test.expect(3);
+    var Test = java.import("Test");
+    test.ok(Test);
+    Test.caller_alt(function(err, val) {
+      test.ifError(err);
+      test.strictEqual(val, "caller");
       test.done();
     });
   },
 
   testReservedFieldName: function(test) {
-    test.expect(5);
+    test.expect(7);
     var TestEnum = java.import("Test$Enum");
     test.ok(TestEnum);
 
@@ -87,6 +121,8 @@ module.exports = {
 
     // Instead we need to acccess TestEnum.name_alt
     test.strictEqual(TestEnum.name_alt.toString(), "name");
+    test.strictEqual(TestEnum.caller_alt.toString(), "caller");
+    test.strictEqual(TestEnum.attributes_alt.toString(), "attributes");
 
     test.done();
   },

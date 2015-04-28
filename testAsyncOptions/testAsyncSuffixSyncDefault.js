@@ -131,15 +131,17 @@ module.exports = {
   },
 
   testAlternateMethodNameWorks: function(test) {
-    test.expect(1);
+    test.expect(4);
     var Test = java.import("Test");
     test.ok(Test);
-    Test.name_alt();
+    test.strictEqual(Test.name_alt(), "name");
+    test.strictEqual(Test.caller_alt(), "caller");
+    test.strictEqual(Test.attributes_alt(), "attributes");
     test.done();
   },
 
   testReservedFieldName: function(test) {
-    test.expect(5);
+    test.expect(7);
     var TestEnum = java.import("Test$Enum");
     test.ok(TestEnum);
 
@@ -152,6 +154,8 @@ module.exports = {
 
     // Instead we need to acccess TestEnum.name_alt
     test.strictEqual(TestEnum.name_alt.toString(), "name");
+    test.strictEqual(TestEnum.caller_alt.toString(), "caller");
+    test.strictEqual(TestEnum.attributes_alt.toString(), "attributes");
 
     test.done();
   },

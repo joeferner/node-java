@@ -3,6 +3,7 @@
 var java = require("../testHelpers").java;
 var nodeunit = require("nodeunit");
 var util = require("util");
+var _ = require("lodash");
 
 exports['Import Class'] = nodeunit.testCase({
   tearDown: function (callback) {
@@ -28,33 +29,39 @@ exports['Import Class'] = nodeunit.testCase({
   },
 
   "import TestEnum with unsable name": function (test) {
+    test.expect(5);
     var TestEnum = java.import('Test$Enum');
 
     // 'foo' and 'bar' are valid enum names
     test.strictEqual(TestEnum.foo.toStringSync(), "foo");
     test.strictEqual(TestEnum.bar.toStringSync(), "bar");
 
-    test.throws(
-      function() {
-        // The enum also defines 'name', but Javascript prevents us from using it,
-        // since Function.name is always an unwritable property.
-        var x = TestEnum.name.toStringSync();
-      },
-      TypeError
-    );
+    _.forEach(['name', 'caller', 'attributes'], function(prop) {
+      test.throws(
+        function() {
+          // The enum also defines 'name', 'caller', and 'attributes', but Javascript prevents us from using them,
+          // since these are unwritable properties of Function.
+          var x = TestEnum[prop].toStringSync();
+        },
+        TypeError
+      );
+    });
     test.done();
   },
 
   "import TestEnum and use alternate name": function (test) {
+    test.expect(5);
     var TestEnum = java.import('Test$Enum');
 
     // 'foo' and 'bar' are valid enum names
     test.strictEqual(TestEnum.foo.toStringSync(), "foo");
     test.strictEqual(TestEnum.bar.toStringSync(), "bar");
 
-    // 'name' is not, so we must use 'name_' to reference the enum.
-    // But note that it's value is still "name".
+    // 'name', 'caller', and 'attributes' are not, so we must use e.g. 'name_' to reference the enum.
+    // But note that the value is still e.g. "name".
     test.strictEqual(TestEnum.name_.toStringSync(), "name");
+    test.strictEqual(TestEnum.caller_.toStringSync(), "caller");
+    test.strictEqual(TestEnum.attributes_.toStringSync(), "attributes");
     test.done();
   }
 
