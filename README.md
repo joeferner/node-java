@@ -86,7 +86,7 @@ _See testIntegration/webkit for a working example_
 
 ## Using node-java in existing maven projects
 
-When using node-java in existing maven projects, all the dependencies and the class files of the project have to be pushed to the classpath. 
+When using node-java in existing maven projects, all the dependencies and the class files of the project have to be pushed to the classpath.
 
 One possible solution would be:
 
@@ -571,7 +571,7 @@ __Example__
 
     var thread = java.newInstanceSync("java.lang.Thread", myProxy);
     thread.start();
- 
+
 <a name="javaisJvmCreated" />
 **java.isJvmCreated()**
 
@@ -696,6 +696,53 @@ ShutdownHookHelper.setShutdownHookSync(java.newProxy('java.lang.Runnable', {
 # Object lifetime
 
 When you call a Java method through node-java, any arguments (V8/JavaScript objects) will be converted to Java objects  on the v8 main thread via a call to v8ToJava (found in utils.cpp). The JavaScript object is not held on to and can be garbage collected by v8. If this is an async call, the reference count on the Java objects will be incremented. The Java method will be invoked in a node.js async thread (see uv_queue_work). When the method returns, the resulting object will be returned to the main v8 thread and converted to JavaScript objects via a call to javaToV8 and the Java object's reference count will then be decremented to allow for garbage collection. The resulting v8 object will then be returned to the callers callback function.
+
+# Static member name conficts ('name', 'arguments', 'caller')
+
+The Javscript object returned by `java.import(classname)` is a Javascript constructor Function, implemented such that you can create instances of the Java class. For example:
+
+```javascript
+var Test = java.import('Test');
+var test = new Test();
+
+Test.someStaticMethod(function(err, result) { ... });
+
+var value1 = Test.NestedEnum.Value1;
+```
+
+But Javascript reserves a few property names of Function objects: `name`, `arguments`, and `caller`. If your class has public static members (either methods or fields) with these names, node-java is unable to create the necessary property to implement the class's API. For example, suppose your class `Test` implements a static method named `caller`, or has a `NestedEnum` with a value `name`:
+
+```java
+public class Test {
+    ...
+    public static String caller() { return "something"; }
+    public enum NestedEnum { foo, name };
+}
+```
+
+In Javascript, you would expect to be able to use those static members like this:
+
+```javascript
+var Test = java.import('Test');
+Test.caller(function(err, result) { ... });  // ERROR
+var value = Test.NestedEnum.name;  // ERROR
+```
+
+Node-java can't create those properties, so the above code won't work. Instead, node-java appends a suffix to the name. The default suffix is simpy an underscore `_`, but you can change the suffix using asyncOptions:
+
+```javascript
+var java = require('java');
+
+java.asyncOptions = {
+  asyncSuffix: "",
+  syncSuffix: "Sync",
+  ifReadOnlySuffix: "_alt"
+};
+
+var Test = java.import('Test');
+Test.caller_alt(function(err, result) { ... });  // OK
+var value = Test.NestedEnum.name_alt;  // OK
+```
 
 # Troubleshooting
 
