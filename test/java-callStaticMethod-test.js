@@ -268,7 +268,7 @@ exports['Java - Call Static Method'] = nodeunit.testCase({
     test.equal(str, "Value1");
     test.done();
   },
-  
+
   "Call static method with varargs": function(test) {
     var Test = java.import("Test");
 
@@ -279,6 +279,14 @@ exports['Java - Call Static Method'] = nodeunit.testCase({
     test.equal(str, "5abc");
 
     test.done();
-  }
+  },
 
+  "Call static method named name_": function(test) {
+    test.expect(1);
+    var Test = java.import("Test");
+    Test.name_(function(err) {
+      test.ifError(err);
+      test.done();
+    });
+  }
 });
