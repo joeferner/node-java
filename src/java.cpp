@@ -249,6 +249,8 @@ v8::Local<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   JNI_CreateJavaVM(&jvmTemp, (void **)env, &args);
   *jvm = jvmTemp;
 
+  delete [] vmOptions;
+
   m_classLoader = getSystemClassLoader(*env);
 
   v8::Local<v8::Value> onJvmCreated = NanObjectWrapHandle(this)->Get(NanNew<v8::String>("onJvmCreated"));
