@@ -162,8 +162,6 @@ void Java::configureAsync(v8::Local<v8::Value>& asyncOptions) {
 }
 
 v8::Local<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
-  JavaVM* jvmTemp;
-  JavaVMInitArgs args;
 
   v8::Local<v8::Value> asyncOptions = NanObjectWrapHandle(this)->Get(NanNew<v8::String>("asyncOptions"));
   if (asyncOptions->IsObject()) {
@@ -226,11 +224,28 @@ v8::Local<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     vmOptions[i+1].optionString = strdup(*arrayItemStr);
   }
 
-  JNI_GetDefaultJavaVMInitArgs(&args);
+  JavaVMInitArgs args;
+  // The JNI invocation is documented to include a function JNI_GetDefaultJavaVMInitArgs that
+  // was formerly called here. But the documentation from Oracle is confusing/contradictory.
+  // 1) It claims that the caller must set args.version before calling JNI_GetDefaultJavaVMInitArgs, which
+  // we did not do.
+  // 2) The sample code provide at the top of the doc doesn't even call JNI_GetDefaultJavaVMInitArgs.
+  // 3) The Oracle documentation for Java 6 through Java 8 all contain a comment "Note that in the JDK/JRE, there is no
+  // longer any need to call JNI_GetDefaultJavaVMInitArgs."
+  // 4) It seems that some platforms don't implement JNI_GetDefaultJavaVMInitArgs, or have
+  // marked it deprecated.
+  // Omitting the call to JNI_GetDefaultJavaVMInitArgs works fine on Mac and Linux with Java 7 and Java 8.
+  // The Oracle documentation is here:
+  //     http://docs.oracle.com/javase/6/docs/technotes/guides/jni/spec/invocation.html
+  //     http://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/invocation.html
+  //     http://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/invocation.html
   args.version = JNI_BEST_VERSION;
+  // JNI_GetDefaultJavaVMInitArgs(&args);  // If this turns out to be necessary, it should be called here.
   args.ignoreUnrecognized = false;
   args.options = vmOptions;
   args.nOptions = vmOptionsCount;
+
+  JavaVM* jvmTemp;
   JNI_CreateJavaVM(&jvmTemp, (void **)env, &args);
   *jvm = jvmTemp;
 
