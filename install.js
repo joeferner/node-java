@@ -26,12 +26,8 @@ require('find-java-home')(function(err, home){
 
         binary = dll || dylib || so;
 
-        var jvmDllPath = path.resolve(__dirname, './build/jvm_dll_path.json');
+        var jvmDllPath = path.resolve(__dirname, './lib/jvm_dll_path.json');
         var jvmDllContent = path.delimiter + path.dirname(path.resolve(home, binary));
-
-        if (!fs.existsSync(path.resolve(__dirname, './build'))) {
-            fs.mkdirSync(path.resolve(__dirname, './build'));
-        }
 
         console.log('Creating ' + jvmDllPath);
 
