@@ -27,21 +27,19 @@ require('find-java-home')(function(err, home){
         binary = dll || dylib || so;
 
         var jvmDllPath = path.resolve(__dirname, './build/jvm_dll_path.json');
+        var jvmDllContent = path.delimiter + path.dirname(path.resolve(home, binary));
 
         console.log('Creating ' + jvmDllPath);
 
         fs.writeFileSync(
             jvmDllPath,
-            binary
-                ? JSON.stringify(
-                path.delimiter
-                + path.dirname(path.resolve(home, binary))
-            )
-                : '""'
+            binary ? JSON.stringify(jvmDllContent) : '""'
         );
 
-        console.log('Setting environment path for JVM DLL');
-        process.env.PATH += require('./build/jvm_dll_path.json');
+        if (binary) {
+            console.log('Setting environment path for JVM DLL');
+            process.env.PATH += jvmDllContent;
+        }
 
         var pregypRun = new pregyp.Run();
         pregypRun.parseArgv([ '--fallback-to-build' ]);
