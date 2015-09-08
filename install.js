@@ -10,7 +10,13 @@ require('find-java-home')(function(err, home){
     var so,soFiles;
     var binary;
 
+    if (!home) {
+        console.log('Java home not found. Can\'t continue');
+    }
+
     if(home){
+        console.log('Java home found. Searching for applicable DLLs');
+
         dll = glob.sync('**/jvm.dll', {cwd: home})[0];
         dylib = glob.sync('**/libjvm.dylib', {cwd: home})[0];
         soFiles = glob.sync('**/libjvm.so', {cwd: home});
@@ -20,8 +26,12 @@ require('find-java-home')(function(err, home){
 
         binary = dll || dylib || so;
 
+        var jvmDllPath = path.resolve(__dirname, './build/jvm_dll_path.json');
+
+        console.log('Creating ' + jvmDllPath);
+
         fs.writeFileSync(
-            path.resolve(__dirname, './build/jvm_dll_path.json'),
+            jvmDllPath,
             binary
                 ? JSON.stringify(
                 path.delimiter
@@ -29,7 +39,7 @@ require('find-java-home')(function(err, home){
             )
                 : '""'
         );
-        
+
         console.log('Setting environment path for JVM DLL');
         process.env.PATH += require('./build/jvm_dll_path.json');
 
