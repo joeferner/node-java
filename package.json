@@ -41,9 +41,9 @@
   },
   "bundledDependencies":["node-pre-gyp"],
   "scripts": {
-    "install": "node-pre-gyp install --fallback-to-build",
-    "test": "node testRunner.js",
-    "postinstall": "node postInstall.js"
+    "preinstall": "node postInstall.js",
+    "install": "node install.js",
+    "test": "node testRunner.js"
   },
   "main": "./index.js",
   "binary": {
