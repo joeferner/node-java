@@ -41,8 +41,7 @@
   },
   "bundledDependencies":["node-pre-gyp"],
   "scripts": {
-    "preinstall": "npm install glob; node postInstall.js",
-    "install": "npm install node-pre-gyp; node install.js",
+    "install": "node install.js",
     "test": "node testRunner.js"
   },
   "main": "./index.js",
