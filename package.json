@@ -30,16 +30,25 @@
     "find-java-home": "0.1.2",
     "glob": "5.0.5",
     "lodash": "3.7.0",
-    "nan": "1.7.0"
+    "nan": "1.7.0",
+    "node-pre-gyp": "0.5.x"
   },
   "devDependencies": {
     "chalk": "1.0.0",
     "nodeunit": "0.9.1",
-    "when": "3.7.2"
+    "when": "3.7.2",
+    "aws-sdk": "~2.0.0-rc.15"
   },
+  "bundledDependencies":["node-pre-gyp"],
   "scripts": {
+    "install": "node-pre-gyp install --fallback-to-build",
     "test": "node testRunner.js",
     "postinstall": "node postInstall.js"
   },
-  "main": "./index.js"
+  "main": "./index.js",
+  "binary": {
+    "module_name": "nodejavabridge_bindings",
+    "module_path": "./lib/binding/",
+    "host": "https://node-java.s3.amazonaws.com/"
+  }
 }
