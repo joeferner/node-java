@@ -11,7 +11,7 @@
 
 class Java;
 
-class JavaObject : public node::ObjectWrap {
+class JavaObject : public Nan::ObjectWrap {
 public:
   static void Init(v8::Handle<v8::Object> target);
   static v8::Local<v8::Object> New(Java* java, jobject obj);
@@ -20,8 +20,8 @@ public:
   jobject getObject() { return m_obj; }
   jclass getClass() { return m_class; }
 
-  void Ref() { node::ObjectWrap::Ref(); }
-  void Unref() { node::ObjectWrap::Unref(); }
+  void Ref() { Nan::ObjectWrap::Ref(); }
+  void Unref() { Nan::ObjectWrap::Unref(); }
 
 protected:
   JavaObject(Java* java, jobject obj);
@@ -50,7 +50,7 @@ private:
   static NAN_METHOD(doUnref);
   static NAN_GETTER(invocationHandlerGetter);
 
-  static v8::Persistent<v8::FunctionTemplate> s_proxyCt;
+  static Nan::Persistent<v8::FunctionTemplate> s_proxyCt;
   DynamicProxyData* m_dynamicProxyData;
 };
 

@@ -12,7 +12,7 @@
 class Java;
 class JavaObject;
 
-class MethodCallBaton : public NanAsyncWorker {
+class MethodCallBaton : public Nan::AsyncWorker {
 public:
   MethodCallBaton(Java* java, jobject method, jarray args, v8::Handle<v8::Value>& callback);
   virtual ~MethodCallBaton();
