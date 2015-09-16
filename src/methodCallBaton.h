@@ -18,10 +18,10 @@ public:
   virtual ~MethodCallBaton();
 
   void run();
-  v8::Handle<v8::Value> runSync();
+  v8::Local<v8::Value> runSync();
 
 protected:
-  v8::Handle<v8::Value> resultsToV8(JNIEnv *env);
+  v8::Local<v8::Value> resultsToV8(JNIEnv *env);
   virtual void Execute();
   virtual void WorkComplete();
   virtual void ExecuteInternal(JNIEnv* env) = 0;

@@ -55,7 +55,7 @@ void MethodCallBaton::run() {
   Nan::AsyncQueueWorker(this);
 }
 
-v8::Handle<v8::Value> MethodCallBaton::runSync() {
+v8::Local<v8::Value> MethodCallBaton::runSync() {
   JNIEnv* env = m_java->getJavaEnv();
   ExecuteInternal(env);
   return resultsToV8(env);
@@ -94,7 +94,7 @@ void MethodCallBaton::WorkComplete() {
   }
 }
 
-v8::Handle<v8::Value> MethodCallBaton::resultsToV8(JNIEnv *env) {
+v8::Local<v8::Value> MethodCallBaton::resultsToV8(JNIEnv *env) {
   Nan::EscapableHandleScope scope;
 
   if(m_error) {
