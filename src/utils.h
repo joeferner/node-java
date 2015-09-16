@@ -113,7 +113,7 @@ void unref(DynamicProxyData* dynamicProxyData);
 
 #define ARGS_BACK_CALLBACK()                              \
   bool callbackProvided;                                  \
-  v8::Handle<v8::Value> callback;                         \
+  v8::Local<v8::Value> callback;                          \
   if(info[info.Length()-1]->IsFunction()) {               \
     callback = info[argsEnd-1];                           \
     argsEnd--;                                            \

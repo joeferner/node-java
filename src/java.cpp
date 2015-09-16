@@ -405,7 +405,7 @@ NAN_METHOD(Java::newInstanceSync) {
   }
 
   // run
-  v8::Handle<v8::Value> callback = Nan::Null();
+  v8::Local<v8::Value> callback = Nan::Null();
   NewInstanceBaton* baton = new NewInstanceBaton(self, clazz, method, methodArgs, callback);
   v8::Local<v8::Value> result = baton->runSync();
   delete baton;
@@ -603,7 +603,7 @@ NAN_METHOD(Java::callStaticMethodSync) {
   }
 
   // run
-  v8::Handle<v8::Value> callback = Nan::Null();
+  v8::Local<v8::Value> callback = Nan::Null();
   StaticMethodCallBaton* baton = new StaticMethodCallBaton(self, clazz, method, methodArgs, callback);
   v8::Local<v8::Value> result = baton->runSync();
   delete baton;
@@ -644,7 +644,7 @@ NAN_METHOD(Java::callMethodSync) {
   }
 
   // run
-  v8::Handle<v8::Value> callback = Nan::Null();
+  v8::Local<v8::Value> callback = Nan::Null();
   InstanceMethodCallBaton* baton = new InstanceMethodCallBaton(self, javaObj, method, methodArgs, callback);
   v8::Local<v8::Value> result = baton->runSync();
   delete baton;
