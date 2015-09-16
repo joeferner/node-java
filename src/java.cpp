@@ -36,7 +36,7 @@ long my_getThreadId() {
 }
 
 /*static*/ void Java::Init(v8::Handle<v8::Object> target) {
-  Nan::HandleScope();
+  Nan::HandleScope scope;
 
   v8ThreadId = my_getThreadId();
 
@@ -71,7 +71,7 @@ long my_getThreadId() {
 }
 
 NAN_METHOD(Java::New) {
-  Nan::HandleScope();
+  Nan::HandleScope scope;
 
   Java *self = new Java();
   self->Wrap(info.This());
@@ -272,7 +272,7 @@ v8::Local<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
 
 NAN_GETTER(Java::AccessorProhibitsOverwritingGetter) {
   Java* self = Nan::ObjectWrap::Unwrap<Java>(info.This());
-  Nan::HandleScope();
+  Nan::HandleScope scope;
   v8::String::Utf8Value nameStr(property);
   if(!strcmp("classpath", *nameStr)) {
     info.GetReturnValue().Set(Nan::New(self->m_classPathArray));
@@ -309,7 +309,7 @@ void Java::destroyJVM(JavaVM** jvm, JNIEnv** env) {
 }
 
 NAN_METHOD(Java::getClassLoader) {
-  Nan::HandleScope();
+  Nan::HandleScope scope;
   Java* self = Nan::ObjectWrap::Unwrap<Java>(info.This());
   v8::Local<v8::Value> ensureJvmResults = self->ensureJvm();
   if(!ensureJvmResults->IsNull()) {
@@ -329,7 +329,7 @@ NAN_METHOD(Java::getClassLoader) {
 }
 
 NAN_METHOD(Java::newInstance) {
-  Nan::HandleScope();
+  Nan::HandleScope scope;
   Java* self = Nan::ObjectWrap::Unwrap<Java>(info.This());
   v8::Local<v8::Value> ensureJvmResults = self->ensureJvm();
   if(!ensureJvmResults->IsNull()) {
@@ -372,7 +372,7 @@ NAN_METHOD(Java::newInstance) {
 }
 
 NAN_METHOD(Java::newInstanceSync) {
-  Nan::HandleScope();
+  Nan::HandleScope scope;
   Java* self = Nan::ObjectWrap::Unwrap<Java>(info.This());
   v8::Local<v8::Value> ensureJvmResults = self->ensureJvm();
   if(!ensureJvmResults->IsNull()) {
@@ -416,7 +416,7 @@ NAN_METHOD(Java::newInstanceSync) {
 }
 
 NAN_METHOD(Java::newProxy) {
-  Nan::HandleScope();
+  Nan::HandleScope scope;
   Java* self = Nan::ObjectWrap::Unwrap<Java>(info.This());
   v8::Local<v8::Value> ensureJvmResults = self->ensureJvm();
   if(!ensureJvmResults->IsNull()) {
@@ -525,7 +525,7 @@ NAN_METHOD(Java::newProxy) {
 }
 
 NAN_METHOD(Java::callStaticMethod) {
-  Nan::HandleScope();
+  Nan::HandleScope scope;
   Java* self = Nan::ObjectWrap::Unwrap<Java>(info.This());
   v8::Local<v8::Value> ensureJvmResults = self->ensureJvm();
   if(!ensureJvmResults->IsNull()) {
@@ -569,7 +569,7 @@ NAN_METHOD(Java::callStaticMethod) {
 }
 
 NAN_METHOD(Java::callStaticMethodSync) {
-  Nan::HandleScope();
+  Nan::HandleScope scope;
   Java* self = Nan::ObjectWrap::Unwrap<Java>(info.This());
   v8::Local<v8::Value> ensureJvmResults = self->ensureJvm();
   if(!ensureJvmResults->IsNull()) {
@@ -615,7 +615,7 @@ NAN_METHOD(Java::callStaticMethodSync) {
 }
 
 NAN_METHOD(Java::callMethodSync) {
-  Nan::HandleScope();
+  Nan::HandleScope scope;
   Java* self = Nan::ObjectWrap::Unwrap<Java>(info.This());
   v8::Local<v8::Value> ensureJvmResults = self->ensureJvm();
   if(!ensureJvmResults->IsNull()) {
@@ -655,7 +655,7 @@ NAN_METHOD(Java::callMethodSync) {
 }
 
 NAN_METHOD(Java::callMethod) {
-  Nan::HandleScope();
+  Nan::HandleScope scope;
   Java* self = Nan::ObjectWrap::Unwrap<Java>(info.This());
   v8::Local<v8::Value> ensureJvmResults = self->ensureJvm();
   if(!ensureJvmResults->IsNull()) {
@@ -694,7 +694,7 @@ NAN_METHOD(Java::callMethod) {
 }
 
 NAN_METHOD(Java::findClassSync) {
-  Nan::HandleScope();
+  Nan::HandleScope scope;
   Java* self = Nan::ObjectWrap::Unwrap<Java>(info.This());
   v8::Local<v8::Value> ensureJvmResults = self->ensureJvm();
   if(!ensureJvmResults->IsNull()) {
@@ -723,7 +723,7 @@ NAN_METHOD(Java::findClassSync) {
 }
 
 NAN_METHOD(Java::newArray) {
-  Nan::HandleScope();
+  Nan::HandleScope scope;
   Java* self = Nan::ObjectWrap::Unwrap<Java>(info.This());
   v8::Local<v8::Value> ensureJvmResults = self->ensureJvm();
   if(!ensureJvmResults->IsNull()) {
@@ -861,7 +861,7 @@ NAN_METHOD(Java::newArray) {
 }
 
 NAN_METHOD(Java::newByte) {
-  Nan::HandleScope();
+  Nan::HandleScope scope;
   Java* self = Nan::ObjectWrap::Unwrap<Java>(info.This());
   v8::Local<v8::Value> ensureJvmResults = self->ensureJvm();
   if(!ensureJvmResults->IsNull()) {
@@ -891,7 +891,7 @@ NAN_METHOD(Java::newByte) {
 }
 
 NAN_METHOD(Java::newShort) {
-  Nan::HandleScope();
+  Nan::HandleScope scope;
   Java* self = Nan::ObjectWrap::Unwrap<Java>(info.This());
   v8::Local<v8::Value> ensureJvmResults = self->ensureJvm();
   if(!ensureJvmResults->IsNull()) {
@@ -920,7 +920,7 @@ NAN_METHOD(Java::newShort) {
 }
 
 NAN_METHOD(Java::newLong) {
-  Nan::HandleScope();
+  Nan::HandleScope scope;
   Java* self = Nan::ObjectWrap::Unwrap<Java>(info.This());
   v8::Local<v8::Value> ensureJvmResults = self->ensureJvm();
   if(!ensureJvmResults->IsNull()) {
@@ -949,7 +949,7 @@ NAN_METHOD(Java::newLong) {
 }
 
 NAN_METHOD(Java::newChar) {
-  Nan::HandleScope();
+  Nan::HandleScope scope;
   Java* self = Nan::ObjectWrap::Unwrap<Java>(info.This());
   v8::Local<v8::Value> ensureJvmResults = self->ensureJvm();
   if(!ensureJvmResults->IsNull()) {
@@ -987,7 +987,7 @@ NAN_METHOD(Java::newChar) {
 }
 
 NAN_METHOD(Java::newFloat) {
-  Nan::HandleScope();
+  Nan::HandleScope scope;
   Java* self = Nan::ObjectWrap::Unwrap<Java>(info.This());
   v8::Local<v8::Value> ensureJvmResults = self->ensureJvm();
   if(!ensureJvmResults->IsNull()) {
@@ -1012,7 +1012,7 @@ NAN_METHOD(Java::newFloat) {
 }
 
 NAN_METHOD(Java::newDouble) {
-  Nan::HandleScope();
+  Nan::HandleScope scope;
   Java* self = Nan::ObjectWrap::Unwrap<Java>(info.This());
   v8::Local<v8::Value> ensureJvmResults = self->ensureJvm();
   if(!ensureJvmResults->IsNull()) {
@@ -1037,7 +1037,7 @@ NAN_METHOD(Java::newDouble) {
 }
 
 NAN_METHOD(Java::getStaticFieldValue) {
-  Nan::HandleScope();
+  Nan::HandleScope scope;
   Java* self = Nan::ObjectWrap::Unwrap<Java>(info.This());
   v8::Local<v8::Value> ensureJvmResults = self->ensureJvm();
   if(!ensureJvmResults->IsNull()) {
@@ -1084,7 +1084,7 @@ NAN_METHOD(Java::getStaticFieldValue) {
 }
 
 NAN_METHOD(Java::setStaticFieldValue) {
-  Nan::HandleScope();
+  Nan::HandleScope scope;
   Java* self = Nan::ObjectWrap::Unwrap<Java>(info.This());
   v8::Local<v8::Value> ensureJvmResults = self->ensureJvm();
   if(!ensureJvmResults->IsNull()) {
@@ -1146,7 +1146,7 @@ NAN_METHOD(Java::setStaticFieldValue) {
 }
 
 NAN_METHOD(Java::instanceOf) {
-  Nan::HandleScope();
+  Nan::HandleScope scope;
   Java* self = Nan::ObjectWrap::Unwrap<Java>(info.This());
   v8::Local<v8::Value> ensureJvmResults = self->ensureJvm();
   if(!ensureJvmResults->IsNull()) {
@@ -1209,7 +1209,7 @@ void EIO_AfterCallJs(uv_work_t* req) {
     return;
   }
 
-  Nan::HandleScope();
+  Nan::HandleScope scope;
   v8::Array* v8Args;
   v8::Function* fn;
   v8::Handle<v8::Value>* argv;

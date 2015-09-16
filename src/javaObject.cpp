@@ -119,7 +119,7 @@ JavaObject::~JavaObject() {
 }
 
 NAN_METHOD(JavaObject::methodCall) {
-  Nan::HandleScope();
+  Nan::HandleScope scope;
   JavaObject* self = Nan::ObjectWrap::Unwrap<JavaObject>(info.This());
   JNIEnv *env = self->m_java->getJavaEnv();
   JavaScope javaScope(env);
@@ -155,7 +155,7 @@ NAN_METHOD(JavaObject::methodCall) {
 }
 
 NAN_METHOD(JavaObject::methodCallSync) {
-  Nan::HandleScope();
+  Nan::HandleScope scope;
   JavaObject* self = Nan::ObjectWrap::Unwrap<JavaObject>(info.This());
   JNIEnv *env = self->m_java->getJavaEnv();
   JavaScope javaScope(env);
@@ -191,7 +191,7 @@ NAN_METHOD(JavaObject::methodCallSync) {
 }
 
 NAN_GETTER(JavaObject::fieldGetter) {
-  Nan::HandleScope();
+  Nan::HandleScope scope;
   JavaObject* self = Nan::ObjectWrap::Unwrap<JavaObject>(info.This());
   JNIEnv *env = self->m_java->getJavaEnv();
   JavaScope javaScope(env);
@@ -226,7 +226,7 @@ NAN_GETTER(JavaObject::fieldGetter) {
 }
 
 NAN_SETTER(JavaObject::fieldSetter) {
-  Nan::HandleScope();
+  Nan::HandleScope scope;
   JavaObject* self = Nan::ObjectWrap::Unwrap<JavaObject>(info.This());
   JNIEnv *env = self->m_java->getJavaEnv();
   JavaScope javaScope(env);
@@ -307,7 +307,7 @@ NAN_METHOD(JavaProxyObject::doUnref) {
 }
 
 NAN_GETTER(JavaProxyObject::invocationHandlerGetter) {
- Nan::HandleScope();
+ Nan::HandleScope scope;
 
  JavaProxyObject* self = Nan::ObjectWrap::Unwrap<JavaProxyObject>(info.This());
  if (!dynamicProxyDataVerify(self->m_dynamicProxyData)) {

@@ -70,7 +70,7 @@ void MethodCallBaton::Execute() {
 
 // callback from NanAsyncWorker. This will be on the v8 main thread
 void MethodCallBaton::WorkComplete() {
-  Nan::HandleScope();
+  Nan::HandleScope scope;
 
   if(callback) {
     JNIEnv* env = javaGetEnv(this->m_java->getJvm(), this->m_java->getClassLoader());
