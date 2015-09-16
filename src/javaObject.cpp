@@ -177,7 +177,7 @@ NAN_METHOD(JavaObject::methodCallSync) {
   }
 
   // run
-  v8::Handle<v8::Value> callback = Nan::Undefined();
+  v8::Local<v8::Value> callback = Nan::Undefined();
   InstanceMethodCallBaton* baton = new InstanceMethodCallBaton(self->m_java, self, method, methodArgs, callback);
   v8::Local<v8::Value> result = baton->runSync();
   delete baton;
