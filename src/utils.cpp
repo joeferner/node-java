@@ -474,7 +474,7 @@ v8::Local<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArra
   jsize arraySize = env->GetArrayLength(objArray);
   //printf("array size: %d\n", arraySize);
 
-  v8::Handle<v8::Array> result = Nan::New<v8::Array>(arraySize);
+  v8::Local<v8::Array> result = Nan::New<v8::Array>(arraySize);
   switch(arrayComponentType) {
   case TYPE_INT:
     {
@@ -576,7 +576,7 @@ v8::Local<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj, DynamicProxy
   switch(resultType) {
     case TYPE_ARRAY:
       {
-        v8::Handle<v8::Value> result = javaArrayToV8(java, env, (jobjectArray)obj);
+        v8::Local<v8::Value> result = javaArrayToV8(java, env, (jobjectArray)obj);
         return result;
       }
     case TYPE_VOID:
