@@ -5,7 +5,7 @@
 #include <sstream>
 #include <algorithm>
 
-/*static*/ std::map<std::string, v8::Persistent<v8::FunctionTemplate>*> JavaObject::sFunctionTemplates;
+/*static*/ std::map<std::string, Nan::Persistent<v8::FunctionTemplate>*> JavaObject::sFunctionTemplates;
 
 /*static*/ void JavaObject::Init(v8::Handle<v8::Object> target) {
 }
