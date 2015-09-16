@@ -6,15 +6,15 @@
 
 jmethodID MethodCallBaton::m_methodInvokeMethodId = 0;
 
-NanCallback* toNanCallback(v8::Handle<v8::Value>& callback) {
+Nan::Callback* toNanCallback(v8::Local<v8::Value>& callback) {
   if(callback->IsFunction()) {
-    return new NanCallback(callback.As<v8::Function>());
+    return new Nan::Callback(callback.As<v8::Function>());
   }
   return NULL;
 }
 
-MethodCallBaton::MethodCallBaton(Java* java, jobject method, jarray args, v8::Handle<v8::Value>& callback) :
-  NanAsyncWorker(toNanCallback(callback)) {
+MethodCallBaton::MethodCallBaton(Java* java, jobject method, jarray args, v8::Local<v8::Value>& callback) :
+  Nan::AsyncWorker(toNanCallback(callback)) {
   JNIEnv *env = java->getJavaEnv();
   m_java = java;
   m_args = (jarray)env->NewGlobalRef(args);
@@ -52,10 +52,10 @@ jmethodID MethodCallBaton::getMethodInvokeMethodId(JNIEnv *env) {
 }
 
 void MethodCallBaton::run() {
-  NanAsyncQueueWorker(this);
+  Nan::AsyncQueueWorker(this);
 }
 
-v8::Handle<v8::Value> MethodCallBaton::runSync() {
+v8::Local<v8::Value> MethodCallBaton::runSync() {
   JNIEnv* env = m_java->getJavaEnv();
   ExecuteInternal(env);
   return resultsToV8(env);
@@ -70,20 +70,20 @@ void MethodCallBaton::Execute() {
 
 // callback from NanAsyncWorker. This will be on the v8 main thread
 void MethodCallBaton::WorkComplete() {
-  NanScope();
+  Nan::HandleScope scope;
 
   if(callback) {
     JNIEnv* env = javaGetEnv(this->m_java->getJvm(), this->m_java->getClassLoader());
     JavaScope javaScope(env);
-    v8::Handle<v8::Value> result = resultsToV8(env);
+    v8::Local<v8::Value> result = resultsToV8(env);
     if (result->IsNativeError()) {
-      v8::Handle<v8::Value> argv[] = {
+      v8::Local<v8::Value> argv[] = {
         result
       };
       callback->Call(1, argv);
     } else {
-      v8::Handle<v8::Value> argv[] = {
-        NanUndefined(),
+      v8::Local<v8::Value> argv[] = {
+        Nan::Undefined(),
         result
       };
       callback->Call(2, argv);
@@ -94,8 +94,8 @@ void MethodCallBaton::WorkComplete() {
   }
 }
 
-v8::Handle<v8::Value> MethodCallBaton::resultsToV8(JNIEnv *env) {
-  NanEscapableScope();
+v8::Local<v8::Value> MethodCallBaton::resultsToV8(JNIEnv *env) {
+  Nan::EscapableHandleScope scope;
 
   if(m_error) {
     jthrowable cause = m_error;
@@ -111,11 +111,11 @@ v8::Handle<v8::Value> MethodCallBaton::resultsToV8(JNIEnv *env) {
       checkJavaException(env);
     }
 
-    v8::Handle<v8::Value> err = javaExceptionToV8(m_java, env, cause, m_errorString);
-    return NanEscapeScope(err);
+    v8::Local<v8::Value> err = javaExceptionToV8(m_java, env, cause, m_errorString);
+    return scope.Escape(err);
   }
 
-  return NanEscapeScope(javaToV8(m_java, env, m_result));
+  return scope.Escape(javaToV8(m_java, 	env, m_result));
 }
 
 void NewInstanceBaton::ExecuteInternal(JNIEnv* env) {
@@ -198,7 +198,7 @@ NewInstanceBaton::NewInstanceBaton(
   jclass clazz,
   jobject method,
   jarray args,
-  v8::Handle<v8::Value>& callback) : MethodCallBaton(java, method, args, callback) {
+  v8::Local<v8::Value>& callback) : MethodCallBaton(java, method, args, callback) {
   JNIEnv *env = m_java->getJavaEnv();
   m_clazz = (jclass)env->NewGlobalRef(clazz);
 }
@@ -214,7 +214,7 @@ StaticMethodCallBaton::StaticMethodCallBaton(
   jclass clazz,
   jobject method,
   jarray args,
-  v8::Handle<v8::Value>& callback) : MethodCallBaton(java, method, args, callback) {
+  v8::Local<v8::Value>& callback) : MethodCallBaton(java, method, args, callback) {
   JNIEnv *env = m_java->getJavaEnv();
   m_clazz = (jclass)env->NewGlobalRef(clazz);
 }
@@ -230,7 +230,7 @@ InstanceMethodCallBaton::InstanceMethodCallBaton(
   JavaObject* obj,
   jobject method,
   jarray args,
-  v8::Handle<v8::Value>& callback) : MethodCallBaton(java, method, args, callback) {
+  v8::Local<v8::Value>& callback) : MethodCallBaton(java, method, args, callback) {
   m_javaObject = obj;
   m_javaObject->Ref();
 }

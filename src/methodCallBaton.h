@@ -12,16 +12,16 @@
 class Java;
 class JavaObject;
 
-class MethodCallBaton : public NanAsyncWorker {
+class MethodCallBaton : public Nan::AsyncWorker {
 public:
-  MethodCallBaton(Java* java, jobject method, jarray args, v8::Handle<v8::Value>& callback);
+  MethodCallBaton(Java* java, jobject method, jarray args, v8::Local<v8::Value>& callback);
   virtual ~MethodCallBaton();
 
   void run();
-  v8::Handle<v8::Value> runSync();
+  v8::Local<v8::Value> runSync();
 
 protected:
-  v8::Handle<v8::Value> resultsToV8(JNIEnv *env);
+  v8::Local<v8::Value> resultsToV8(JNIEnv *env);
   virtual void Execute();
   virtual void WorkComplete();
   virtual void ExecuteInternal(JNIEnv* env) = 0;
@@ -40,7 +40,7 @@ private:
 
 class InstanceMethodCallBaton : public MethodCallBaton {
 public:
-  InstanceMethodCallBaton(Java* java, JavaObject* obj, jobject method, jarray args, v8::Handle<v8::Value>& callback);
+  InstanceMethodCallBaton(Java* java, JavaObject* obj, jobject method, jarray args, v8::Local<v8::Value>& callback);
   virtual ~InstanceMethodCallBaton();
 
 protected:
@@ -51,7 +51,7 @@ protected:
 
 class NewInstanceBaton : public MethodCallBaton {
 public:
-  NewInstanceBaton(Java* java, jclass clazz, jobject method, jarray args, v8::Handle<v8::Value>& callback);
+  NewInstanceBaton(Java* java, jclass clazz, jobject method, jarray args, v8::Local<v8::Value>& callback);
   virtual ~NewInstanceBaton();
 
 protected:
@@ -62,7 +62,7 @@ protected:
 
 class StaticMethodCallBaton : public MethodCallBaton {
 public:
-  StaticMethodCallBaton(Java* java, jclass clazz, jobject method, jarray args, v8::Handle<v8::Value>& callback);
+  StaticMethodCallBaton(Java* java, jclass clazz, jobject method, jarray args, v8::Local<v8::Value>& callback);
   virtual ~StaticMethodCallBaton();
 
 protected:

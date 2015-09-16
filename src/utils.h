@@ -34,8 +34,8 @@ struct DynamicProxyData {
   unsigned int markerStart;
   Java* java;
   std::string interfaceName;
-  v8::Persistent<v8::Object> functions;
-  v8::Persistent<v8::Value> jsObject;
+  Nan::Persistent<v8::Object> functions;
+  Nan::Persistent<v8::Value> jsObject;
   std::string methodName;
   jobjectArray args;
   jobject result;
@@ -61,15 +61,15 @@ JNIEnv* javaGetEnv(JavaVM* jvm, jobject classLoader);
 jobject getSystemClassLoader(JNIEnv *env);
 jvalueType javaGetArrayComponentType(JNIEnv *env, jobjectArray array);
 jvalueType javaGetType(JNIEnv *env, jclass type);
-jobjectArray v8ToJava(JNIEnv* env, _NAN_METHOD_ARGS_TYPE args, int start, int end);
+jobjectArray v8ToJava(JNIEnv* env, Nan::NAN_METHOD_ARGS_TYPE args, int start, int end);
 jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg);
-v8::Handle<v8::Value> javaExceptionToV8(Java* java, JNIEnv* env, const std::string& alternateMessage);
-v8::Handle<v8::Value> javaExceptionToV8(Java* java, JNIEnv* env, jthrowable ex, const std::string& alternateMessage);
+v8::Local<v8::Value> javaExceptionToV8(Java* java, JNIEnv* env, const std::string& alternateMessage);
+v8::Local<v8::Value> javaExceptionToV8(Java* java, JNIEnv* env, jthrowable ex, const std::string& alternateMessage);
 std::string javaExceptionToString(JNIEnv* env, jthrowable ex);
 void checkJavaException(JNIEnv* env);
-v8::Handle<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArray);
-v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj);
-v8::Handle<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj, DynamicProxyData* dynamicProxyData);
+v8::Local<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArray);
+v8::Local<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj);
+v8::Local<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj, DynamicProxyData* dynamicProxyData);
 jobjectArray javaObjectArrayToClasses(JNIEnv *env, jobjectArray objs);
 jobject longToJavaLongObj(JNIEnv *env, jlong l);
 jarray javaGetArgsForMethod(JNIEnv *env, jobject method, jarray args);
@@ -81,29 +81,31 @@ jobject javaFindMethod(JNIEnv *env, jclass clazz, std::string& methodName, jobje
 jobject javaFindConstructor(JNIEnv *env, jclass clazz, jobjectArray methodArgs);
 void javaCastArguments(JNIEnv *env, jobjectArray methodArgs, jobject method);
 
-std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string methodName, bool constructor, _NAN_METHOD_ARGS_TYPE args, int argStart, int argEnd);
+std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string methodName, bool constructor, Nan::NAN_METHOD_ARGS_TYPE args, int argStart, int argEnd);
 
 void unref(DynamicProxyData* dynamicProxyData);
 
 #define UNUSED_VARIABLE(var) var = var;
 
 #define ARGS_FRONT_OBJECT(ARGNAME) \
-  if(args.Length() < argsStart+1 || !args[argsStart]->IsObject()) {                          \
+  if(info.Length() < argsStart+1 || !info[argsStart]->IsObject()) {                          \
     std::ostringstream errStr;                                                               \
     errStr << "Argument " << (argsStart+1) << " must be an object";                          \
-    return NanThrowError(v8::Exception::TypeError(NanNew<v8::String>(errStr.str().c_str())));   \
+    Nan::ThrowError(Nan::TypeError(errStr.str().c_str()));                                   \
+    return;                                                                                  \
   }                                                                                          \
-  v8::Local<v8::Object> ARGNAME = v8::Local<v8::Object>::Cast(args[argsStart]);              \
+  v8::Local<v8::Object> ARGNAME = v8::Local<v8::Object>::Cast(info[argsStart]);              \
   argsStart++;
 
 #define ARGS_FRONT_STRING(ARGNAME) \
-  if(args.Length() < argsStart+1 || !args[argsStart]->IsString()) {                          \
+  if(info.Length() < argsStart+1 || !info[argsStart]->IsString()) {                          \
     std::ostringstream errStr;                                                               \
     errStr << "Argument " << (argsStart+1) << " must be a string";                           \
-    return NanThrowError(v8::Exception::TypeError(NanNew<v8::String>(errStr.str().c_str())));   \
+    Nan::ThrowError(Nan::TypeError(errStr.str().c_str()));                                   \
+    return;                                                                                  \
   }                                                                                          \
-  v8::Local<v8::String> _##ARGNAME##_obj = v8::Local<v8::String>::Cast(args[argsStart]);     \
-  v8::String::Utf8Value _##ARGNAME##_val(_##ARGNAME##_obj);                                 \
+  v8::Local<v8::String> _##ARGNAME##_obj = v8::Local<v8::String>::Cast(info[argsStart]);     \
+  v8::String::Utf8Value _##ARGNAME##_val(_##ARGNAME##_obj);                                  \
   std::string ARGNAME = *_##ARGNAME##_val;                                                   \
   argsStart++;
 
@@ -111,13 +113,13 @@ void unref(DynamicProxyData* dynamicProxyData);
 
 #define ARGS_BACK_CALLBACK()                              \
   bool callbackProvided;                                  \
-  v8::Handle<v8::Value> callback;                         \
-  if(args[args.Length()-1]->IsFunction()) {               \
-    callback = args[argsEnd-1];                           \
+  v8::Local<v8::Value> callback;                          \
+  if(info[info.Length()-1]->IsFunction()) {               \
+    callback = info[argsEnd-1];                           \
     argsEnd--;                                            \
     callbackProvided = true;                              \
   } else {                                                \
-    callback = NanNull();                                 \
+    callback = Nan::Null();                               \
     callbackProvided = false;                             \
   }
 
@@ -127,16 +129,18 @@ void unref(DynamicProxyData* dynamicProxyData);
   v8::Handle<v8::Value> error = javaExceptionToV8(JAVA, env, errStr.str());             \
   v8::Handle<v8::Value> argv[2];                                                        \
   argv[0] = error;                                                                      \
-  argv[1] = NanUndefined();                                                            \
-  v8::Function::Cast(*callback)->Call(NanGetCurrentContext()->Global(), 2, argv);
+  argv[1] = Nan::Undefined();                                                           \
+  v8::Function::Cast(*callback)->Call(Nan::GetCurrentContext()->Global(), 2, argv);
 
 #define END_CALLBACK_FUNCTION(MSG) \
   if(callbackProvided) {                                     \
-    NanReturnUndefined();                                    \
+    info.GetReturnValue().SetUndefined();                    \
+    return;                                                  \
   } else {                                                   \
     std::ostringstream str;                                  \
     str << MSG;                                              \
-    NanReturnValue(NanNew<v8::String>(str.str().c_str()));      \
+    info.GetReturnValue().Set(Nan::New(str.str().c_str()).ToLocalChecked()); \
+    return;                                                  \
   }
 
 #ifndef UNUSED_VARIABLE
