@@ -13,7 +13,7 @@ Nan::Callback* toNanCallback(v8::Local<v8::Value>& callback) {
   return NULL;
 }
 
-MethodCallBaton::MethodCallBaton(Java* java, jobject method, jarray args, v8::Handle<v8::Value>& callback) :
+MethodCallBaton::MethodCallBaton(Java* java, jobject method, jarray args, v8::Local<v8::Value>& callback) :
   Nan::AsyncWorker(toNanCallback(callback)) {
   JNIEnv *env = java->getJavaEnv();
   m_java = java;
@@ -198,7 +198,7 @@ NewInstanceBaton::NewInstanceBaton(
   jclass clazz,
   jobject method,
   jarray args,
-  v8::Handle<v8::Value>& callback) : MethodCallBaton(java, method, args, callback) {
+  v8::Local<v8::Value>& callback) : MethodCallBaton(java, method, args, callback) {
   JNIEnv *env = m_java->getJavaEnv();
   m_clazz = (jclass)env->NewGlobalRef(clazz);
 }
@@ -214,7 +214,7 @@ StaticMethodCallBaton::StaticMethodCallBaton(
   jclass clazz,
   jobject method,
   jarray args,
-  v8::Handle<v8::Value>& callback) : MethodCallBaton(java, method, args, callback) {
+  v8::Local<v8::Value>& callback) : MethodCallBaton(java, method, args, callback) {
   JNIEnv *env = m_java->getJavaEnv();
   m_clazz = (jclass)env->NewGlobalRef(clazz);
 }
@@ -230,7 +230,7 @@ InstanceMethodCallBaton::InstanceMethodCallBaton(
   JavaObject* obj,
   jobject method,
   jarray args,
-  v8::Handle<v8::Value>& callback) : MethodCallBaton(java, method, args, callback) {
+  v8::Local<v8::Value>& callback) : MethodCallBaton(java, method, args, callback) {
   m_javaObject = obj;
   m_javaObject->Ref();
 }
