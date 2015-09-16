@@ -6,7 +6,7 @@
 
 jmethodID MethodCallBaton::m_methodInvokeMethodId = 0;
 
-Nan::Callback* toNanCallback(v8::Handle<v8::Value>& callback) {
+Nan::Callback* toNanCallback(v8::Local<v8::Value>& callback) {
   if(callback->IsFunction()) {
     return new Nan::Callback(callback.As<v8::Function>());
   }
