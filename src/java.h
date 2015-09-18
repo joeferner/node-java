@@ -14,7 +14,7 @@
 #define JNI_BEST_VERSION JNI_VERSION_1_6
 #endif
 
-class Java : public node::ObjectWrap {
+class Java : public Nan::ObjectWrap {
 public:
   static void Init(v8::Handle<v8::Object> target);
   JavaVM* getJvm() { return m_jvm; }
@@ -60,15 +60,15 @@ private:
   static NAN_SETTER(AccessorProhibitsOverwritingSetter);
   v8::Local<v8::Value> ensureJvm();
 
-  static v8::Persistent<v8::FunctionTemplate> s_ct;
+  static Nan::Persistent<v8::FunctionTemplate> s_ct;
   JavaVM* m_jvm;
   JNIEnv* m_env; // can only be used safely by the main thread as this is the thread it belongs to
   jobject m_classLoader;
   std::string m_classPath;
   static std::string s_nativeBindingLocation;
-  v8::Persistent<v8::Array> m_classPathArray;
-  v8::Persistent<v8::Array> m_optionsArray;
-  v8::Persistent<v8::Object> m_asyncOptions;
+  Nan::Persistent<v8::Array> m_classPathArray;
+  Nan::Persistent<v8::Array> m_optionsArray;
+  Nan::Persistent<v8::Object> m_asyncOptions;
 
   std::string m_SyncSuffix;
   std::string m_AsyncSuffix;

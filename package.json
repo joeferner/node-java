@@ -7,7 +7,7 @@
     "jvm",
     "bridge"
   ],
-  "version": "0.5.5",
+  "version": "0.6.0",
   "engines": {
     "node": ">=0.10.0"
   },
@@ -30,8 +30,8 @@
     "find-java-home": "0.1.2",
     "glob": "5.0.5",
     "lodash": "3.7.0",
-    "nan": "1.7.0",
-    "node-pre-gyp": "0.5.x"
+    "nan": "2.0.9",
+	"node-pre-gyp": "0.5.x"
   },
   "devDependencies": {
     "chalk": "1.0.0",
