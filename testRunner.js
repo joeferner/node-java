@@ -14,7 +14,7 @@ var tests = glob.sync(path.join('testAsyncOptions', '*.js'));
 tests.unshift('test test8');  // Arrange to run the primary tests first, in a single process
 
 function runTest(testArgs, done) {
-  var cmd = 'node_modules/.bin/nodeunit ' + testArgs;
+  var cmd = 'node_modules' + path.sep + '.bin' + path.sep + 'nodeunit ' + testArgs;
   childProcess.exec(cmd, function (error, stdout, stderr) {
     // It appears that nodeunit merges error output into the stdout
     // so these three lines are probably useless.
