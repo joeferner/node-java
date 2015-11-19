@@ -58,6 +58,35 @@ npm test
 
 _NOTE: You will need node-gyp installed using "npm install -g node-gyp"_
 
+## Docker
+
+If you want to play with node-java but don't want to setup the build environment you can run it in docker.
+
+```
+docker run -it joeferner/node-java bash
+```
+
+Then inside the docker container create a directory and run
+
+```bash
+npm install java
+```
+
+Then create a file called `test.js` with the following contents
+
+```
+var java = require('java');
+var javaLangSystem = java.import('java.lang.System');
+
+javaLangSystem.out.printlnSync('Hello World');
+```
+
+Then run
+
+```bash
+node test.js
+```
+
 ### Java 1.8 support
 
 Manual compilation for Java 1.8 support requires additional steps:
