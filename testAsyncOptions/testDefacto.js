@@ -19,14 +19,12 @@ module.exports = {
       asyncSuffix: ""
     };
 
-    function before(callback) {
+    function before() {
       test.ok(!java.isJvmCreated());
-      callback();
     }
 
-    function after(callback) {
+    function after() {
       test.ok(java.isJvmCreated());
-      callback();
     }
 
     java.registerClient(before, after);
