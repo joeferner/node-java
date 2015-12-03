@@ -783,6 +783,12 @@ var value = Test.NestedEnum.name_alt;  // OK
 
 Either postInstall.js didn't run or there was a problem detecting java. Try running postInstall.js manually.
 
+## Debugging
+
+        npm install
+        node-gyp build --debug
+        gdb --args `which node` ./node_modules/.bin/nodeunit test
+
 ## License
 
 (The MIT License)
