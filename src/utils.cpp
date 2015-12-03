@@ -178,6 +178,8 @@ jvalueType javaGetType(JNIEnv *env, jclass type) {
     //printf("javaGetType: %s\n", typeStr);
     if(strcmp(typeStr, "void") == 0) {
       return TYPE_VOID;
+    } else if(strcmp(typeStr, "char") == 0 || strcmp(typeStr, "class java.lang.Character") == 0) {
+      return TYPE_CHAR;
     } else if(strcmp(typeStr, "int") == 0 || strcmp(typeStr, "class java.lang.Integer") == 0) {
       return TYPE_INT;
     } else if(strcmp(typeStr, "double") == 0 || strcmp(typeStr, "class java.lang.Double") == 0) {
@@ -476,6 +478,19 @@ v8::Local<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArra
 
   v8::Local<v8::Array> result = Nan::New<v8::Array>(arraySize);
   switch(arrayComponentType) {
+  case TYPE_CHAR:
+    {
+      jchar* elems = env->GetCharArrayElements((jcharArray)objArray, 0);
+      char str[2];
+      str[1] = '\0';
+      for(jsize i=0; i<arraySize; i++) {
+        str[0] = elems[i];
+        result->Set(i, Nan::New<v8::String>(str).ToLocalChecked());
+      }
+      env->ReleaseCharArrayElements((jcharArray)objArray, elems, 0);
+    }
+    break;
+
   case TYPE_INT:
     {
       jint* elems = env->GetIntArrayElements((jintArray)objArray, 0);
@@ -581,6 +596,16 @@ v8::Local<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj, DynamicProxy
       }
     case TYPE_VOID:
       return Nan::Undefined();
+    case TYPE_CHAR:
+      {
+        jclass charClazz = env->FindClass("java/lang/Character");
+        jmethodID char_charValue = env->GetMethodID(charClazz, "charValue", "()C");
+        char str[2];
+        str[0] = env->CallCharMethod(obj, char_charValue);
+        str[1] = '\0';
+        checkJavaException(env);
+        return Nan::New<v8::String>(str).ToLocalChecked();
+      }
     case TYPE_BOOLEAN:
       {
         jclass booleanClazz = env->FindClass("java/lang/Boolean");

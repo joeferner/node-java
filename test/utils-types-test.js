@@ -47,5 +47,19 @@ exports['Utils - Types'] = nodeunit.testCase({
     result = testObj.methodOverloadSync(java.newInstanceSync("Test$SubClass"));
     test.equal(result, 4);
     test.done();
+  },
+
+  "Char array": function(test) {
+    var originalArray = "hello world\n".split('');
+    var Arrays = java.import("java.util.Arrays");
+    var arr1 = java.newArray("char", originalArray);
+    var list = Arrays.asListSync(arr1);
+    var arr2 = list.toArraySync();
+    test.equal(arr2.length, 1);
+    test.equal(arr2[0].length, 12);
+    for(var i=0; i<originalArray.length; i++) {
+      test.equal(arr2[0][i], originalArray[i]);
+    }
+    test.done();
   }
 });
