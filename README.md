@@ -277,6 +277,8 @@ In most cases it is still acceptable to use `java.newArray()`. But it is now pos
 
 Note that when passing a Javascript array (e.g. `['a', 'b', 'c']`) for a varargs parameter, node-java must infer the Java type of the array. If all of the elements are of the same javascript primitive type (`string` in this example) then node-java will create a Java array of the corresponding type (e.g. `java.lang.String`). The Java types that node-java can infer are: `java.lang.String`, `java.lang.Boolean`, `java.lang.Integer`, `java.lang.Long`, and `java.lang.Double`. If an array has a mix of `Integer`, `Long`, and `Double`, then the inferred type will be `java.lang.Number`. Any other mix will result in an inferred type of `java.lang.Object`.
 
+Methods accepting varargs of a generic type are also problematic. You will need to fall back to using `java.newArray()`. See [Issue #285](https://github.com/joeferner/node-java/issues/285).
+
 ## JVM Creation
 
 With v0.5.1 a new API is available to make it easier for a complex application to have full control over JVM creation. In particular, it is now easier to compose an application from several modules, each of which must add to the Java classpath and possibly do other operations just before or just after the JVM has been created. See the methods [ensureJvm](#javaEnsureJvm) and [registerClient](#javaRegisterClient). See also several of the tests in the testAsyncOptions directory.
