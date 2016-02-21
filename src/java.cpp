@@ -818,6 +818,20 @@ NAN_METHOD(Java::newArray) {
     }
   }
 
+  else if(strcmp(className.c_str(), "float") == 0) {
+    results = env->NewFloatArray(arrayObj->Length());
+    for(uint32_t i=0; i<arrayObj->Length(); i++) {
+      v8::Local<v8::Value> item = arrayObj->Get(i);
+      jobject val = v8ToJava(env, item);
+      jclass floatClazz = env->FindClass("java/lang/Float");
+      jmethodID float_floatValue = env->GetMethodID(floatClazz, "floatValue", "()F");
+      jfloat floatValues[1];
+      floatValues[0] = env->CallFloatMethod(val, float_floatValue);
+      checkJavaException(env);
+      env->SetFloatArrayRegion((jfloatArray)results, i, 1, floatValues);
+    }
+  }
+
   else if(strcmp(className.c_str(), "boolean") == 0) {
     results = env->NewBooleanArray(arrayObj->Length());
     for(uint32_t i=0; i<arrayObj->Length(); i++) {
