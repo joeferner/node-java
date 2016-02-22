@@ -38,6 +38,7 @@ public class Test {
   public static int staticLong(long l) { return (int)l; }
   public static double staticDouble(double s) { return s; }
   public static float staticFloat(float s) { return s; }
+  public static String staticString(String s) { return s; }
 
   public static int staticMethodAmbiguous(Double a) { return 1; }
   public static int staticMethodAmbiguous(Integer a) { return 2; }
@@ -156,6 +157,18 @@ public class Test {
     arr[3] = 4;
     arr[4] = 5;
     return arr;
+  }
+
+  public static String getUnicodeBMP() {
+    return new String(Character.toChars(0x2605));
+  }
+
+  public static String getUnicodeSMP() {
+    return new String(Character.toChars(0x1F596));
+  }
+
+  public static String getUnicodeNull() {
+    return new String("\0");
   }
 
   public static enum StaticEnum {

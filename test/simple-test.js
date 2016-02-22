@@ -194,6 +194,28 @@ exports['Simple'] = nodeunit.testCase({
     test.done();
   },
 
+  "method returning a string (Unicode BMP)": function(test) {
+    var s = java.callStaticMethodSync("Test", "getUnicodeBMP");
+    console.log(s);
+    test.equal("\u2605", s);
+    test.done();
+  },
+
+  "method returning a string (Unicode SMP)": function(test) {
+    var s = java.callStaticMethodSync("Test", "getUnicodeSMP");
+    console.log(s);
+    // The below string is U+1F596, represented as surrogate pairs
+    test.equal("\uD83D\uDD96", s);
+    test.done();
+  },
+
+  "method returning a string (NULL char)": function(test) {
+    var s = java.callStaticMethodSync("Test", "getUnicodeNull");
+    console.log(s);
+    test.equal("\0", s);
+    test.done();
+  },
+
   "method taking a byte": function(test) {
     var b = java.newByte(1);
     test.equal('java.lang.Byte', b.getClassSync().getNameSync());
@@ -261,6 +283,31 @@ exports['Simple'] = nodeunit.testCase({
     var r = java.callStaticMethodSync("Test", "staticChar", ch);
     console.log(r);
     test.equal(r, 97);
+    test.done();
+  },
+
+  "method taking a string (Unicode BMP)": function(test) {
+    var s = "\u2605";
+    var r = java.callStaticMethodSync("Test", "staticString", s);
+    console.log(r);
+    test.equal(r, s);
+    test.done();
+  },
+
+  "method taking a string (Unicode SMP)": function(test) {
+    // The below string is U+1F596, represented as surrogate pairs
+    var s = "\uD83D\uDD96";
+    var r = java.callStaticMethodSync("Test", "staticString", s);
+    console.log(r);
+    test.equal(r, s);
+    test.done();
+  },
+
+  "method taking a string (with null char)": function(test) {
+    var s = "\0";
+    var r = java.callStaticMethodSync("Test", "staticString", s);
+    console.log(r);
+    test.equal(r, s);
     test.done();
   },
 

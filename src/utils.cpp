@@ -65,9 +65,21 @@ void javaReflectionGetFields(JNIEnv *env, jclass clazz, std::list<jobject>* fiel
 }
 
 std::string javaToString(JNIEnv *env, jstring str) {
-  const char* chars = env->GetStringUTFChars(str, NULL);
-  std::string results = chars;
-  env->ReleaseStringUTFChars(str, chars);
+  jclass objClazz = env->GetObjectClass(str);
+  jmethodID methodId = env->GetMethodID(objClazz, "getBytes", "(Ljava/lang/String;)[B");
+
+  jstring charsetName = env->NewStringUTF("UTF-8");
+  jbyteArray stringJbytes = (jbyteArray)env->CallObjectMethod(str, methodId, charsetName);
+  env->DeleteLocalRef(charsetName);
+
+  jbyte* pBytes = env->GetByteArrayElements(stringJbytes, NULL);
+
+  const jsize length = env->GetArrayLength(stringJbytes);
+  std::string results((const char*)pBytes, length);
+
+  env->ReleaseByteArrayElements(stringJbytes, pBytes, JNI_ABORT);
+  env->DeleteLocalRef(stringJbytes);
+
   return results;
 }
 
@@ -327,8 +339,8 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
   }
 
   if(arg->IsString()) {
-    v8::String::Utf8Value val(arg->ToString());
-    return env->NewStringUTF(*val);
+    v8::String::Value val(arg->ToString());
+    return env->NewString(*val, val.length());
   }
 
   if(arg->IsInt32() || arg->IsUint32()) {
@@ -668,7 +680,10 @@ v8::Local<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj, DynamicProxy
         return Nan::New<v8::Number>(result);
       }
     case TYPE_STRING:
-      return Nan::New<v8::String>(javaObjectToString(env, obj).c_str()).ToLocalChecked();
+      {
+        std::string str = javaObjectToString(env, obj);
+        return Nan::New<v8::String>(str.c_str(), str.length()).ToLocalChecked();
+      }
     case TYPE_OBJECT:
       if (dynamicProxyData != NULL) {
         return JavaProxyObject::New(java, obj, dynamicProxyData);
