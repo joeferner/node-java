@@ -197,14 +197,15 @@ exports['Simple'] = nodeunit.testCase({
   "method returning a string (Unicode BMP)": function(test) {
     var s = java.callStaticMethodSync("Test", "getUnicodeBMP");
     console.log(s);
-    test.equal(String.fromCodePoint(0x2605), s);
+    test.equal("\u2605", s);
     test.done();
   },
 
   "method returning a string (Unicode SMP)": function(test) {
     var s = java.callStaticMethodSync("Test", "getUnicodeSMP");
     console.log(s);
-    test.equal(String.fromCodePoint(0x1F596), s);
+    // The below string is U+1F596, represented as surrogate pairs
+    test.equal("\uD83D\uDD96", s);
     test.done();
   },
 
@@ -286,7 +287,7 @@ exports['Simple'] = nodeunit.testCase({
   },
 
   "method taking a string (Unicode BMP)": function(test) {
-    var s = String.fromCodePoint(0x2605);
+    var s = "\u2605";
     var r = java.callStaticMethodSync("Test", "staticString", s);
     console.log(r);
     test.equal(r, s);
@@ -294,7 +295,8 @@ exports['Simple'] = nodeunit.testCase({
   },
 
   "method taking a string (Unicode SMP)": function(test) {
-    var s = String.fromCodePoint(0x1F596);
+    // The below string is U+1F596, represented as surrogate pairs
+    var s = "\uD83D\uDD96";
     var r = java.callStaticMethodSync("Test", "staticString", s);
     console.log(r);
     test.equal(r, s);
