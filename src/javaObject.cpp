@@ -45,13 +45,14 @@
     funcTemplate->InstanceTemplate()->SetInternalFieldCount(1);
     funcTemplate->SetClassName(Nan::New<v8::String>(className.c_str()).ToLocalChecked());
 
+    // copy methods to template
     std::list<jobject> methods;
     javaReflectionGetMethods(env, objClazz, &methods, false);
     jclass methodClazz = env->FindClass("java/lang/reflect/Method");
     jmethodID method_getName = env->GetMethodID(methodClazz, "getName", "()Ljava/lang/String;");
     for(std::list<jobject>::iterator it = methods.begin(); it != methods.end(); ++it) {
       jstring methodNameJava = (jstring)env->CallObjectMethod(*it, method_getName);
-      assert(!env->ExceptionCheck());
+      assertNoException(env);
       std::string methodNameStr = javaToString(env, methodNameJava);
 
       v8::Local<v8::String> baseMethodName = Nan::New<v8::String>(methodNameStr.c_str()).ToLocalChecked();
@@ -78,6 +79,7 @@
       }
     }
 
+    // copy fields to template
     std::list<jobject> fields;
     javaReflectionGetFields(env, objClazz, &fields);
     jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
@@ -89,6 +91,16 @@
 
       v8::Local<v8::String> fieldName = Nan::New<v8::String>(fieldNameStr.c_str()).ToLocalChecked();
       Nan::SetAccessor(funcTemplate->InstanceTemplate(), fieldName, fieldGetter, fieldSetter);
+    }
+
+    // copy array methods to template
+    jmethodID class_isArray = env->GetMethodID(classClazz, "isArray", "()Z");
+    jboolean isArray = env->CallBooleanMethod(objClazz, class_isArray);
+    if(isArray) {
+      v8::Local<v8::String> fieldName = Nan::New<v8::String>("length").ToLocalChecked();
+      Nan::SetAccessor(funcTemplate->InstanceTemplate(), fieldName, fieldGetter, NULL);
+
+      Nan::SetIndexedPropertyHandler(funcTemplate->InstanceTemplate(), indexGetter);
     }
 
     Nan::Persistent<v8::FunctionTemplate>* persistentFuncTemplate = new Nan::Persistent<v8::FunctionTemplate>();
@@ -200,8 +212,22 @@ NAN_GETTER(JavaObject::fieldGetter) {
   std::string propertyStr = *propertyCStr;
   jobject field = javaFindField(env, self->m_class, propertyStr);
   if(field == NULL) {
+    if(propertyStr == "length") {
+      jclass classClazz = env->FindClass("java/lang/Class");
+      jmethodID class_isArray = env->GetMethodID(classClazz, "isArray", "()Z");
+      jboolean isArray = env->CallBooleanMethod(self->m_class, class_isArray);
+      if(isArray) {
+        jclass arrayClass = env->FindClass("java/lang/reflect/Array");
+        jmethodID array_getLength = env->GetStaticMethodID(arrayClass, "getLength", "(Ljava/lang/Object;)I");
+        jint arrayLength = env->CallStaticIntMethod(arrayClass, array_getLength, self->m_obj);
+        assertNoException(env);
+        info.GetReturnValue().Set(arrayLength);
+        return;
+      }
+    }
+
     std::ostringstream errStr;
-    errStr << "Could not find field " << propertyStr;
+    errStr << "Could not find field \"" << propertyStr << "\" for get";
     v8::Local<v8::Value> ex = javaExceptionToV8(self->m_java, env, errStr.str());
     Nan::ThrowError(ex);
     return;
@@ -238,7 +264,7 @@ NAN_SETTER(JavaObject::fieldSetter) {
   jobject field = javaFindField(env, self->m_class, propertyStr);
   if(field == NULL) {
     std::ostringstream errStr;
-    errStr << "Could not find field " << propertyStr;
+    errStr << "Could not find field \"" << propertyStr << "\" for set";
     v8::Local<v8::Value> error = javaExceptionToV8(self->m_java, env, errStr.str());
     Nan::ThrowError(error);
     return;
@@ -258,6 +284,29 @@ NAN_SETTER(JavaObject::fieldSetter) {
     Nan::ThrowError(error);
     return;
   }
+}
+
+NAN_INDEX_GETTER(JavaObject::indexGetter) {
+  Nan::HandleScope scope;
+  JavaObject* self = Nan::ObjectWrap::Unwrap<JavaObject>(info.This());
+  JNIEnv *env = self->m_java->getJavaEnv();
+  JavaScope javaScope(env);
+
+  jclass arrayClass = env->FindClass("java/lang/reflect/Array");
+
+  jmethodID array_getLength = env->GetStaticMethodID(arrayClass, "getLength", "(Ljava/lang/Object;)I");
+  jint arrayLength = env->CallStaticIntMethod(arrayClass, array_getLength, self->m_obj);
+  assertNoException(env);
+  if ((jint)index >= arrayLength) {
+    info.GetReturnValue().SetUndefined();
+    return;
+  }
+
+  jmethodID array_get = env->GetStaticMethodID(arrayClass, "get", "(Ljava/lang/Object;I)Ljava/lang/Object;");
+  jobject item = env->CallStaticObjectMethod(arrayClass, array_get, self->m_obj, index);
+  assertNoException(env);
+  v8::Local<v8::Value> result = javaToV8(self->m_java, env, item);
+  info.GetReturnValue().Set(result);
 }
 
 /*static*/ Nan::Persistent<v8::FunctionTemplate> JavaProxyObject::s_proxyCt;

@@ -319,7 +319,14 @@ exports['Simple'] = nodeunit.testCase({
     test.equal(r[1], false);
     test.done();
   },
-
+  "new byte array object": function(test) {
+    var byteArray = java.newArray("byte", [1, 2, 3]);
+    test.equal(byteArray.length, 3);
+    test.equal(byteArray[0], 1);
+    test.equal(byteArray[1], 2);
+    test.equal(byteArray[2], 3);
+    test.done();
+  },
   "new boolean array": function(test) {
     var booleanArray = java.newArray("boolean", [true, false]);
     var r = java.callStaticMethodSync("Test", "staticBooleanArray", booleanArray);

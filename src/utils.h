@@ -82,6 +82,12 @@ jobject javaFindMethod(JNIEnv *env, jclass clazz, std::string& methodName, jobje
 jobject javaFindConstructor(JNIEnv *env, jclass clazz, jobjectArray methodArgs);
 void javaCastArguments(JNIEnv *env, jobjectArray methodArgs, jobject method);
 
+#define assertNoException(env)      \
+  if (env->ExceptionCheck()) {      \
+    env->ExceptionDescribe();       \
+    assert(false);                  \
+  }
+
 std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string methodName, bool constructor, Nan::NAN_METHOD_ARGS_TYPE args, int argStart, int argEnd);
 
 void unref(DynamicProxyData* dynamicProxyData);

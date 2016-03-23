@@ -492,7 +492,7 @@ NAN_METHOD(Java::newProxy) {
 
   jmethodID class_getClassLoader = env->GetMethodID(classClazz, "getClassLoader", "()Ljava/lang/ClassLoader;");
   jobject classLoader = env->CallObjectMethod(dynamicInterface, class_getClassLoader);
-  assert(!env->ExceptionCheck());
+  assertNoException(env);
 
   if(classLoader == NULL) {
     jclass objectClazz = env->FindClass("java/lang/Object");
@@ -757,7 +757,7 @@ NAN_METHOD(Java::newArray) {
       jmethodID byte_byteValue = env->GetMethodID(byteClazz, "byteValue", "()B");
       jbyte byteValues[1];
       byteValues[0] = env->CallByteMethod(val, byte_byteValue);
-      assert(!env->ExceptionCheck());
+      assertNoException(env);
       env->SetByteArrayRegion((jbyteArray)results, i, 1, byteValues);
     }
   }
@@ -785,7 +785,7 @@ NAN_METHOD(Java::newArray) {
       jmethodID short_shortValue = env->GetMethodID(shortClazz, "shortValue", "()S");
       jshort shortValues[1];
       shortValues[0] = env->CallShortMethod(val, short_shortValue);
-      assert(!env->ExceptionCheck());
+      assertNoException(env);
       env->SetShortArrayRegion((jshortArray)results, i, 1, shortValues);
     }
   }
@@ -799,7 +799,7 @@ NAN_METHOD(Java::newArray) {
       jmethodID double_doubleValue = env->GetMethodID(doubleClazz, "doubleValue", "()D");
       jdouble doubleValues[1];
       doubleValues[0] = env->CallDoubleMethod(val, double_doubleValue);
-      assert(!env->ExceptionCheck());
+      assertNoException(env);
       env->SetDoubleArrayRegion((jdoubleArray)results, i, 1, doubleValues);
     }
   }
@@ -813,7 +813,7 @@ NAN_METHOD(Java::newArray) {
       jmethodID integer_intValue = env->GetMethodID(integerClazz, "intValue", "()I");
       jint intValues[1];
       intValues[0] = env->CallIntMethod(val, integer_intValue);
-      assert(!env->ExceptionCheck());
+      assertNoException(env);
       env->SetIntArrayRegion((jintArray)results, i, 1, intValues);
     }
   }
@@ -1079,7 +1079,7 @@ NAN_METHOD(Java::getStaticFieldValue) {
   jobject field = javaFindField(env, clazz, fieldName);
   if(field == NULL) {
     std::ostringstream errStr;
-    errStr << "Could not find field " << fieldName.c_str() << " on class " << className.c_str();
+    errStr << "Could not find field \"" << fieldName.c_str() << "\" on class \"" << className.c_str() << "\"";
     return Nan::ThrowError(javaExceptionToV8(self, env, errStr.str()));
   }
 
@@ -1137,7 +1137,7 @@ NAN_METHOD(Java::setStaticFieldValue) {
   jobject field = javaFindField(env, clazz, fieldName);
   if(field == NULL) {
     std::ostringstream errStr;
-    errStr << "Could not find field " << fieldName.c_str() << " on class " << className.c_str();
+    errStr << "Could not find field \"" << fieldName.c_str() << "\" on class \"" << className.c_str() << "\"";
     Nan::ThrowError(javaExceptionToV8(self, env, errStr.str()));
     return;
   }
@@ -1315,7 +1315,7 @@ JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jo
   jclass methodClazz = env->FindClass("java/lang/reflect/Method");
   jmethodID method_getName = env->GetMethodID(methodClazz, "getName", "()Ljava/lang/String;");
   dynamicProxyData->methodName = javaObjectToString(env, env->CallObjectMethod(method, method_getName));
-  assert(!env->ExceptionCheck());
+  assertNoException(env);
 
   uv_work_t* req = new uv_work_t();
   req->data = dynamicProxyData;

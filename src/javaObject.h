@@ -32,6 +32,7 @@ private:
   static NAN_METHOD(methodCallSync);
   static NAN_GETTER(fieldGetter);
   static NAN_SETTER(fieldSetter);
+  static NAN_INDEX_GETTER(indexGetter);
 
   static std::map<std::string, Nan::Persistent<v8::FunctionTemplate>*> sFunctionTemplates;
   Java* m_java;
