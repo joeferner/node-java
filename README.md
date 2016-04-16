@@ -255,7 +255,7 @@ java.newInstancePromise("java.util.ArrayList")
 * If you provide `asyncOptions.promisify` then you must provide a *non-empty* string for `asyncOptions.promiseSuffix`.
 * Either (but not both) `asyncSuffix` or `syncSuffix` can be the empty string. If you want the defacto standard behavior for no suffix on async methods, you must provide an empty string for `asyncSuffix`.
 * We've tested promises with five Promises/A+ implementations. See `testHelpers.js` for more information.
-* NOTE: Due to specifics of initialization order, the methods  `java.newInstancePromise`, `java.callMethodPromise`, and `java.callStaticMethodPromise` are not available until the JVM has been created. You may need to call some other java method such as `java.import()` to finalize java initialization, or even better, the function `java.ensureJVM()`.
+* NOTE: Due to specifics of initialization order, the methods  `java.newInstancePromise`, `java.callMethodPromise`, and `java.callStaticMethodPromise` are not available until the JVM has been created. You may need to call some other java method such as `java.import()` to finalize java initialization, or even better, the function `java.ensureJvm()`.
 
 ##### Special note about the exported module functions `newInstance`, `callMethod`, and `callStaticMethod`.
 These methods come in both async and sync variants. If you provide the `promisify` and `promiseSuffix` attributes in asyncOptions then you'll also get the Promises/A+ variant for these three functions. However, if you change the defacto
