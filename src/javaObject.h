@@ -30,6 +30,7 @@ protected:
 private:
   static NAN_METHOD(methodCall);
   static NAN_METHOD(methodCallSync);
+  static NAN_METHOD(methodCallPromise);
   static NAN_GETTER(fieldGetter);
   static NAN_SETTER(fieldSetter);
   static NAN_INDEX_GETTER(indexGetter);

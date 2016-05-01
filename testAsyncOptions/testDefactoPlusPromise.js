@@ -46,10 +46,9 @@ module.exports = {
     test.ok(arrayList);
     test.ok(java.instanceOf(arrayList, "java.util.ArrayList"));
 
-    var api = _.functions(arrayList);
-    test.ok(_.includes(api, 'addSync'), 'Expected `addSync` to be present, but it is NOT.');
-    test.ok(_.includes(api, 'add'), 'Expected `add` to be present, but it is NOT.');
-    test.ok(_.includes(api, 'addPromise'), 'Expected `addPromise` to be present, but it is NOT.');
+    test.ok(!_.isUndefined(arrayList.addSync), 'Expected `addSync` to be present, but it is NOT.');
+    test.ok(!_.isUndefined(arrayList.add), 'Expected `add` to be present, but it is NOT.');
+    test.ok(!_.isUndefined(arrayList.addPromise), 'Expected `addPromise` to be present, but it is NOT.');
     test.done();
   },
 

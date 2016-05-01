@@ -57,13 +57,15 @@
 
       v8::Local<v8::String> baseMethodName = Nan::New<v8::String>(methodNameStr.c_str()).ToLocalChecked();
 
-      v8::Local<v8::String> methodNameAsync = Nan::New<v8::String>((methodNameStr + java->AsyncSuffix()).c_str()).ToLocalChecked();
+      std::string methodNameAsyncStr = methodNameStr;
+      const char* methodNameAsync = methodNameAsyncStr.append(java->AsyncSuffix()).c_str();
       v8::Local<v8::FunctionTemplate> methodCallTemplate = Nan::New<v8::FunctionTemplate>(methodCall, baseMethodName);
-      funcTemplate->PrototypeTemplate()->Set(methodNameAsync, methodCallTemplate->GetFunction());
+      Nan::SetPrototypeTemplate(funcTemplate, methodNameAsync, methodCallTemplate);
 
-      v8::Local<v8::String> methodNameSync = Nan::New<v8::String>((methodNameStr + java->SyncSuffix()).c_str()).ToLocalChecked();
+      std::string methodNameSyncStr = methodNameStr;
+      const char* methodNameSync = methodNameSyncStr.append(java->SyncSuffix()).c_str();
       v8::Local<v8::FunctionTemplate> methodCallSyncTemplate = Nan::New<v8::FunctionTemplate>(methodCallSync, baseMethodName);
-      funcTemplate->PrototypeTemplate()->Set(methodNameSync, methodCallSyncTemplate->GetFunction());
+      Nan::SetPrototypeTemplate(funcTemplate, methodNameSync, methodCallSyncTemplate);
 
       if (java->DoPromise()) {
         v8::Local<v8::Object> recv = Nan::New<v8::Object>();
@@ -74,8 +76,10 @@
           assert(result->IsFunction());
         }
         v8::Local<v8::Function> promFunction = result.As<v8::Function>();
-        v8::Local<v8::String> methodNamePromise = Nan::New<v8::String>((methodNameStr + java->PromiseSuffix()).c_str()).ToLocalChecked();
-        funcTemplate->PrototypeTemplate()->Set(methodNamePromise, promFunction);
+        v8::Local<v8::FunctionTemplate> promFunctionTemplate = Nan::New<v8::FunctionTemplate>(methodCallPromise, promFunction);
+        std::string methodNamePromiseStr = methodNameStr;
+        const char* methodNamePromise = methodNamePromiseStr.append(java->PromiseSuffix()).c_str();
+        Nan::SetPrototypeTemplate(funcTemplate, methodNamePromise, promFunctionTemplate);
       }
     }
 
@@ -202,6 +206,21 @@ NAN_METHOD(JavaObject::methodCallSync) {
   info.GetReturnValue().Set(result);
 }
 
+NAN_METHOD(JavaObject::methodCallPromise) {
+  Nan::HandleScope scope;
+  v8::Local<v8::Function> fn = info.Data().As<v8::Function>();
+  v8::Handle<v8::Value>* argv = new v8::Handle<v8::Value>[info.Length()];
+  for (int i = 0 ; i < info.Length(); i++) {
+    argv[i] = info[i];
+  }
+  
+  v8::Local<v8::Value> result = fn->Call(info.This(), info.Length(), argv);
+  
+  delete[] argv;
+  
+  info.GetReturnValue().Set(result);
+}
+
 NAN_GETTER(JavaObject::fieldGetter) {
   Nan::HandleScope scope;
   JavaObject* self = Nan::ObjectWrap::Unwrap<JavaObject>(info.This());
@@ -317,9 +336,7 @@ NAN_INDEX_GETTER(JavaObject::indexGetter) {
   t->InstanceTemplate()->SetInternalFieldCount(1);
   t->SetClassName(Nan::New<v8::String>("NodeDynamicProxy").ToLocalChecked());
 
-  v8::Local<v8::String> methodName = Nan::New<v8::String>("unref").ToLocalChecked();
-  v8::Local<v8::FunctionTemplate> methodCallTemplate = Nan::New<v8::FunctionTemplate>(doUnref);
-  t->PrototypeTemplate()->Set(methodName, methodCallTemplate->GetFunction());
+  Nan::SetPrototypeTemplate(t, "unref", Nan::New<v8::FunctionTemplate>(doUnref));
 
   v8::Local<v8::String> fieldName = Nan::New<v8::String>("invocationHandler").ToLocalChecked();
   Nan::SetAccessor(t->InstanceTemplate(), fieldName, invocationHandlerGetter);
