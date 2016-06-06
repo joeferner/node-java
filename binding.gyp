@@ -24,6 +24,9 @@
       ['OS=="mac"', {
       	'javaver%' : "<!(awk -F/ -v h=`node findJavaHome.js` 'BEGIN {n=split(h, a); print a[2]; exit}')"
       }],
+      ['OS=="linux" and target_arch=="arm"', {
+        'javalibdir%': "<!(h=\"`node findJavaHome.js`\" sh -c 'if [ -d \"$h/jre/lib/arm/classic\" ]; then echo $h/jre/arm/i386/classic; else echo $h/jre/lib/arm/server; fi')"
+      }],
       ['OS=="linux" and target_arch=="ia32"', {
         'javalibdir%': "<!(h=\"`node findJavaHome.js`\" sh -c 'if [ -d \"$h/jre/lib/i386/classic\" ]; then echo $h/jre/lib/i386/classic; else echo $h/jre/lib/i386/server; fi')"
       }],
