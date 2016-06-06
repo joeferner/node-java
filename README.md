@@ -62,7 +62,7 @@ On Raspian you might need a:
 
 * sudo ln -s /usr/lib/jvm/jdk-7-oracle-arm-vfp-hflt /opt/jdk
 
-I noticed some issues with the OpenSDK7 so take the Oracle version for compiling.
+Some issues with the OpenSDK7 so take the Oracle version for compiling.
 
 ## Docker
 
