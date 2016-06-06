@@ -60,7 +60,9 @@ _NOTE: You will need node-gyp installed using "npm install -g node-gyp"_
 
 On Raspian you might need a: 
 
-* sudo ln -s /usr/lib/jvm/java-7-openjdk-armhf /opt/jdk
+* sudo ln -s /usr/lib/jvm/jdk-7-oracle-arm-vfp-hflt /opt/jdk
+
+I noticed some issues with the OpenSDK7 so take the Oracle version for compiling.
 
 ## Docker
 
