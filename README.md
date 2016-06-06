@@ -58,6 +58,10 @@ npm test
 
 _NOTE: You will need node-gyp installed using "npm install -g node-gyp"_
 
+On Raspian you might need a: 
+
+* sudo ln -s /usr/lib/jvm/java-7-openjdk-armhf /opt/jdk
+
 ## Docker
 
 If you want to play with node-java but don't want to setup the build environment you can run it in docker.
