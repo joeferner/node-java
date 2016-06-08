@@ -54,6 +54,24 @@ exports['Dynamic Proxy'] = nodeunit.testCase({
     test.done();
   },
 
+  "Listener test": function (test) {
+    var runData = '';
+
+    var myProxy = java.newProxy('ListenerInterface', {
+      onEvent: function (list, runtime) {
+        runData = 'onEvent';
+      }
+    });
+
+    var listenerTester = java.newInstanceSync("ListenerTester");
+    listenerTester.setListenerSync(myProxy);
+    listenerTester.raiseEventSync();
+
+    test.equals(runData, 'onEvent');
+
+    test.done();
+  },  
+
   "thread": function (test) {
     var callCount = 0;
 
