@@ -452,7 +452,7 @@ NAN_METHOD(Java::newProxy) {
   jclass objectClazz = env->FindClass("java/lang/Object");
   jobjectArray methodArgs = env->NewObjectArray(2, objectClazz, NULL);
   env->SetObjectArrayElement(methodArgs, 0, v8ToJava(env, Nan::New<v8::String>(s_nativeBindingLocation.c_str()).ToLocalChecked()));
-  env->SetObjectArrayElement(methodArgs, 1, longToJavaLongObj(env, (long)dynamicProxyData));
+  env->SetObjectArrayElement(methodArgs, 1, longToJavaLongObj(env, (jlong)dynamicProxyData));
   jobject method = javaFindConstructor(env, clazz, methodArgs);
   if(method == NULL) {
     std::ostringstream errStr;
