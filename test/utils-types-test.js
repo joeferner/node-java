@@ -57,8 +57,13 @@ exports['Utils - Types'] = nodeunit.testCase({
     var arr2 = list.toArraySync();
     test.equal(arr2.length, 1);
     test.equal(arr2[0].length, 9);
+    var isTypedArrayReturn = !(typeof arr2[0][0] === 'string');
     for(var i=0; i<originalArray.length; i++) {
-      test.equal(arr2[0][i], originalArray[i]);
+      if (isTypedArrayReturn) {
+        test.equal(arr2[0][i], originalArray[i].charCodeAt(0));
+      } else {
+        test.equal(arr2[0][i], originalArray[i]);
+      }
     }
     test.done();
   }
