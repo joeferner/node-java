@@ -477,6 +477,16 @@ jvalueType javaGetArrayComponentType(JNIEnv *env, jobjectArray array) {
   return arrayComponentType;
 }
 
+v8::Local<v8::String> javaCharToV8String(jchar c) {
+#if ((NODE_MAJOR_VERSION == 0) && (NODE_MINOR_VERSION <= 10))
+  return v8::String::New(&c, 1);
+#elif ((NODE_MAJOR_VERSION == 0) && (NODE_MINOR_VERSION <= 12))
+  return v8::String::NewFromTwoByte(v8::Isolate::GetCurrent(), &c, v8::String::kNormalString, 1);
+#else
+  return v8::String::NewFromTwoByte(v8::Isolate::GetCurrent(), &c, v8::NewStringType::kNormal, 1).ToLocalChecked();
+#endif
+}
+
 v8::Local<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArray) {
   if(objArray == NULL) {
     return Nan::Null();
@@ -493,11 +503,10 @@ v8::Local<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArra
   case TYPE_CHAR:
     {
       jchar* elems = env->GetCharArrayElements((jcharArray)objArray, 0);
-      char str[2];
-      str[1] = '\0';
+      jchar str;
       for(jsize i=0; i<arraySize; i++) {
-        str[0] = elems[i];
-        result->Set(i, Nan::New<v8::String>(str).ToLocalChecked());
+        str = elems[i];
+        result->Set(i, javaCharToV8String(str));
       }
       env->ReleaseCharArrayElements((jcharArray)objArray, elems, 0);
     }
@@ -612,11 +621,9 @@ v8::Local<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj, DynamicProxy
       {
         jclass charClazz = env->FindClass("java/lang/Character");
         jmethodID char_charValue = env->GetMethodID(charClazz, "charValue", "()C");
-        char str[2];
-        str[0] = env->CallCharMethod(obj, char_charValue);
-        str[1] = '\0';
+        jchar c = env->CallCharMethod(obj, char_charValue);
         checkJavaException(env);
-        return Nan::New<v8::String>(str).ToLocalChecked();
+        return javaCharToV8String(c);
       }
     case TYPE_BOOLEAN:
       {
