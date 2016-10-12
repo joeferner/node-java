@@ -114,7 +114,7 @@
 
   v8::Local<v8::Function> ctor = funcTemplate->GetFunction();
   v8::Local<v8::Object> javaObjectObj = ctor->NewInstance();
-  javaObjectObj->SetHiddenValue(Nan::New<v8::String>(V8_HIDDEN_MARKER_JAVA_OBJECT).ToLocalChecked(), Nan::New<v8::Boolean>(true));
+  SetHiddenValue(javaObjectObj, Nan::New<v8::String>(V8_HIDDEN_MARKER_JAVA_OBJECT).ToLocalChecked(), Nan::New<v8::Boolean>(true));
   JavaObject *self = new JavaObject(java, obj);
   self->Wrap(javaObjectObj);
 
@@ -347,7 +347,7 @@ v8::Local<v8::Object> JavaProxyObject::New(Java *java, jobject obj, DynamicProxy
 
   v8::Local<v8::Function> ctor = Nan::New(s_proxyCt)->GetFunction();
   v8::Local<v8::Object> javaObjectObj = ctor->NewInstance();
-  javaObjectObj->SetHiddenValue(Nan::New<v8::String>(V8_HIDDEN_MARKER_JAVA_OBJECT).ToLocalChecked(), Nan::New<v8::Boolean>(true));
+  SetHiddenValue(javaObjectObj, Nan::New<v8::String>(V8_HIDDEN_MARKER_JAVA_OBJECT).ToLocalChecked(), Nan::New<v8::Boolean>(true));
   JavaProxyObject *self = new JavaProxyObject(java, obj, dynamicProxyData);
   self->Wrap(javaObjectObj);
 

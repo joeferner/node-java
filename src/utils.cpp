@@ -293,7 +293,7 @@ static std::string getArrayElementType(v8::Local<v8::Array> array, uint32_t arra
     }
     else if(arg->IsObject()) {
       v8::Local<v8::Object> obj = v8::Local<v8::Object>::Cast(arg);
-      v8::Local<v8::Value> isJavaLong = obj->GetHiddenValue(Nan::New<v8::String>(V8_HIDDEN_MARKER_JAVA_LONG).ToLocalChecked());
+      v8::Local<v8::Value> isJavaLong = GetHiddenValue(obj, Nan::New<v8::String>(V8_HIDDEN_MARKER_JAVA_LONG).ToLocalChecked());
       if(!isJavaLong.IsEmpty() && isJavaLong->IsBoolean()) {
         types.insert(kLong);
       }
@@ -367,12 +367,12 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
   if(arg->IsObject()) {
     v8::Local<v8::Object> obj = v8::Local<v8::Object>::Cast(arg);
 
-    v8::Local<v8::Value> isJavaObject = obj->GetHiddenValue(Nan::New<v8::String>(V8_HIDDEN_MARKER_JAVA_OBJECT).ToLocalChecked());
+    v8::Local<v8::Value> isJavaObject = GetHiddenValue(obj, Nan::New<v8::String>(V8_HIDDEN_MARKER_JAVA_OBJECT).ToLocalChecked());
     if(!isJavaObject.IsEmpty() && isJavaObject->IsBoolean()) {
       return v8ToJava_javaObject(env, obj);
     }
 
-    v8::Local<v8::Value> isJavaLong = obj->GetHiddenValue(Nan::New<v8::String>(V8_HIDDEN_MARKER_JAVA_LONG).ToLocalChecked());
+    v8::Local<v8::Value> isJavaLong = GetHiddenValue(obj, Nan::New<v8::String>(V8_HIDDEN_MARKER_JAVA_LONG).ToLocalChecked());
     if(!isJavaLong.IsEmpty() && isJavaLong->IsBoolean()) {
       return v8ToJava_javaLong(env, obj);
     }
@@ -709,7 +709,7 @@ v8::Local<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj, DynamicProxy
         v8::Local<v8::Value> v8Result = Nan::New<v8::NumberObject>((double)result);
         v8::NumberObject* v8ResultNumberObject = v8::NumberObject::Cast(*v8Result);
         v8ResultNumberObject->Set(Nan::New<v8::String>("longValue").ToLocalChecked(), Nan::New<v8::String>(strValue.c_str()).ToLocalChecked());
-        v8ResultNumberObject->SetHiddenValue(Nan::New<v8::String>(V8_HIDDEN_MARKER_JAVA_LONG).ToLocalChecked(), Nan::New<v8::Boolean>(true));
+        SetHiddenValue(v8ResultNumberObject, Nan::New<v8::String>(V8_HIDDEN_MARKER_JAVA_LONG).ToLocalChecked(), Nan::New<v8::Boolean>(true));
         return v8Result;
       }
     case TYPE_INT:
@@ -930,3 +930,50 @@ jarray javaGetArgsForConstructor(JNIEnv *env, jobject method, jarray args) {
   checkJavaException(env);
   return result;
 }
+
+#if (NODE_MODULE_VERSION > 48)
+  // The two methods below were copied from
+  // https://github.com/electron/electron?branch=master&filepath=atom/common/api/atom_api_v8_util.cc
+  // Copyright (c) 2013 GitHub, Inc.
+  // Use of this source code is governed by the MIT license.
+
+  v8::Local<v8::Value> GetHiddenValue(v8::Local<v8::Object> object, v8::Local<v8::String> key) {
+    v8::Local<v8::Context> context = v8::Isolate::GetCurrent()->GetCurrentContext();
+    v8::Local<v8::Private> privateKey = v8::Private::ForApi(v8::Isolate::GetCurrent(), key);
+    v8::Local<v8::Value> value;
+    v8::Maybe<bool> result = object->HasPrivate(context, privateKey);
+    if (!(result.IsJust() && result.FromJust()))
+      return v8::Local<v8::Value>();
+    if (object->GetPrivate(context, privateKey).ToLocal(&value))
+      return value;
+    return v8::Local<v8::Value>();
+  }
+
+  void SetHiddenValue(v8::NumberObject* object, v8::Local<v8::String> key, v8::Local<v8::Value> value) {
+    if (value.IsEmpty())
+      return;
+    v8::Local<v8::Context> context = v8::Isolate::GetCurrent()->GetCurrentContext();
+    v8::Local<v8::Private> privateKey = v8::Private::ForApi(v8::Isolate::GetCurrent(), key);
+    object->SetPrivate(context, privateKey, value);
+  }
+
+  void SetHiddenValue(v8::Local<v8::Object> object, v8::Local<v8::String> key, v8::Local<v8::Value> value) {
+    if (value.IsEmpty())
+      return;
+    v8::Local<v8::Context> context = v8::Isolate::GetCurrent()->GetCurrentContext();
+    v8::Local<v8::Private> privateKey = v8::Private::ForApi(v8::Isolate::GetCurrent(), key);
+    object->SetPrivate(context, privateKey, value);
+  }
+#else
+  v8::Local<v8::Value> GetHiddenValue(v8::Local<v8::Object> object, v8::Local<v8::String> key) {
+    return object->GetHiddenValue(key);
+  }
+
+  void SetHiddenValue(v8::NumberObject* object, v8::Local<v8::String> key, v8::Local<v8::Value> value) {
+    object->SetHiddenValue(key, value);
+  }
+
+  void SetHiddenValue(v8::Local<v8::Object> object, v8::Local<v8::String> key, v8::Local<v8::Value> value) {
+    object->SetHiddenValue(key, value);
+  }
+#endif

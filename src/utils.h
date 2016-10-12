@@ -82,6 +82,11 @@ jobject javaFindMethod(JNIEnv *env, jclass clazz, std::string& methodName, jobje
 jobject javaFindConstructor(JNIEnv *env, jclass clazz, jobjectArray methodArgs);
 void javaCastArguments(JNIEnv *env, jobjectArray methodArgs, jobject method);
 
+// TODO remove these functions after node nan gets updated
+v8::Local<v8::Value> GetHiddenValue(v8::Local<v8::Object> object, v8::Local<v8::String> key);
+void SetHiddenValue(v8::Local<v8::Object> object, v8::Local<v8::String> key, v8::Local<v8::Value> value);
+void SetHiddenValue(v8::NumberObject*, v8::Local<v8::String> key, v8::Local<v8::Value> value);
+
 #define assertNoException(env)      \
   if (env->ExceptionCheck()) {      \
     env->ExceptionDescribe();       \
