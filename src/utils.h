@@ -37,13 +37,17 @@ struct DynamicProxyData {
   std::string interfaceName;
   Nan::Persistent<v8::Object> functions;
   Nan::Persistent<v8::Value> jsObject;
+  unsigned int markerEnd;
+};
+
+struct DynamicProxyJsCallData {
+  DynamicProxyData *dynamicProxyData;
   std::string methodName;
   jobjectArray args;
   jobject result;
   std::string throwableClass;
   std::string throwableMessage;
   int done;
-  unsigned int markerEnd;
 };
 
 #define DYNAMIC_PROXY_DATA_MARKER_START 0x12345678
