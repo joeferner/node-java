@@ -6,7 +6,7 @@ Bridge API to connect with existing Java APIs.
 
 [Google Groups Discussion Forum](https://groups.google.com/forum/#!forum/node-java)
 
-###Other projects that might be helpful
+### Other projects that might be helpful
 
 * [node-java-maven](https://github.com/joeferner/node-java-maven) - manages your node-java classpath by using maven dependency mangement.
 
