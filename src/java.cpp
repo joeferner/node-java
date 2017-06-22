@@ -894,11 +894,11 @@ NAN_METHOD(Java::newByte) {
     return Nan::ThrowError(Nan::TypeError("Argument 1 must be a number"));
   }
 
-  v8::Local<v8::Number> val = info[0]->ToNumber();
+  jbyte val = Nan::To<int32_t>(info[0]).FromJust();
 
   jclass clazz = env->FindClass("java/lang/Byte");
   jmethodID constructor = env->GetMethodID(clazz, "<init>", "(B)V");
-  jobject newObj = env->NewObject(clazz, constructor, (jbyte)val->Value());
+  jobject newObj = env->NewObject(clazz, constructor, val);
 
   info.GetReturnValue().Set(JavaObject::New(self, newObj));
   return;
@@ -924,11 +924,11 @@ NAN_METHOD(Java::newShort) {
     return Nan::ThrowError(Nan::TypeError("Argument 1 must be a number"));
   }
 
-  v8::Local<v8::Number> val = info[0]->ToNumber();
+  jshort val = Nan::To<int32_t>(info[0]).FromJust();
 
   jclass clazz = env->FindClass("java/lang/Short");
   jmethodID constructor = env->GetMethodID(clazz, "<init>", "(S)V");
-  jobject newObj = env->NewObject(clazz, constructor, (jshort)val->Value());
+  jobject newObj = env->NewObject(clazz, constructor, val);
 
   info.GetReturnValue().Set(JavaObject::New(self, newObj));
 }
@@ -953,11 +953,11 @@ NAN_METHOD(Java::newLong) {
     return Nan::ThrowError(Nan::TypeError("Argument 1 must be a number"));
   }
 
-  v8::Local<v8::Number> val = info[0]->ToNumber();
+  jlong val = Nan::To<int64_t>(info[0]).FromJust();
 
   jclass clazz = env->FindClass("java/lang/Long");
   jmethodID constructor = env->GetMethodID(clazz, "<init>", "(J)V");
-  jobject newObj = env->NewObject(clazz, constructor, (jlong)val->Value());
+  jobject newObj = env->NewObject(clazz, constructor, val);
 
   info.GetReturnValue().Set(JavaObject::New(self, newObj));
 }
@@ -980,8 +980,7 @@ NAN_METHOD(Java::newChar) {
   // argument - value
   jchar charVal;
   if(info[0]->IsNumber()) {
-    v8::Local<v8::Number> val = info[0]->ToNumber();
-    charVal = (jchar)val->Value();
+    charVal = (jchar)Nan::To<int32_t>(info[0]).FromJust();
   } else if(info[0]->IsString()) {
     v8::Local<v8::String> val = info[0]->ToString();
     if(val->Length() != 1) {
@@ -1016,11 +1015,11 @@ NAN_METHOD(Java::newFloat) {
   } else if(!info[0]->IsNumber()) {
     return Nan::ThrowError(Nan::TypeError("Argument 1 must be a number"));
   }
-  v8::Local<v8::Number> val = info[0]->ToNumber();
+  jfloat val = (jfloat)Nan::To<double>(info[0]).FromJust();
 
   jclass clazz = env->FindClass("java/lang/Float");
   jmethodID constructor = env->GetMethodID(clazz, "<init>", "(F)V");
-  jobject newObj = env->NewObject(clazz, constructor, (jfloat)val->Value());
+  jobject newObj = env->NewObject(clazz, constructor, val);
 
   info.GetReturnValue().Set(JavaObject::New(self, newObj));
 }
@@ -1041,11 +1040,12 @@ NAN_METHOD(Java::newDouble) {
   } else if(!info[0]->IsNumber()) {
     return Nan::ThrowError(Nan::TypeError("Argument 1 must be a number"));
   }
-  v8::Local<v8::Number> val = info[0]->ToNumber();
+
+  jdouble val = (jdouble)Nan::To<double>(info[0]).FromJust();
 
   jclass clazz = env->FindClass("java/lang/Double");
   jmethodID constructor = env->GetMethodID(clazz, "<init>", "(D)V");
-  jobject newObj = env->NewObject(clazz, constructor, (jdouble)val->Value());
+  jobject newObj = env->NewObject(clazz, constructor, val);
 
   info.GetReturnValue().Set(JavaObject::New(self, newObj));
 }
@@ -1260,18 +1260,14 @@ void EIO_AfterCallJs(uv_work_t* req) {
     argv[i] = v8Args->Get(i);
   }
 
-  v8::TryCatch tryCatch;
+  Nan::TryCatch tryCatch;
+  tryCatch.SetCaptureMessage(true);
   v8Result = fn->Call(dynamicProxyDataFunctions, argc, argv);
   delete[] argv;
   if (tryCatch.HasCaught()) {
     dynamicProxyData->throwableClass = "node/NodeJsException";
-    v8::String::Utf8Value stackTrace(tryCatch.StackTrace());
-    if (stackTrace.length() > 0) {
-      dynamicProxyData->throwableMessage = std::string(*stackTrace);
-    } else {
-      v8::String::Utf8Value exception(tryCatch.Exception());
-      dynamicProxyData->throwableMessage = std::string(*exception);
-    }
+    v8::String::Utf8Value message(tryCatch.Message()->Get());
+    dynamicProxyData->throwableMessage = std::string(*message);
     tryCatch.Reset();
     dynamicProxyData->done = DYNAMIC_PROXY_JS_ERROR;
     return;

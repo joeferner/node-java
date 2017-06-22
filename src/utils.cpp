@@ -344,21 +344,21 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
   }
 
   if(arg->IsInt32() || arg->IsUint32()) {
-    jint val = arg->ToInt32()->Value();
+    jint val = Nan::To<int32_t>(arg).FromJust();
     jclass clazz = env->FindClass("java/lang/Integer");
     jmethodID constructor = env->GetMethodID(clazz, "<init>", "(I)V");
     return env->NewObject(clazz, constructor, val);
   }
 
   if(arg->IsNumber()) {
-    jdouble val = arg->ToNumber()->Value();
+    jdouble val = Nan::To<double>(arg).FromJust();
     jclass clazz = env->FindClass("java/lang/Double");
     jmethodID constructor = env->GetMethodID(clazz, "<init>", "(D)V");
     return env->NewObject(clazz, constructor, val);
   }
 
   if(arg->IsBoolean()) {
-    jboolean val = arg->ToBoolean()->Value();
+    jboolean val = Nan::To<bool>(arg).FromJust();
     jclass clazz = env->FindClass("java/lang/Boolean");
     jmethodID constructor = env->GetMethodID(clazz, "<init>", "(Z)V");
     return env->NewObject(clazz, constructor, val);
