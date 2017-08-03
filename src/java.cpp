@@ -14,7 +14,8 @@
 
 #define DYNAMIC_PROXY_JS_ERROR -4
 
-long v8ThreadId;
+long v8ThreadIdWIN32;
+pthread_t v8ThreadIdNotWIN32;
 
 /*static*/ Nan::Persistent<v8::FunctionTemplate> Java::s_ct;
 /*static*/ std::string Java::s_nativeBindingLocation;
@@ -27,18 +28,24 @@ void my_sleep(int dur) {
 #endif
 }
 
-long my_getThreadId() {
 #ifdef WIN32
+long my_getThreadId_WIN32() {
   return (long)GetCurrentThreadId();
-#else
-  return (long)pthread_self();
-#endif
 }
+#else
+pthread_t my_getThreadId_NotWIN32() {
+  return pthread_self();
+}
+#endif
 
 /*static*/ void Java::Init(v8::Handle<v8::Object> target) {
   Nan::HandleScope scope;
 
-  v8ThreadId = my_getThreadId();
+#ifdef WIN32
+  v8ThreadIdWIN32 = my_getThreadId_WIN32();
+#else
+  v8ThreadIdNotWIN32 = my_getThreadId_NotWIN32();
+#endif
 
   v8::Local<v8::FunctionTemplate> t = Nan::New<v8::FunctionTemplate>(New);
   s_ct.Reset(t);
@@ -1297,7 +1304,18 @@ void throwNewThrowable(JNIEnv* env, const char * excClassName, std::string msg) 
 }
 
 JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jobject src, jlong ptr, jobject method, jobjectArray args) {
-  long myThreadId = my_getThreadId();
+  long myThreadIdWIN32;
+  pthread_t myThreadIdNotWIN32;
+  bool isWIN32;
+
+#ifdef WIN32
+  myThreadIdWIN32 = my_getThreadId_WIN32();
+  isWIN32 = true;
+#else
+  myThreadIdNotWIN32 = my_getThreadId_NotWIN32();
+  isWIN32 = false;
+#endif
+
   bool hasArgsGlobalRef = false;
 
   // args needs to be global, you can't send env across thread boundaries
@@ -1315,7 +1333,7 @@ JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jo
 
   uv_work_t* req = new uv_work_t();
   req->data = dynamicProxyData;
-  if(myThreadId == v8ThreadId) {
+  if((isWIN32 && (myThreadIdWIN32 == v8ThreadIdWIN32)) || (!isWIN32 && pthread_equal(myThreadIdNotWIN32, v8ThreadIdNotWIN32))) {
 #if NODE_MINOR_VERSION >= 10
     EIO_AfterCallJs(req, 0);
 #else
