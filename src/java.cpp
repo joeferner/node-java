@@ -14,7 +14,13 @@
 
 #define DYNAMIC_PROXY_JS_ERROR -4
 
-long v8ThreadId;
+#ifdef WIN32
+  typedef long threadId;
+#else
+  typedef pthread_t threadId;
+#endif
+
+threadId v8ThreadId;
 
 /*static*/ Nan::Persistent<v8::FunctionTemplate> Java::s_ct;
 /*static*/ std::string Java::s_nativeBindingLocation;
@@ -27,11 +33,19 @@ void my_sleep(int dur) {
 #endif
 }
 
-long my_getThreadId() {
+threadId my_getThreadId() {
 #ifdef WIN32
   return (long)GetCurrentThreadId();
 #else
-  return (long)pthread_self();
+  return pthread_self();
+#endif
+}
+
+bool v8ThreadIdEquals(threadId a, threadId b) {
+#ifdef WIN32
+  return a == b;
+#else
+  return pthread_equal(a, b);
 #endif
 }
 
@@ -1297,7 +1311,8 @@ void throwNewThrowable(JNIEnv* env, const char * excClassName, std::string msg) 
 }
 
 JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jobject src, jlong ptr, jobject method, jobjectArray args) {
-  long myThreadId = my_getThreadId();
+  threadId myThreadId = my_getThreadId();
+
   bool hasArgsGlobalRef = false;
 
   // args needs to be global, you can't send env across thread boundaries
@@ -1315,7 +1330,7 @@ JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jo
 
   uv_work_t* req = new uv_work_t();
   req->data = dynamicProxyData;
-  if(myThreadId == v8ThreadId) {
+  if(v8ThreadIdEquals(myThreadId, v8ThreadId)) {
 #if NODE_MINOR_VERSION >= 10
     EIO_AfterCallJs(req, 0);
 #else
