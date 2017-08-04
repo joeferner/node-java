@@ -14,8 +14,13 @@
 
 #define DYNAMIC_PROXY_JS_ERROR -4
 
-long v8ThreadIdWIN32;
-pthread_t v8ThreadIdNotWIN32;
+#ifdef WIN32
+  typedef long threadId;
+#else
+  typedef pthread_t threadId;
+#endif
+
+threadId v8ThreadId;
 
 /*static*/ Nan::Persistent<v8::FunctionTemplate> Java::s_ct;
 /*static*/ std::string Java::s_nativeBindingLocation;
@@ -28,24 +33,26 @@ void my_sleep(int dur) {
 #endif
 }
 
+threadId my_getThreadId() {
 #ifdef WIN32
-long my_getThreadId_WIN32() {
   return (long)GetCurrentThreadId();
-}
 #else
-pthread_t my_getThreadId_NotWIN32() {
   return pthread_self();
-}
 #endif
+}
+
+bool v8ThreadIdEquals(threadId a, threadId b) {
+#ifdef WIN32
+  return a == b;
+#else
+  return pthread_equal(a, b);
+#endif
+}
 
 /*static*/ void Java::Init(v8::Handle<v8::Object> target) {
   Nan::HandleScope scope;
 
-#ifdef WIN32
-  v8ThreadIdWIN32 = my_getThreadId_WIN32();
-#else
-  v8ThreadIdNotWIN32 = my_getThreadId_NotWIN32();
-#endif
+  v8ThreadId = my_getThreadId();
 
   v8::Local<v8::FunctionTemplate> t = Nan::New<v8::FunctionTemplate>(New);
   s_ct.Reset(t);
@@ -1304,17 +1311,7 @@ void throwNewThrowable(JNIEnv* env, const char * excClassName, std::string msg) 
 }
 
 JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jobject src, jlong ptr, jobject method, jobjectArray args) {
-  long myThreadIdWIN32;
-  pthread_t myThreadIdNotWIN32;
-  bool isWIN32;
-
-#ifdef WIN32
-  myThreadIdWIN32 = my_getThreadId_WIN32();
-  isWIN32 = true;
-#else
-  myThreadIdNotWIN32 = my_getThreadId_NotWIN32();
-  isWIN32 = false;
-#endif
+  threadId myThreadId = my_getThreadId();
 
   bool hasArgsGlobalRef = false;
 
@@ -1333,7 +1330,7 @@ JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jo
 
   uv_work_t* req = new uv_work_t();
   req->data = dynamicProxyData;
-  if((isWIN32 && (myThreadIdWIN32 == v8ThreadIdWIN32)) || (!isWIN32 && pthread_equal(myThreadIdNotWIN32, v8ThreadIdNotWIN32))) {
+  if(v8ThreadIdEquals(myThreadId, v8ThreadId)) {
 #if NODE_MINOR_VERSION >= 10
     EIO_AfterCallJs(req, 0);
 #else
