@@ -332,11 +332,13 @@ With v0.5.1 a new API is available to make it easier for a complex application t
 
 # API Documentation
 
-<a name="java"/>
-## java
+<a name="java">
 
-<a name="javaClasspath" />
-**java.classpath**
+# java
+
+<a name="javaClasspath" >
+
+*java.classpath**
 
 Array of paths or jars to pass to the creation of the JVM.
 
@@ -347,8 +349,9 @@ __Example__
     java.classpath.push('commons.io.jar');
     java.classpath.push('src');
 
-<a name="javaOptions" />
-**java.options**
+<a name="javaOptions" >
+
+*java.options**
 
 Array of options to pass to the creation of the JVM.
 
@@ -359,8 +362,9 @@ __Example__
     java.options.push('-Djava.awt.headless=true');
     java.options.push('-Xmx1024m');
 
-<a name="javaImport" />
-**java.import(className)**
+<a name="javaImport" >
+
+*java.import(className)**
 
 Loads the class given by className such that it acts and feels like a javascript object.
 
@@ -379,8 +383,9 @@ __Example__
     var test = new Test();
     list.instanceMethodSync('item1');
 
-<a name="javaNewInstance" />
-**java.newInstance(className, [args...], callback)**
+<a name="javaNewInstance" >
+
+*java.newInstance(className, [args...], callback)**
 
 **java.newInstanceSync(className, [args...]) : result**
 
@@ -401,8 +406,9 @@ __Example__
       // new list
     });
 
-<a name="javaInstanceOf" />
-**java.instanceOf(javaObject, className)**
+<a name="javaInstanceOf" >
+
+*java.instanceOf(javaObject, className)**
 
 Determines of a javaObject is an instance of a class.
 
@@ -419,8 +425,9 @@ __Example__
       console.log("obj is an instance of SuperClass");
     }
 
-<a name="javaCallStaticMethod" />
-**java.callStaticMethod(className, methodName, [args...], callback)**
+<a name="javaCallStaticMethod" >
+
+*java.callStaticMethod(className, methodName, [args...], callback)**
 
 **java.callStaticMethodSync(className, methodName, [args...]) : result**
 
@@ -442,8 +449,9 @@ __Example__
       // results from doSomething
     });
 
-<a name="javaCallMethod" />
-**java.callMethod(instance, methodName, [args...], callback)**
+<a name="javaCallMethod" >
+
+*java.callMethod(instance, methodName, [args...], callback)**
 
 **java.callMethodSync(instance, methodName, [args...]) : result**
 
@@ -467,8 +475,9 @@ __Example__
       // results from doSomething
     });
 
-<a name="javaGetStaticFieldValue" />
-**java.getStaticFieldValue(className, fieldName)**
+<a name="javaGetStaticFieldValue" >
+
+*java.getStaticFieldValue(className, fieldName)**
 
 Gets a static field value from the specified class.
 
@@ -481,8 +490,9 @@ __Example__
 
     var data = java.getStaticFieldValue("com.nearinfinty.MyClass", "data");
 
-<a name="javaSetStaticFieldValue" />
-**java.setStaticFieldValue(className, fieldName, newValue)**
+<a name="javaSetStaticFieldValue" >
+
+*java.setStaticFieldValue(className, fieldName, newValue)**
 
 Sets a static field value on the specified class.
 
@@ -496,8 +506,9 @@ __Example__
 
     java.setStaticFieldValue("com.nearinfinty.MyClass", "data", "Hello World");
 
-<a name="javaNewArray" />
-**java.newArray(className, values[])**
+<a name="javaNewArray" >
+
+*java.newArray(className, values[])**
 
 Creates a new java array of type class.
 
@@ -510,8 +521,9 @@ __Example__
 
     var newArray = java.newArray("java.lang.String", ["item1", "item2", "item3"]);
 
-<a name="javaNewByte" />
-**java.newByte(val)**
+<a name="javaNewByte" >
+
+*java.newByte(val)**
 
 Creates a new java byte. This is needed because javascript does not have the concept of a byte.
 
@@ -523,8 +535,9 @@ __Example__
 
     var b = java.newByte(12);
 
-<a name="javaNewShort" />
-**java.newShort(val)**
+<a name="javaNewShort" >
+
+*java.newShort(val)**
 
 Creates a new java short. This is needed because javascript does not have the concept of a short.
 
@@ -536,8 +549,9 @@ __Example__
 
     var s = java.newShort(12);
 
-<a name="javaNewLong" />
-**java.newLong(val)**
+<a name="javaNewLong" >
+
+*java.newLong(val)**
 
 Creates a new java long. This is needed because javascript does not have the concept of a long.
 
@@ -549,8 +563,9 @@ __Example__
 
     var s = java.newLong(12);
 
-<a name="javaNewChar" />
-**java.newChar(val)**
+<a name="javaNewChar" >
+
+*java.newChar(val)**
 
 Creates a new java char. This is needed because javascript does not have the concept of a char.
 
@@ -562,8 +577,9 @@ __Example__
 
     var ch = java.newChar('a');
 
-<a name="javaNewDouble" />
-**java.newDouble(val)**
+<a name="javaNewDouble" >
+
+*java.newDouble(val)**
 
 Creates a new java double. This is needed to force javascript's number to a double to call some methods.
 
@@ -575,8 +591,9 @@ __Example__
 
     var d = java.newDouble(3.14);
 
-<a name="javaNewFloat" />
-**java.newFloat(val)**
+<a name="javaNewFloat" >
+
+*java.newFloat(val)**
 
 Creates a new java float. This is needed to force javascript's number to a float to call some methods.
 
@@ -588,8 +605,9 @@ __Example__
 
     var f = java.newFloat(3.14);
 
-<a name="javaNewProxy" />
-**java.newProxy(interfaceName, functions)**
+<a name="javaNewProxy" >
+
+*java.newProxy(interfaceName, functions)**
 
 Creates a new java Proxy for the given interface. Functions passed in will run on the v8 main thread and not a new thread.
 
@@ -613,33 +631,39 @@ __Example__
     var thread = java.newInstanceSync("java.lang.Thread", myProxy);
     thread.start();
 
-<a name="javaisJvmCreated" />
-**java.isJvmCreated()**
+<a name="javaisJvmCreated" >
+
+*java.isJvmCreated()**
 
 Returns true if the JVM has been created. The JVM can only be created once.
 
-<a name="javaRegisterClient" />
-**java.registerClient(before, after)**
+<a name="javaRegisterClient" >
+
+*java.registerClient(before, after)**
 
 Register that a client wants to be called back immediately before and/or immediately after the JVM is created. If used, this function must be called before the JVM has been created. The before function is typically used to add to the classpath. The function may execute asynchronous operations (such as a async glob function). The after function is sometimes useful for doing one-time initialization that requires the JVM to first be initialized. If either function is unnecessary, use `null` or `undefined`. See also `registerClientP` and `ensureJvm`. See the unit tests in `testAsyncOptions` for examples.
 
-<a name="javaRegisterClientP" />
-**java.registerClientP(before, after)**
+<a name="javaRegisterClientP" >
+
+*java.registerClientP(before, after)**
 
 Like java.registerClient, but before and after are assumed to be functions returning promises.
 
-<a name="javaEnsureJvm" />
-**java.ensureJvm(callback)**
+<a name="javaEnsureJvm" >
+
+*java.ensureJvm(callback)**
 
 If the JVM has not yet been created, execute the full JVM initialization process, then call callback function when initialization is complete. If the JVM has been created, just call the callback. Note that the full initialization process includes: 1) executing all registered client *before* hooks, 2) creating the JVM, then 3) executing all registered client *after* hooks.
 
 
 
-<a name="javaObject"/>
-## java object
+<a name="javaObject">
 
-<a name="javaObjectCallMethod" />
-**obj._methodName_([args...], callback)**
+# java object
+
+<a name="javaObjectCallMethod" >
+
+*obj._methodName_([args...], callback)**
 
 **obj._methodNameSync_([args...]) : result**
 
@@ -659,8 +683,9 @@ __Example__
       if(err) { console.error(err); return; }
     });
 
-<a name="javaObjectGetSetField" />
-**obj._fieldName_ = val**
+<a name="javaObjectGetSetField" >
+
+*obj._fieldName_ = val**
 
 **val = obj._fieldName_**
 
@@ -673,8 +698,9 @@ __Example__
     list.data = "test";
     var data = list.data;
 
-<a name="getFullMethodSignature" />
-# Getting the Full Method Signature
+<a name="getFullMethodSignature" >
+
+ Getting the Full Method Signature
 
 Run `javap -s -classpath <your-class-path> <your-class-name>`. Find the method name you are looking for. For example:
 
