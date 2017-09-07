@@ -370,7 +370,7 @@ Loads the class given by className such that it acts and feels like a javascript
 
 __Arguments__
 
- * className - The name of the class to create. For subclasses seperate using a '$' (eg. com.nearinfinty.MyClass$SubClass)
+ * className - The name of the class to create. For nested classes seperate using a '$' (eg. com.nearinfinty.MyClass$NestedClass)
 
 __Example__
 
@@ -394,7 +394,7 @@ otherwise it will be the first argument in the callback.
 
 __Arguments__
 
- * className - The name of the class to create. For subclasses seperate using a '$' (eg. com.nearinfinty.MyClass$SubClass)
+ * className - The name of the class to create. For nested classes seperate using a '$' (eg. com.nearinfinty.MyClass$NestedClass)
  * callback(err, item) - Callback to be called when the class is created.
 
 __Example__
@@ -436,7 +436,7 @@ otherwise it will be the first argument in the callback.
 
 __Arguments__
 
- * className - The name of the class to call the method on. For subclasses seperate using a '$' (eg. com.nearinfinty.MyClass$SubClass)
+ * className - The name of the class to call the method on. For nested classes seperate using a '$' (eg. com.nearinfinty.MyClass$NestedClass)
  * methodName - The name of the method to call. The method name can include the full signature (see [Getting the full method signature](#getFullMethodSignature)).
  * callback(err, item) - Callback to be called when the class is created.
 
@@ -483,7 +483,7 @@ Gets a static field value from the specified class.
 
 __Arguments__
 
- * className - The name of the class to get the value from. For subclasses seperate using a '$' (eg. com.nearinfinty.MyClass$SubClass)
+ * className - The name of the class to get the value from. For nested classes seperate using a '$' (eg. com.nearinfinty.MyClass$NestedClass)
  * fieldName - The name of the field to get the value from.
 
 __Example__
@@ -498,7 +498,7 @@ Sets a static field value on the specified class.
 
 __Arguments__
 
- * className - The name of the class to set the value on. For subclasses seperate using a '$' (eg. com.nearinfinty.MyClass$SubClass)
+ * className - The name of the class to set the value on. For nested classes seperate using a '$' (eg. com.nearinfinty.MyClass$NestedClass)
  * fieldName - The name of the field to set the value on.
  * newValue - The new value to assign to the field.
 
@@ -514,7 +514,7 @@ Creates a new java array of type class.
 
 __Arguments__
 
- * className - The name of the type of array elements. For subclasses seperate using a '$' (eg. com.nearinfinty.MyClass$SubClass)
+ * className - The name of the type of array elements. For nested classes seperate using a '$' (eg. com.nearinfinty.MyClass$NestedClass)
  * values - A javascript array of values to assign to the java array.
 
 __Example__
@@ -616,7 +616,7 @@ garbage collection.
 
 __Arguments__
 
- * interfaceName - The name of the interface to proxy. For subclasses seperate using a '$' (eg. com.nearinfinty.MyClass$SubClass)
+ * interfaceName - The name of the interface to proxy. For nested classes seperate using a '$' (eg. com.nearinfinty.MyClass$NestedClass)
  * functions - A hash of functions matching the function in the interface.
 
 __Example__
