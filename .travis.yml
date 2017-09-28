@@ -7,8 +7,6 @@ env:
   - NODE_VERSION=7 CC=clang CXX=clang++
   - NODE_VERSION=6 CC=clang CXX=clang++
   - NODE_VERSION=4 CC=clang CXX=clang++
-  - NODE_VERSION="0.12"
-  - NODE_VERSION="0.10"
 before_install:
   - nvm install $NODE_VERSION
 before_script:
