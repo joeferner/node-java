@@ -32,8 +32,10 @@ PREREQUISITES:
 Run (https://gist.github.com/pudquick/349f063c242239952a2e#file-modify_java-py) to guarantee all JDKs have JNI enabled.
 
 * Add a symlink to your JDK.
+```bash
 cd /Library/Application Support/ExportData/
 sudo ln -s /Library/Java/JavaVirtualMachines/<JDK-VERSION>/Contents/Home javaLocation
+```
 
 where JDK-VERSION is the version of the JDK you wish to use.
 
