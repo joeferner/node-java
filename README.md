@@ -33,6 +33,7 @@ Run (https://gist.github.com/pudquick/349f063c242239952a2e#file-modify_java-py) 
 
 * Add a symlink to your JDK.
 ```bash
+sudo mkdir /Library/Application Support/ExportData/
 cd /Library/Application Support/ExportData/
 sudo ln -s /Library/Java/JavaVirtualMachines/<JDK-VERSION>/Contents/Home javaLocation
 ```
