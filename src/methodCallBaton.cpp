@@ -80,13 +80,13 @@ void MethodCallBaton::WorkComplete() {
       v8::Local<v8::Value> argv[] = {
         result
       };
-      callback->Call(1, argv);
+      callback->Call(1, argv, async_resource);
     } else {
       v8::Local<v8::Value> argv[] = {
         Nan::Undefined(),
         result
       };
-      callback->Call(2, argv);
+      callback->Call(2, argv, async_resource);
     }
 
     delete callback;
