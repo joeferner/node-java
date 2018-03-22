@@ -135,8 +135,8 @@
                     '<(javahome)/include/darwin'
                   ],
                   'libraries': [
-                    '-L<(javahome)/jre/lib/server',
-                    '-Wl,-rpath,<(javahome)/jre/lib/server',
+                    '-L/Library/Application\ Support/ExportData/javaLocation/jre/lib/server',
+                    '-Wl,-rpath,/Library/Application\ Support/ExportData/javaLocation/jre/lib/server',
                     '-ljvm'
                   ],
                 },

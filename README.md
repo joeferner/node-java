@@ -26,7 +26,20 @@ Notes:
 
 ### Installation OSX
 
-* If you run into strange runtime issues, it could be because the Oracle JDK does not advertise itself as available for JNI.  See [Issue 90](https://github.com/joeferner/node-java/issues/90#issuecomment-45613235) for more details and manual workarounds.  If this does occur for you, please update the issue.
+PREREQUISITES:
+
+* OSX JDK needs JNI feature enabled.  
+Run (https://gist.github.com/pudquick/349f063c242239952a2e#file-modify_java-py) to guarantee all JDKs have JNI enabled.
+
+* Add a symlink to your JDK.
+```bash
+sudo mkdir /Library/Application Support/ExportData/
+cd /Library/Application Support/ExportData/
+sudo ln -s /Library/Java/JavaVirtualMachines/<JDK-VERSION>/Contents/Home javaLocation
+```
+
+where JDK-VERSION is the version of the JDK you wish to use.
+
 
 ### Installation Windows
 
