@@ -1,8 +1,10 @@
 language: java
 sudo: false
 jdk:
-  - oraclejdk8
   - oraclejdk7
+  - oraclejdk8
+  - oraclejdk9
+  - oraclejdk10
 env:
   - NODE_VERSION=7 CC=clang CXX=clang++
   - NODE_VERSION=6 CC=clang CXX=clang++
