@@ -28,8 +28,8 @@ main () {
   else
     jre_dir="${java_home}/lib"
   fi
-
-  local lib_dir
+  
+  local lib_dir=""
   if [[ "${os}" == "linux" && ! "${java_version}" =~ (6|7|8) ]]; then
     # no arch on JDK 9+
     lib_dir="${jre_dir}/server"
@@ -43,6 +43,8 @@ main () {
     if [[ -d ${jre_dir}/s390x/classic ]]; then lib_dir="${jre_dir}"/s390x/classic; else lib_dir="${jre_dir}"/s390/classic; fi
   elif [[ "${os}" == "linux" ]] && [[ "${target_arch}" == "ppc64" || "${target_arch}" == "ppc" ]]; then
     if [[ -d ${jre_dir}/ppc64/classic ]]; then lib_dir="${jre_dir}"/ppc64/classic; fi
+  elif [[ "${os}" == "linux" ]] && [[ "${target_arch}" == "ppc64le" || "${target_arch}" == "ppcle" ]]; then
+    if [[ -d ${jre_dir}/ppc64le/classic ]]; then lib_dir="${jre_dir}"/ppc64le/classic; else lib_dir="${jre_dir}"/ppc64le/server; fi
   elif [[ "${os}" == "mac" ]]; then
     lib_dir="${jre_dir}/server"
   else
@@ -60,6 +62,7 @@ main () {
       lib_dir="${jre_dir}/${arch}/server"
     fi
   fi
+
   if [[ -z "${lib_dir}" ]]; then
     error "Can't find lib dir for ${os} ${target_arch}, java home: ${java_home}"
   fi
