@@ -28,7 +28,7 @@ main () {
   else
     jre_dir="${java_home}/lib"
   fi
-  
+
   local lib_dir=""
   if [[ "${os}" == "linux" && ! "${java_version}" =~ (6|7|8) ]]; then
     # no arch on JDK 9+
@@ -42,9 +42,8 @@ main () {
   elif [[ "${os}" == "linux" ]] && [[ "${target_arch}" == "s390x" || "${target_arch}" == "s390" ]]; then
     if [[ -d ${jre_dir}/s390x/classic ]]; then lib_dir="${jre_dir}"/s390x/classic; else lib_dir="${jre_dir}"/s390/classic; fi
   elif [[ "${os}" == "linux" ]] && [[ "${target_arch}" == "ppc64" || "${target_arch}" == "ppc" ]]; then
-    if [[ -d ${jre_dir}/ppc64/classic ]]; then lib_dir="${jre_dir}"/ppc64/classic; fi
-  elif [[ "${os}" == "linux" ]] && [[ "${target_arch}" == "ppc64le" || "${target_arch}" == "ppcle" ]]; then
-    if [[ -d ${jre_dir}/ppc64le/classic ]]; then lib_dir="${jre_dir}"/ppc64le/classic; else lib_dir="${jre_dir}"/ppc64le/server; fi
+    target_arch=`uname -m`
+    if [[ -d ${jre_dir}/${target_arch}/classic ]]; then lib_dir="${jre_dir}"/${target_arch}/classic; else lib_dir="${jre_dir}"/${target_arch}/server; fi
   elif [[ "${os}" == "mac" ]]; then
     lib_dir="${jre_dir}/server"
   else

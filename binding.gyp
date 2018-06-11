@@ -12,12 +12,6 @@
       ['uname_m=="s390" or uname_m=="s390x"', {
         'target_arch': 's390'
       }],
-      ['uname_m=="ppc64"', {
-        'target_arch': 'ppc64'
-      }],
-      ['uname_m=="ppc64le"', {
-        'target_arch': 'ppc64le'
-      }],
       ['OS=="win"', {
         'javahome%': '<!(node findJavaHome.js)'
       }],
