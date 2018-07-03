@@ -8,7 +8,7 @@ Bridge API to connect with existing Java APIs.
 
 ### Other projects that might be helpful
 
-* [node-java-maven](https://github.com/joeferner/node-java-maven) - manages your node-java classpath by using maven dependency mangement.
+* [node-java-maven](https://github.com/joeferner/node-java-maven) - manages your node-java classpath by using maven dependency management.
 
 ## Installation
 
