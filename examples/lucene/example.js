@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 
 var java = require("../../");
-java.classpath.push("lucene-core-6.0.0.jar");
-java.classpath.push("lucene-analyzers-common-6.0.0.jar");
-java.classpath.push("lucene-queryparser-6.0.0.jar");
+java.classpath.push("./lucene-lib/lucene-core-7.4.0.jar");
+java.classpath.push("./lucene-lib/lucene-analyzers-common-7.4.0.jar");
+java.classpath.push("./lucene-lib/lucene-queryparser-7.4.0.jar");
 
 
 var idx = java.newInstanceSync("org.apache.lucene.store.RAMDirectory");
 var analyzer = java.newInstanceSync("org.apache.lucene.analysis.standard.StandardAnalyzer");
 var writerConfig = java.newInstanceSync("org.apache.lucene.index.IndexWriterConfig", analyzer);
 var writer = java.newInstanceSync("org.apache.lucene.index.IndexWriter", idx, writerConfig);
-var queryParser = java.newInstanceSync("org.apache.lucene.queryparser.analyzing.AnalyzingQueryParser", "content", analyzer);
+var queryParser = java.newInstanceSync("org.apache.lucene.queryparser.classic.QueryParser", "content", analyzer);
 
 writer.addDocumentSync(createDocument("Theodore Roosevelt",
   "It behooves every man to remember that the work of the " +

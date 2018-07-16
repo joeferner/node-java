@@ -42,6 +42,12 @@ npm install -g node-gyp
 
 If you get `D9025` warnings and `C1083` errors when looking for `.sln` or `.h` files, be sure you've got the `node-gyp`'s dependencies, [as explained here](https://github.com/joeferner/node-java#installation).
 
+Alternatively, Windows users can easily install all required tools by running the following command in PowerShell as administrator. For more information see [windows-build-tools project page](https://github.com/felixrieseberg/windows-build-tools):
+
+```sh
+npm install --global --production windows-build-tools
+```
+
 ### Installation ARM (Raspberry Pi)
 
 ```bash
