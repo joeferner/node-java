@@ -237,7 +237,7 @@ try {
 
 ### AsyncOptions: control over the generation of sync, async & promise method variants.
 
-As of release 0.4.5 it became possible to create async methods that return promises by setting the asyncOptions property of the java object. With release 0.4.7 this feature is extended to allow changing the suffix assigned for sync and async method variants, and to further configure this module to optionally omit generation of any of these variants.
+As of release 0.4.5 it became possible to create async methods that return promises by setting the `asyncOptions` property of the java object. With release 0.4.7 this feature is extended to allow changing the suffix assigned for sync and async method variants, and to further configure this module to optionally omit generation of any of these variants.
 
 Example:
 
@@ -247,7 +247,7 @@ java.asyncOptions = {
   asyncSuffix: undefined,     // Don't generate node-style methods taking callbacks
   syncSuffix: "",              // Sync methods use the base name(!!)
   promiseSuffix: "Promise",   // Generate methods returning promises, using the suffix Promise.
-  promisify: require("when/node").lift
+  promisify: require('util').promisify // Needs Node.js version 8 or greater, see comment below
 };
 java.classpath.push("commons-lang3-3.1.jar");
 java.classpath.push("commons-io.jar");
@@ -261,9 +261,11 @@ java.newInstancePromise("java.util.ArrayList")
 ```
 
 #### NOTES:
+
 * If you want the defacto standard behavior, simply don't set java.asyncOptions.
 * If you do provide asyncOptions, be aware that this module will not generate method variants of a given flavor if you don't provide a string value for the corresponding suffix (`asyncSuffix`, `syncSuffix`, `promiseSuffix`). In the example above, the application is configured to omit the method variants using node-style async callback functions.
 * If you provide `asyncOptions.promiseSuffix` then you must also set `asyncOptions.promisify` to a function that *promisifies* a node-style async function. I.e. the provided function must take as input a function whose last argument is a node callback function, and it must return an equivalent promise-returning function. Several Promises/A+ libraries provide such functions, but it may be necessary to provide a wrapper function. See `testHelpers.js` for an example.
+* For `promisify` implementation, if you are using Node.js version 8.0.0 or newer then `promisify: require('util').promisify` will work out of the box. If you need to support and older Node.js version then an implementation needs to be provided, for example, `promisify: require("when/node").lift`
 * If you provide `asyncOptions.promisify` then you must provide a *non-empty* string for `asyncOptions.promiseSuffix`.
 * Either (but not both) `asyncSuffix` or `syncSuffix` can be the empty string. If you want the defacto standard behavior for no suffix on async methods, you must provide an empty string for `asyncSuffix`.
 * We've tested promises with five Promises/A+ implementations. See `testHelpers.js` for more information.
@@ -376,7 +378,7 @@ Loads the class given by className such that it acts and feels like a javascript
 
 __Arguments__
 
- * className - The name of the class to create. For nested classes seperate using a '$' (eg. com.nearinfinty.MyClass$NestedClass)
+ * className - The name of the class to create. Separate nested classes using `'$'` (eg. `com.nearinfinty.MyClass$NestedClass`).
 
 __Example__
 
@@ -395,12 +397,12 @@ __Example__
 
 **java.newInstanceSync(className, [args...]) : result**
 
-Creates an instance of the specified class. If you are using the sync method an exception will be throw if an error occures,
+Creates an instance of the specified class. If you are using the sync method an exception will be throw if an error occurs,
 otherwise it will be the first argument in the callback.
 
 __Arguments__
 
- * className - The name of the class to create. For nested classes seperate using a '$' (eg. com.nearinfinty.MyClass$NestedClass)
+ * className - The name of the class to create. Separate nested classes using `'$'` (eg. `com.nearinfinty.MyClass$NestedClass`).
  * callback(err, item) - Callback to be called when the class is created.
 
 __Example__
@@ -437,12 +439,12 @@ __Example__
 
 **java.callStaticMethodSync(className, methodName, [args...]) : result**
 
-Calls a static method on the specified class. If you are using the sync method an exception will be throw if an error occures,
+Calls a static method on the specified class. If you are using the sync method an exception will be throw if an error occurs,
 otherwise it will be the first argument in the callback.
 
 __Arguments__
 
- * className - The name of the class to call the method on. For nested classes seperate using a '$' (eg. com.nearinfinty.MyClass$NestedClass)
+ * className - The name of the class to call the method on. Separate nested classes using `'$'` (eg. `com.nearinfinty.MyClass$NestedClass`).
  * methodName - The name of the method to call. The method name can include the full signature (see [Getting the full method signature](#getFullMethodSignature)).
  * callback(err, item) - Callback to be called when the class is created.
 
@@ -461,7 +463,7 @@ __Example__
 
 **java.callMethodSync(instance, methodName, [args...]) : result**
 
-Calls a method on the specified instance. If you are using the sync method an exception will be throw if an error occures,
+Calls a method on the specified instance. If you are using the sync method an exception will be throw if an error occurs,
 otherwise it will be the first argument in the callback.
 
 __Arguments__
@@ -489,7 +491,7 @@ Gets a static field value from the specified class.
 
 __Arguments__
 
- * className - The name of the class to get the value from. For nested classes seperate using a '$' (eg. com.nearinfinty.MyClass$NestedClass)
+ * className - The name of the class to get the value from. Separate nested classes using `'$'` (eg. `com.nearinfinty.MyClass$NestedClass`).
  * fieldName - The name of the field to get the value from.
 
 __Example__
@@ -504,7 +506,7 @@ Sets a static field value on the specified class.
 
 __Arguments__
 
- * className - The name of the class to set the value on. For nested classes seperate using a '$' (eg. com.nearinfinty.MyClass$NestedClass)
+ * className - The name of the class to set the value on. Separate nested classes using `'$'` (eg. `com.nearinfinty.MyClass$NestedClass`).
  * fieldName - The name of the field to set the value on.
  * newValue - The new value to assign to the field.
 
@@ -520,8 +522,8 @@ Creates a new java array of type class.
 
 __Arguments__
 
- * className - The name of the type of array elements. For nested classes seperate using a '$' (eg. com.nearinfinty.MyClass$NestedClass)
- * values - A javascript array of values to assign to the java array.
+ * className - The name of the type of array elements. Separate nested classes using `'$'` (eg. `com.nearinfinty.MyClass$NestedClass`).
+ * values - A JavaScript array of values to assign to the java array.
 
 __Example__
 
@@ -531,7 +533,7 @@ __Example__
 
 *java.newByte(val)**
 
-Creates a new java byte. This is needed because javascript does not have the concept of a byte.
+Creates a new java byte. This is needed because JavaScript does not have the concept of a byte.
 
 __Arguments__
 
@@ -545,7 +547,7 @@ __Example__
 
 *java.newShort(val)**
 
-Creates a new java short. This is needed because javascript does not have the concept of a short.
+Creates a new java short. This is needed because JavaScript does not have the concept of a short.
 
 __Arguments__
 
@@ -559,7 +561,7 @@ __Example__
 
 *java.newLong(val)**
 
-Creates a new java long. This is needed because javascript does not have the concept of a long.
+Creates a new java long. This is needed because JavaScript does not have the concept of a long.
 
 __Arguments__
 
@@ -573,7 +575,7 @@ __Example__
 
 *java.newChar(val)**
 
-Creates a new java char. This is needed because javascript does not have the concept of a char.
+Creates a new java char. This is needed because JavaScript does not have the concept of a char.
 
 __Arguments__
 
@@ -587,7 +589,7 @@ __Example__
 
 *java.newDouble(val)**
 
-Creates a new java double. This is needed to force javascript's number to a double to call some methods.
+Creates a new java double. This is needed to force JavaScript's number to a double to call some methods.
 
 __Arguments__
 
@@ -601,7 +603,7 @@ __Example__
 
 *java.newFloat(val)**
 
-Creates a new java float. This is needed to force javascript's number to a float to call some methods.
+Creates a new java float. This is needed to force JavaScript's number to a float to call some methods.
 
 __Arguments__
 
@@ -622,7 +624,7 @@ garbage collection.
 
 __Arguments__
 
- * interfaceName - The name of the interface to proxy. For nested classes seperate using a '$' (eg. com.nearinfinty.MyClass$NestedClass)
+ * interfaceName - The name of the interface to proxy. Separate nested classes using `'$'` (eg. `com.nearinfinty.MyClass$NestedClass`).
  * functions - A hash of functions matching the function in the interface.
 
 __Example__
@@ -770,9 +772,9 @@ ShutdownHookHelper.setShutdownHookSync(java.newProxy('java.lang.Runnable', {
 
 When you call a Java method through node-java, any arguments (V8/JavaScript objects) will be converted to Java objects  on the v8 main thread via a call to v8ToJava (found in utils.cpp). The JavaScript object is not held on to and can be garbage collected by v8. If this is an async call, the reference count on the Java objects will be incremented. The Java method will be invoked in a node.js async thread (see uv_queue_work). When the method returns, the resulting object will be returned to the main v8 thread and converted to JavaScript objects via a call to javaToV8 and the Java object's reference count will then be decremented to allow for garbage collection. The resulting v8 object will then be returned to the callers callback function.
 
-# Static member name conficts ('name', 'arguments', 'caller')
+# Static member name conflicts ('name', 'arguments', 'caller')
 
-The Javscript object returned by `java.import(classname)` is a Javascript constructor Function, implemented such that you can create instances of the Java class. For example:
+The JavaScript object returned by `java.import(classname)` is a Javascript constructor Function, implemented such that you can create instances of the Java class. For example:
 
 ```javascript
 var Test = java.import('Test');
@@ -801,7 +803,7 @@ Test.caller(function(err, result) { ... });  // ERROR
 var value = Test.NestedEnum.name;  // ERROR
 ```
 
-Node-java can't create those properties, so the above code won't work. Instead, node-java appends a suffix to the name. The default suffix is simpy an underscore `_`, but you can change the suffix using asyncOptions:
+Node-java can't create those properties, so the above code won't work. Instead, node-java appends a suffix to the name. The default suffix is simply an underscore `_`, but you can change the suffix using `asyncOptions`:
 
 ```javascript
 var java = require('java');
@@ -821,7 +823,7 @@ var value = Test.NestedEnum.name_alt;  // OK
 
 ## Error: Cannot find module '../build/jvm_dll_path.json'
 
-Either postInstall.js didn't run or there was a problem detecting java. Try running postInstall.js manually.
+Either `postInstall.js` didn't run or there was a problem detecting java. Try running `postInstall.js` manually.
 
 ## Debugging
 
