@@ -235,7 +235,7 @@ try {
 }
 ```
 
-<a name="asyncOptions" >
+<a name="asyncOptionsDetails" >
 
 ### AsyncOptions: control over the generation of sync, async & promise method variants.
 
@@ -393,7 +393,7 @@ java.asyncOptions = {
  * `promisify` Callback-to-promise transform implementation. From Node.js version 8 one can just use Node.js implementation: `promisify: require('util').promisify`.
  * `ifReadOnlySuffix` See [Static Member Name Conflicts](#staticMemberNameConflicts).
 
-See [Async Options](#asyncOptions) for details. 
+See [Async Options](#asyncOptionsDetails) for details. 
 
 ## import
 
