@@ -559,7 +559,7 @@ __Example__
 
 *java.newArray(className, values[])**
 
-Creates a new java array of type class.
+Creates a new java array of given glass type. To create array of primitive types like `char`, `byte`, etc, pass the primitive type name (eg.  `java.newArray("char", "hello world\n".split(''))`). 
 
 __Arguments__
 
