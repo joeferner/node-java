@@ -1,14 +1,13 @@
 language: java
 sudo: false
 jdk:
-  - oraclejdk7
-  - oraclejdk8
-  - oraclejdk9
-  - oraclejdk10
+  - openjdk9
+  - openjdk10
+  - openjdk11
 env:
   - NODE_VERSION=7 CC=clang CXX=clang++
-  - NODE_VERSION=6 CC=clang CXX=clang++
-  - NODE_VERSION=4 CC=clang CXX=clang++
+  - NODE_VERSION=8 CC=clang CXX=clang++
+  - NODE_VERSION=11 CC=clang CXX=clang++
 before_install:
   - nvm install $NODE_VERSION
 before_script:
