@@ -11,7 +11,7 @@ require('find-java-home')(function(err, home){
 
   if(home){
     dll = glob.sync('**/jvm.dll', {cwd: home})[0];
-    dylib = glob.sync('**/libjvm.dylib', {cwd: home})[0];
+    dylib = glob.sync('**/libjli.dylib', {cwd: home})[0];
     soFiles = glob.sync('**/libjvm.so', {cwd: home});
     
     if(soFiles.length>0)
