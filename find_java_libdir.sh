@@ -35,6 +35,8 @@ main () {
     lib_dir="${jre_dir}/server"
   elif [[ "${os}" == "linux" && "${target_arch}" == "arm" ]]; then
     if [[ -d ${jre_dir}/arm/classic ]]; then lib_dir="${jre_dir}"/arm/classic; else lib_dir="${jre_dir}"/arm/server; fi
+  elif [[ "${os}" == "linux" && "${target_arch}" == "arm64" ]]; then
+    if [[ -d ${jre_dir}/aarch64/classic ]]; then lib_dir="${jre_dir}"/aarch64/classic; else lib_dir="${jre_dir}"/aarch64/server; fi
   elif [[ "${os}" == "linux" && "${target_arch}" == "ia32" ]]; then
     if [[ -d ${jre_dir}/i386/classic ]]; then lib_dir="${jre_dir}"/i386/classic; else lib_dir="${jre_dir}"/i386/server; fi
   elif [[ "${os}" == "linux" && "${target_arch}" == "x64" ]]; then
