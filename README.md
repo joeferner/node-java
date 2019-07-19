@@ -24,6 +24,11 @@ Notes:
 * If you are having problems finding 'jni.h'. Make sure you have the JDK installed not just the JRE. If you are using
       OpenJDK you want the openjdk-7-jdk package, not openjdk-7-jre.  _Mavericks users see [Issue #86](https://github.com/nearinfinity/node-java/issues/86) if you run into this._
 
+### Installation Ubuntu
+
+- `sudo apt install make g++`
+- If u've error (on global installation): `EACCES user nobody does not have permission to access the dev dir /root/.cache/node-gyp/10.16.0`, then just run: `npm i -g java --unsafe-perm`
+
 ### Installation OSX
 
 * If you run into strange runtime issues, it could be because the Oracle JDK does not advertise itself as available for JNI.  See [Issue 90](https://github.com/joeferner/node-java/issues/90#issuecomment-45613235) for more details and manual workarounds.  If this does occur for you, please update the issue.
