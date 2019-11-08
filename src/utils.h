@@ -117,7 +117,7 @@ void unref(DynamicProxyData* dynamicProxyData);
     return;                                                                                  \
   }                                                                                          \
   v8::Local<v8::String> _##ARGNAME##_obj = v8::Local<v8::String>::Cast(info[argsStart]);     \
-  v8::String::Utf8Value _##ARGNAME##_val(_##ARGNAME##_obj);                                  \
+  Nan::Utf8String _##ARGNAME##_val(_##ARGNAME##_obj);                                  \
   std::string ARGNAME = *_##ARGNAME##_val;                                                   \
   argsStart++;
 
@@ -138,11 +138,11 @@ void unref(DynamicProxyData* dynamicProxyData);
 #define EXCEPTION_CALL_CALLBACK(JAVA, STRBUILDER) \
   std::ostringstream errStr;                                                            \
   errStr << STRBUILDER;                                                                 \
-  v8::Handle<v8::Value> error = javaExceptionToV8(JAVA, env, errStr.str());             \
-  v8::Handle<v8::Value> argv[2];                                                        \
+  v8::Local<v8::Value> error = javaExceptionToV8(JAVA, env, errStr.str());             \
+  v8::Local<v8::Value> argv[2];                                                        \
   argv[0] = error;                                                                      \
   argv[1] = Nan::Undefined();                                                           \
-  v8::Function::Cast(*callback)->Call(Nan::GetCurrentContext()->Global(), 2, argv);
+  Nan::Call(callback.As<v8::Function>(), Nan::GetCurrentContext()->Global(), 2, argv);
 
 #define END_CALLBACK_FUNCTION(MSG) \
   if(callbackProvided) {                                     \

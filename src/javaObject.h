@@ -13,7 +13,7 @@ class Java;
 
 class JavaObject : public Nan::ObjectWrap {
 public:
-  static void Init(v8::Handle<v8::Object> target);
+  static void Init(v8::Local<v8::Object> target);
   static v8::Local<v8::Object> New(Java* java, jobject obj);
   static v8::Local<v8::Object> NewProxy(Java* java, jobject obj, DynamicProxyData* dynamicProxyData);
 
