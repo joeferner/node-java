@@ -339,7 +339,11 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
   }
 
   if(arg->IsString()) {
+#if NODE_MAJOR_VERSION > 7
     v8::String::Value val(v8::Isolate::GetCurrent(), arg->ToString(Nan::GetCurrentContext()).ToLocalChecked());
+#else
+    v8::String::Value val(arg->ToString(Nan::GetCurrentContext()).ToLocalChecked());
+#endif
     return env->NewString(*val, val.length());
   }
 
