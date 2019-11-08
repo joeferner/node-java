@@ -49,7 +49,7 @@ bool v8ThreadIdEquals(threadId a, threadId b) {
 #endif
 }
 
-/*static*/ void Java::Init(v8::Handle<v8::Object> target) {
+/*static*/ void Java::Init(v8::Local<v8::Object> target) {
   Nan::HandleScope scope;
 
   v8ThreadId = my_getThreadId();
@@ -79,7 +79,7 @@ bool v8ThreadIdEquals(threadId a, threadId b) {
   Nan::SetPrototypeMethod(t, "setStaticFieldValue", setStaticFieldValue);
   Nan::SetPrototypeMethod(t, "instanceOf", instanceOf);
 
-  target->Set(Nan::New<v8::String>("Java").ToLocalChecked(), t->GetFunction());
+  Nan::Set(target, Nan::New<v8::String>("Java").ToLocalChecked(), Nan::GetFunction(t).ToLocalChecked());
 
   JavaProxyObject::init();
 }
@@ -90,10 +90,10 @@ NAN_METHOD(Java::New) {
   Java *self = new Java();
   self->Wrap(info.This());
 
-  self->handle()->Set(Nan::New<v8::String>("classpath").ToLocalChecked(), Nan::New<v8::Array>());
-  self->handle()->Set(Nan::New<v8::String>("options").ToLocalChecked(), Nan::New<v8::Array>());
-  self->handle()->Set(Nan::New<v8::String>("nativeBindingLocation").ToLocalChecked(), Nan::New<v8::String>("Not Set").ToLocalChecked());
-  self->handle()->Set(Nan::New<v8::String>("asyncOptions").ToLocalChecked(), Nan::Null());
+  Nan::Set(self->handle(), Nan::New<v8::String>("classpath").ToLocalChecked(), Nan::New<v8::Array>());
+  Nan::Set(self->handle(), Nan::New<v8::String>("options").ToLocalChecked(), Nan::New<v8::Array>());
+  Nan::Set(self->handle(), Nan::New<v8::String>("nativeBindingLocation").ToLocalChecked(), Nan::New<v8::String>("Not Set").ToLocalChecked());
+  Nan::Set(self->handle(), Nan::New<v8::String>("asyncOptions").ToLocalChecked(), Nan::Null());
 
   info.GetReturnValue().Set(info.This());
 }
@@ -133,29 +133,31 @@ void Java::configureAsync(v8::Local<v8::Value>& asyncOptions) {
   doAsync = false;
   doPromise = false;
 
-  v8::Local<v8::Value> suffixValue = asyncOptionsObj->Get(Nan::New<v8::String>("syncSuffix").ToLocalChecked());
-  if (suffixValue->IsString()) {
-    v8::Local<v8::String> suffix = suffixValue->ToString();
-    v8::String::Utf8Value utf8(suffix);
+  v8::MaybeLocal<v8::Value> maybeSuffixValue = Nan::Get(asyncOptionsObj, Nan::New<v8::String>("syncSuffix").ToLocalChecked());
+  v8::Local<v8::Value> suffixValue;
+  if (maybeSuffixValue.ToLocal(&suffixValue) && suffixValue->IsString()) {
+    v8::Local<v8::String> suffix = suffixValue->ToString(Nan::GetCurrentContext()).ToLocalChecked();
+    Nan::Utf8String utf8(suffix);
     m_SyncSuffix.assign(*utf8);
     doSync = true;
   }
 
-  suffixValue = asyncOptionsObj->Get(Nan::New<v8::String>("asyncSuffix").ToLocalChecked());
-  if (suffixValue->IsString()) {
-    v8::Local<v8::String> suffix = suffixValue->ToString();
-    v8::String::Utf8Value utf8(suffix);
+  maybeSuffixValue = Nan::Get(asyncOptionsObj, Nan::New<v8::String>("asyncSuffix").ToLocalChecked());
+  if (maybeSuffixValue.ToLocal(&suffixValue) && suffixValue->IsString()) {
+    v8::Local<v8::String> suffix = suffixValue->ToString(Nan::GetCurrentContext()).ToLocalChecked();
+    Nan::Utf8String utf8(suffix);
     m_AsyncSuffix.assign(*utf8);
     doAsync = true;
   }
 
-  suffixValue = asyncOptionsObj->Get(Nan::New<v8::String>("promiseSuffix").ToLocalChecked());
-  if (suffixValue->IsString()) {
-    v8::Local<v8::String> suffix = suffixValue->ToString();
-    v8::String::Utf8Value utf8(suffix);
+  maybeSuffixValue = Nan::Get(asyncOptionsObj, Nan::New<v8::String>("promiseSuffix").ToLocalChecked());
+  if (maybeSuffixValue.ToLocal(&suffixValue) && suffixValue->IsString()) {
+    v8::Local<v8::String> suffix = suffixValue->ToString(Nan::GetCurrentContext()).ToLocalChecked();
+    Nan::Utf8String utf8(suffix);
     m_PromiseSuffix.assign(*utf8);
-    v8::Local<v8::Value> promisify = asyncOptionsObj->Get(Nan::New<v8::String>("promisify").ToLocalChecked());
-    if (!promisify->IsFunction()) {
+    v8::MaybeLocal<v8::Value> maybePromisify = Nan::Get(asyncOptionsObj, Nan::New<v8::String>("promisify").ToLocalChecked());
+    v8::Local<v8::Value> promisify;
+    if (maybePromisify.ToLocal(&promisify) && !promisify->IsFunction()) {
       fprintf(stderr, "asyncOptions.promisify must be a function");
       assert(promisify->IsFunction());
     }
@@ -176,8 +178,9 @@ void Java::configureAsync(v8::Local<v8::Value>& asyncOptions) {
 }
 
 v8::Local<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
-  v8::Local<v8::Value> asyncOptions = this->handle()->Get(Nan::New<v8::String>("asyncOptions").ToLocalChecked());
-  if (asyncOptions->IsObject()) {
+  v8::MaybeLocal<v8::Value> maybeAsyncOptions = Nan::Get(this->handle(), Nan::New<v8::String>("asyncOptions").ToLocalChecked());
+  v8::Local<v8::Value> asyncOptions;
+  if (maybeAsyncOptions.ToLocal(&asyncOptions) && asyncOptions->IsObject()) {
     configureAsync(asyncOptions);
   }
 
@@ -185,8 +188,9 @@ v8::Local<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   std::ostringstream classPath;
   classPath << "-Djava.class.path=";
 
-  v8::Local<v8::Value> classPathValue = this->handle()->Get(Nan::New<v8::String>("classpath").ToLocalChecked());
-  if(!classPathValue->IsArray()) {
+  v8::MaybeLocal<v8::Value> maybeClassPathValue = Nan::Get(this->handle(), Nan::New<v8::String>("classpath").ToLocalChecked());
+  v8::Local<v8::Value> classPathValue;
+  if(!maybeClassPathValue.ToLocal(&classPathValue) || !classPathValue->IsArray()) {
     return Nan::TypeError("Classpath must be an array");
   }
   v8::Local<v8::Array> classPathArrayTemp = v8::Local<v8::Array>::Cast(classPathValue);
@@ -203,18 +207,18 @@ v8::Local<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
     if(!arrayItemValue->IsString()) {
       return Nan::TypeError("Classpath must only contain strings");
     }
-    v8::Local<v8::String> arrayItem = arrayItemValue->ToString();
-    v8::String::Utf8Value arrayItemStr(arrayItem);
+    v8::Local<v8::String> arrayItem = arrayItemValue->ToString(Nan::GetCurrentContext()).ToLocalChecked();
+    Nan::Utf8String arrayItemStr(arrayItem);
     classPath << *arrayItemStr;
   }
 
   // set the native binding location
-  v8::Local<v8::Value> v8NativeBindingLocation = this->handle()->Get(Nan::New<v8::String>("nativeBindingLocation").ToLocalChecked());
-  v8::String::Utf8Value nativeBindingLocationStr(v8NativeBindingLocation);
+  v8::Local<v8::Value> v8NativeBindingLocation = Nan::Get(this->handle(), Nan::New<v8::String>("nativeBindingLocation").ToLocalChecked()).FromMaybe(v8::Local<v8::Value>());
+  Nan::Utf8String nativeBindingLocationStr(v8NativeBindingLocation);
   s_nativeBindingLocation = *nativeBindingLocationStr;
 
   // get other options
-  v8::Local<v8::Value> optionsValue = this->handle()->Get(Nan::New<v8::String>("options").ToLocalChecked());
+  v8::Local<v8::Value> optionsValue = Nan::Get(this->handle(), Nan::New<v8::String>("options").ToLocalChecked()).FromMaybe(v8::Local<v8::Value>());
   if(!optionsValue->IsArray()) {
     return Nan::TypeError("options must be an array");
   }
@@ -232,8 +236,8 @@ v8::Local<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
       delete[] vmOptions;
       return Nan::TypeError("options must only contain strings");
     }
-    v8::Local<v8::String> arrayItem = arrayItemValue->ToString();
-    v8::String::Utf8Value arrayItemStr(arrayItem);
+    v8::Local<v8::String> arrayItem = arrayItemValue->ToString(Nan::GetCurrentContext()).ToLocalChecked();
+    Nan::Utf8String arrayItemStr(arrayItem);
     vmOptions[i+1].optionString = strdup(*arrayItemStr);
   }
 
@@ -266,7 +270,7 @@ v8::Local<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
 
   m_classLoader = getSystemClassLoader(*env);
 
-  v8::Local<v8::Value> onJvmCreated = this->handle()->Get(Nan::New<v8::String>("onJvmCreated").ToLocalChecked());
+  v8::Local<v8::Value> onJvmCreated = Nan::Get(this->handle(), Nan::New<v8::String>("onJvmCreated").ToLocalChecked()).FromMaybe(v8::Local<v8::Value>());
 
   // TODO: this handles sets put doesn't prevent modifing the underlying data. So java.classpath.push will still work which is invalid.
   Nan::SetAccessor(this->handle(), Nan::New<v8::String>("classpath").ToLocalChecked(), AccessorProhibitsOverwritingGetter, AccessorProhibitsOverwritingSetter);
@@ -278,7 +282,7 @@ v8::Local<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   if (onJvmCreated->IsFunction()) {
     v8::Local<v8::Function> onJvmCreatedFunc = onJvmCreated.As<v8::Function>();
     v8::Local<v8::Object> context = Nan::New<v8::Object>();
-    onJvmCreatedFunc->Call(context, 0, NULL);
+    Nan::Call(onJvmCreatedFunc, context, 0, NULL);
   }
 
   return Nan::Null();
@@ -287,7 +291,7 @@ v8::Local<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
 NAN_GETTER(Java::AccessorProhibitsOverwritingGetter) {
   Java* self = Nan::ObjectWrap::Unwrap<Java>(info.This());
   Nan::HandleScope scope;
-  v8::String::Utf8Value nameStr(property);
+  Nan::Utf8String nameStr(property);
   if(!strcmp("classpath", *nameStr)) {
     info.GetReturnValue().Set(Nan::New(self->m_classPathArray));
     return;
@@ -310,7 +314,7 @@ NAN_GETTER(Java::AccessorProhibitsOverwritingGetter) {
 }
 
 NAN_SETTER(Java::AccessorProhibitsOverwritingSetter) {
-  v8::String::Utf8Value nameStr(property);
+  Nan::Utf8String nameStr(property);
   std::ostringstream errStr;
   errStr << "Cannot set " << *nameStr << " after calling any other java function.";
   Nan::ThrowError(errStr.str().c_str());
@@ -878,7 +882,7 @@ NAN_METHOD(Java::newArray) {
       env->SetObjectArrayElement((jobjectArray)results, i, val);
       if(env->ExceptionOccurred()) {
         std::ostringstream errStr;
-        v8::String::Utf8Value valStr(item);
+        Nan::Utf8String valStr(item);
         errStr << "Could not add item \"" << *valStr << "\" to array.";
         return Nan::ThrowError(javaExceptionToV8(self, env, errStr.str()));
       }
@@ -996,11 +1000,11 @@ NAN_METHOD(Java::newChar) {
   if(info[0]->IsNumber()) {
     charVal = (jchar)Nan::To<int32_t>(info[0]).FromJust();
   } else if(info[0]->IsString()) {
-    v8::Local<v8::String> val = info[0]->ToString();
+    v8::Local<v8::String> val = info[0]->ToString(Nan::GetCurrentContext()).ToLocalChecked();
     if(val->Length() != 1) {
       return Nan::ThrowError(Nan::TypeError("Argument 1 must be a string of 1 character."));
     }
-    std::string strVal = std::string(*v8::String::Utf8Value(val));
+    std::string strVal = std::string(*Nan::Utf8String(val));
     charVal = (jchar)strVal[0];
   } else {
     return Nan::ThrowError(Nan::TypeError("Argument 1 must be a number or string"));
@@ -1239,8 +1243,8 @@ void EIO_AfterCallJs(uv_work_t* req) {
 
   Nan::HandleScope scope;
   v8::Array* v8Args;
-  v8::Function* fn;
-  v8::Handle<v8::Value>* argv;
+  v8::Local<v8::Function> fn;
+  v8::Local<v8::Value>* argv;
   int argc;
   int i;
   v8::Local<v8::Value> v8Result;
@@ -1261,7 +1265,7 @@ void EIO_AfterCallJs(uv_work_t* req) {
     return;
   }
 
-  fn = v8::Function::Cast(*fnObj);
+  fn = fnObj.As<v8::Function>();
 
   if(dynamicProxyData->args) {
     v8Args = v8::Array::Cast(*javaArrayToV8(dynamicProxyData->java, env, dynamicProxyData->args));
@@ -1269,18 +1273,18 @@ void EIO_AfterCallJs(uv_work_t* req) {
   } else {
     argc = 0;
   }
-  argv = new v8::Handle<v8::Value>[argc];
+  argv = new v8::Local<v8::Value>[argc];
   for(i=0; i<argc; i++) {
     argv[i] = v8Args->Get(i);
   }
 
   Nan::TryCatch tryCatch;
   tryCatch.SetCaptureMessage(true);
-  v8Result = fn->Call(dynamicProxyDataFunctions, argc, argv);
+  v8Result = Nan::Call(fn, dynamicProxyDataFunctions, argc, argv).FromMaybe(v8::Local<v8::Value>());
   delete[] argv;
   if (tryCatch.HasCaught()) {
     dynamicProxyData->throwableClass = "node/NodeJsException";
-    v8::String::Utf8Value message(tryCatch.Message()->Get());
+    Nan::Utf8String message(tryCatch.Message()->Get());
     dynamicProxyData->throwableMessage = std::string(*message);
     tryCatch.Reset();
     dynamicProxyData->done = DYNAMIC_PROXY_JS_ERROR;
