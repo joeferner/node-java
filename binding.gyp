@@ -15,7 +15,7 @@
       ['OS=="win"', {
         'javahome%': '<!(node findJavaHome.js)'
       }],
-      ['OS=="linux" or OS=="mac" or OS=="freebsd" or OS=="openbsd" or OS=="solaris"'  , {
+      ['OS=="linux" or OS=="mac" or OS=="freebsd" or OS=="openbsd" or OS=="solaris" or OS=="zos"'  , {
         'javahome%': '<!(node findJavaHome.js)'
       }],
       ['OS=="mac"', {
