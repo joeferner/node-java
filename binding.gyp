@@ -19,7 +19,7 @@
         'javahome%': '<!(node findJavaHome.js)'
       }],
       ['OS=="mac"', {
-      	'javaver%' : "<!(awk -F/ -v h=`node findJavaHome.js` 'BEGIN {n=split(h, a); print a[2]; exit}')"
+        'javaver%' : "<!(awk -F/ -v h=`node findJavaHome.js` 'BEGIN {n=split(h, a); print a[2]; exit}')"
       }],
       ['OS=="linux" or OS=="mac" or OS=="freebsd" or OS=="openbsd" or OS=="solaris"', {
         'javalibdir%': "<!(./find_java_libdir.sh <(target_arch) <(OS))"
@@ -101,6 +101,9 @@
             ]
           }
         ],
+        ["OS=='zos'", {
+          "cflags!": [ "-O2", "-O3" ]
+        }],
         ['OS=="mac"',
           {
             'xcode_settings': {
