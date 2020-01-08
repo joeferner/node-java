@@ -203,7 +203,7 @@ v8::Local<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
         classPath << ":";
       #endif
     }
-    v8::Local<v8::Value> arrayItemValue = classPathArrayTemp->Get(i);
+    v8::Local<v8::Value> arrayItemValue = classPathArrayTemp->Get(Nan::GetCurrentContext(), i).ToLocalChecked();
     if(!arrayItemValue->IsString()) {
       return Nan::TypeError("Classpath must only contain strings");
     }
@@ -231,7 +231,7 @@ v8::Local<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   //printf("classPath: %s\n", classPath.str().c_str());
   vmOptions[0].optionString = strdup(classPath.str().c_str());
   for(uint32_t i=0; i<optionsArrayTemp->Length(); i++) {
-    v8::Local<v8::Value> arrayItemValue = optionsArrayTemp->Get(i);
+    v8::Local<v8::Value> arrayItemValue = optionsArrayTemp->Get(Nan::GetCurrentContext(), i).ToLocalChecked();
     if(!arrayItemValue->IsString()) {
       delete[] vmOptions;
       return Nan::TypeError("options must only contain strings");
@@ -769,7 +769,7 @@ NAN_METHOD(Java::newArray) {
   if(strcmp(className.c_str(), "byte") == 0) {
     results = env->NewByteArray(arrayObj->Length());
     for(uint32_t i=0; i<arrayObj->Length(); i++) {
-      v8::Local<v8::Value> item = arrayObj->Get(i);
+      v8::Local<v8::Value> item = arrayObj->Get(Nan::GetCurrentContext(), i).ToLocalChecked();
       jobject val = v8ToJava(env, item);
       jclass byteClazz = env->FindClass("java/lang/Byte");
       jmethodID byte_byteValue = env->GetMethodID(byteClazz, "byteValue", "()B");
@@ -783,7 +783,7 @@ NAN_METHOD(Java::newArray) {
   else if(strcmp(className.c_str(), "char") == 0) {
     results = env->NewCharArray(arrayObj->Length());
     for(uint32_t i=0; i<arrayObj->Length(); i++) {
-      v8::Local<v8::Value> item = arrayObj->Get(i);
+      v8::Local<v8::Value> item = arrayObj->Get(Nan::GetCurrentContext(), i).ToLocalChecked();
       jobject val = v8ToJava(env, item);
       jclass stringClazz = env->FindClass("java/lang/String");
       jmethodID string_charAt = env->GetMethodID(stringClazz, "charAt", "(I)C");
@@ -797,7 +797,7 @@ NAN_METHOD(Java::newArray) {
   else if(strcmp(className.c_str(), "short") == 0) {
     results = env->NewShortArray(arrayObj->Length());
     for(uint32_t i=0; i<arrayObj->Length(); i++) {
-      v8::Local<v8::Value> item = arrayObj->Get(i);
+      v8::Local<v8::Value> item = arrayObj->Get(Nan::GetCurrentContext(), i).ToLocalChecked();
       jobject val = v8ToJava(env, item);
       jclass shortClazz = env->FindClass("java/lang/Short");
       jmethodID short_shortValue = env->GetMethodID(shortClazz, "shortValue", "()S");
@@ -811,7 +811,7 @@ NAN_METHOD(Java::newArray) {
   else if(strcmp(className.c_str(), "double") == 0) {
     results = env->NewDoubleArray(arrayObj->Length());
     for(uint32_t i=0; i<arrayObj->Length(); i++) {
-      v8::Local<v8::Value> item = arrayObj->Get(i);
+      v8::Local<v8::Value> item = arrayObj->Get(Nan::GetCurrentContext(), i).ToLocalChecked();
       jobject val = v8ToJava(env, item);
       jclass doubleClazz = env->FindClass("java/lang/Double");
       jmethodID double_doubleValue = env->GetMethodID(doubleClazz, "doubleValue", "()D");
@@ -825,7 +825,7 @@ NAN_METHOD(Java::newArray) {
   else if(strcmp(className.c_str(), "int") == 0) {
     results = env->NewIntArray(arrayObj->Length());
     for(uint32_t i=0; i<arrayObj->Length(); i++) {
-      v8::Local<v8::Value> item = arrayObj->Get(i);
+      v8::Local<v8::Value> item = arrayObj->Get(Nan::GetCurrentContext(), i).ToLocalChecked();
       jobject val = v8ToJava(env, item);
       jclass integerClazz = env->FindClass("java/lang/Integer");
       jmethodID integer_intValue = env->GetMethodID(integerClazz, "intValue", "()I");
@@ -839,7 +839,7 @@ NAN_METHOD(Java::newArray) {
   else if(strcmp(className.c_str(), "float") == 0) {
     results = env->NewFloatArray(arrayObj->Length());
     for(uint32_t i=0; i<arrayObj->Length(); i++) {
-      v8::Local<v8::Value> item = arrayObj->Get(i);
+      v8::Local<v8::Value> item = arrayObj->Get(Nan::GetCurrentContext(), i).ToLocalChecked();
       jobject val = v8ToJava(env, item);
       jclass floatClazz = env->FindClass("java/lang/Float");
       jmethodID float_floatValue = env->GetMethodID(floatClazz, "floatValue", "()F");
@@ -853,7 +853,7 @@ NAN_METHOD(Java::newArray) {
   else if(strcmp(className.c_str(), "boolean") == 0) {
     results = env->NewBooleanArray(arrayObj->Length());
     for(uint32_t i=0; i<arrayObj->Length(); i++) {
-      v8::Local<v8::Value> item = arrayObj->Get(i);
+      v8::Local<v8::Value> item = arrayObj->Get(Nan::GetCurrentContext(), i).ToLocalChecked();
       jobject val = v8ToJava(env, item);
       jclass booleanClazz = env->FindClass("java/lang/Boolean");
       jmethodID boolean_booleanValue = env->GetMethodID(booleanClazz, "booleanValue", "()Z");
@@ -877,7 +877,7 @@ NAN_METHOD(Java::newArray) {
     results = env->NewObjectArray(arrayObj->Length(), clazz, NULL);
 
     for(uint32_t i=0; i<arrayObj->Length(); i++) {
-      v8::Local<v8::Value> item = arrayObj->Get(i);
+      v8::Local<v8::Value> item = arrayObj->Get(Nan::GetCurrentContext(), i).ToLocalChecked();
       jobject val = v8ToJava(env, item);
       env->SetObjectArrayElement((jobjectArray)results, i, val);
       if(env->ExceptionOccurred()) {
@@ -1251,7 +1251,7 @@ void EIO_AfterCallJs(uv_work_t* req) {
   jobject javaResult;
 
   v8::Local<v8::Object> dynamicProxyDataFunctions = Nan::New(dynamicProxyData->functions);
-  v8::Local<v8::Value> fnObj = dynamicProxyDataFunctions->Get(Nan::New<v8::String>(dynamicProxyData->methodName.c_str()).ToLocalChecked());
+  v8::Local<v8::Value> fnObj = dynamicProxyDataFunctions->Get(Nan::GetCurrentContext(), Nan::New<v8::String>(dynamicProxyData->methodName.c_str()).ToLocalChecked()).ToLocalChecked();
   if(fnObj->IsUndefined() || fnObj->IsNull()) {
     dynamicProxyData->throwableClass = "java/lang/NoSuchMethodError";
     dynamicProxyData->throwableMessage = "Could not find js function " + dynamicProxyData->methodName;
@@ -1275,7 +1275,7 @@ void EIO_AfterCallJs(uv_work_t* req) {
   }
   argv = new v8::Local<v8::Value>[argc];
   for(i=0; i<argc; i++) {
-    argv[i] = v8Args->Get(i);
+    argv[i] = v8Args->Get(Nan::GetCurrentContext(), i).ToLocalChecked();
   }
 
   Nan::TryCatch tryCatch;
