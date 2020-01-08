@@ -29,8 +29,8 @@
 
   v8::Local<v8::Function> promisify;
   if(java->DoPromise()) {
-    v8::Local<v8::Object> asyncOptions = java->handle()->Get(Nan::New<v8::String>("asyncOptions").ToLocalChecked()).As<v8::Object>();
-    v8::Local<v8::Value> promisifyValue = asyncOptions->Get(Nan::New<v8::String>("promisify").ToLocalChecked());
+    v8::Local<v8::Object> asyncOptions = java->handle()->Get(Nan::GetCurrentContext(), Nan::New<v8::String>("asyncOptions").ToLocalChecked()).ToLocalChecked().As<v8::Object>();
+    v8::Local<v8::Value> promisifyValue = asyncOptions->Get(Nan::GetCurrentContext(), Nan::New<v8::String>("promisify").ToLocalChecked()).ToLocalChecked();
     promisify = promisifyValue.As<v8::Function>();
   }
 

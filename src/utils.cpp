@@ -275,7 +275,7 @@ static std::string getArrayElementType(v8::Local<v8::Array> array, uint32_t arra
   }
 
   for(uint32_t i=0; i<arraySize; i++) {
-    v8::Local<v8::Value> arg = array->Get(i);
+    v8::Local<v8::Value> arg = array->Get(Nan::GetCurrentContext(), i).ToLocalChecked();
     if (arg->IsArray()) {
       return kObject; // We can exit as soon as we know java/lang/Object is required.
     }
@@ -332,7 +332,7 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
     jclass objectClazz = env->FindClass(arrayType.c_str());
     jobjectArray result = env->NewObjectArray(arraySize, objectClazz, NULL);
     for(uint32_t i=0; i<arraySize; i++) {
-      jobject val = v8ToJava(env, array->Get(i));
+      jobject val = v8ToJava(env, array->Get(Nan::GetCurrentContext(), i).ToLocalChecked());
       env->SetObjectArrayElement(result, i, val);
     }
     return result;
@@ -405,7 +405,7 @@ void checkJavaException(JNIEnv* env) {
 }
 
 jobject v8ToJava_javaLong(JNIEnv* env, v8::Local<v8::Object> obj) {
-  jobject longValue = v8ToJava(env, obj->Get(Nan::New<v8::String>("longValue").ToLocalChecked()));
+  jobject longValue = v8ToJava(env, obj->Get(Nan::GetCurrentContext(), Nan::New<v8::String>("longValue").ToLocalChecked()).ToLocalChecked());
   jclass longClazz = env->FindClass("java/lang/Long");
   jmethodID long_constructor = env->GetMethodID(longClazz, "<init>", "(Ljava/lang/String;)V");
   jobject jobj = env->NewObject(longClazz, long_constructor, longValue);
@@ -452,7 +452,7 @@ v8::Local<v8::Value> javaExceptionToV8(Java* java, JNIEnv* env, jthrowable ex, c
     msg << "\n" << javaExceptionToString(env, ex);
 
     v8::Local<v8::Value> v8ex = v8::Exception::Error(Nan::New<v8::String>(msg.str().c_str()).ToLocalChecked());
-    ((v8::Object*)*v8ex)->Set(Nan::New<v8::String>("cause").ToLocalChecked(), javaToV8(java, env, ex));
+    ((v8::Object*)*v8ex)->Set(Nan::GetCurrentContext(), Nan::New<v8::String>("cause").ToLocalChecked(), javaToV8(java, env, ex));
     return v8ex;
   }
 
@@ -639,7 +639,7 @@ v8::Local<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArra
       jlong* elems = env->GetLongArrayElements((jlongArray)objArray, 0);
       for(jsize i=0; i<arraySize; i++) {
         jobject obj = longToJavaLongObj(env, elems[i]);
-        result->Set(i, JavaObject::New(java, obj));
+        result->Set(Nan::GetCurrentContext(), i, JavaObject::New(java, obj));
       }
       env->ReleaseLongArrayElements((jlongArray)objArray, elems, 0);
     }
@@ -649,7 +649,7 @@ v8::Local<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArra
     for(jsize i=0; i<arraySize; i++) {
         jobject obj = env->GetObjectArrayElement(objArray, i);
         v8::Local<v8::Value> item = javaToV8(java, env, obj);
-        result->Set(i, item);
+        result->Set(Nan::GetCurrentContext(), i, item);
     }
     break;
   }
@@ -712,7 +712,7 @@ v8::Local<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj, DynamicProxy
         std::string strValue = javaObjectToString(env, obj);
         v8::Local<v8::Value> v8Result = Nan::New<v8::NumberObject>((double)result);
         v8::NumberObject* v8ResultNumberObject = v8::NumberObject::Cast(*v8Result);
-        v8ResultNumberObject->Set(Nan::New<v8::String>("longValue").ToLocalChecked(), Nan::New<v8::String>(strValue.c_str()).ToLocalChecked());
+        v8ResultNumberObject->Set(Nan::GetCurrentContext(), Nan::New<v8::String>("longValue").ToLocalChecked(), Nan::New<v8::String>(strValue.c_str()).ToLocalChecked());
         SetHiddenValue(v8ResultNumberObject, Nan::New<v8::String>(V8_HIDDEN_MARKER_JAVA_LONG).ToLocalChecked(), Nan::New<v8::Boolean>(true));
         return v8Result;
       }
