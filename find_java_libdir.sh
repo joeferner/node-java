@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 set -eu
 
@@ -15,7 +15,7 @@ main () {
   java_home=$(node findJavaHome.js)
   full_java_version=$(${java_home}/bin/java -version 2>&1 | grep version | sed -e 's/.*version "\(.*\)"\(.*\)/\1/; 1q')
 
-  if [[ "${full_java_version}" = "1."* ]]
+  if [[ "${full_java_version#*1.}" != $full_java_version ]]
   then
     java_version=$(echo "${full_java_version}" | sed -e 's/1\.\([0-9]*\)\(.*\)/\1/; 1q')
   else
@@ -23,14 +23,14 @@ main () {
   fi
 
   local jre_dir
-  if [[ "${java_version}" =~ (6|7|8) ]]; then
+  if [[ "${java_version}" == 6 || "${java_version}" == 7 || "${java_version}" == 8 ]]; then
     jre_dir="${java_home}/jre/lib"
   else
     jre_dir="${java_home}/lib"
   fi
 
   local lib_dir=""
-  if [[ "${os}" == "linux" && ! "${java_version}" =~ (6|7|8) ]]; then
+  if [[ "${os}" == "linux" && ! "${java_version}" == 6 && ! "${java_version}" == 7 && ! "${java_version}" == 8 ]]; then
     # no arch on JDK 9+
     lib_dir="${jre_dir}/server"
   elif [[ "${os}" == "linux" && "${target_arch}" == "arm" ]]; then
@@ -50,7 +50,7 @@ main () {
     lib_dir="${jre_dir}/jli"
   else
     local arch
-    if [[ "${target_arch}" =~ (32|386) ]]; then
+    if [[ "${target_arch}" == 386 || "${target_arch}" == 32 ]]; then
         arch=i386
     else
         arch=amd64

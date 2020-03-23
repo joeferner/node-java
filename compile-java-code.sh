@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/sh -e
 
 JAVA_VERSION=1.7
 
