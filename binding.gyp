@@ -21,11 +21,11 @@
       ['OS=="mac"', {
         'javaver%' : "<!(awk -F/ -v h=`node findJavaHome.js` 'BEGIN {n=split(h, a); print a[2]; exit}')"
       }],
-      ['OS=="linux" or OS=="mac" or OS=="freebsd" or OS=="openbsd" or OS=="solaris"', {
+      ['OS=="linux" or OS=="mac" or OS=="freebsd" or OS=="openbsd" or OS=="solaris" or OS=="zos"', {
         'javalibdir%': "<!(./find_java_libdir.sh <(target_arch) <(OS))"
       }],
       ['OS=="zos"', {
-        'nodever%': '<!(node -e "console.log(process.versions.node)" | cut -d"." -f1)',
+        'nodever%': '<!(node -e "console.log(process.versions.node)" | cut -d"." -f1)'
       }],
     ]
   },
@@ -117,6 +117,9 @@
                   'cflags': [ "-U_VARARG_EXT_" ],
                 }
               ]
+            ],
+            'libraries': [
+              '<(javalibdir)/libjvm.x'
             ]
           }
         ],
