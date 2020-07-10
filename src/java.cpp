@@ -9,6 +9,7 @@
 #include "methodCallBaton.h"
 #include "node_NodeDynamicProxyClass.h"
 #include <node_version.h>
+#include <queue>
 #include <sstream>
 #include <nan.h>
 
@@ -21,6 +22,10 @@
 #endif
 
 threadId v8ThreadId;
+
+std::queue<DynamicProxyJsCallData *> queue_dynamicProxyJsCallData;
+uv_mutex_t uvMutex_dynamicProxyJsCall;
+uv_async_t uvAsync_dynamicProxyJsCall;
 
 /*static*/ Nan::Persistent<v8::FunctionTemplate> Java::s_ct;
 /*static*/ std::string Java::s_nativeBindingLocation;
@@ -49,10 +54,33 @@ bool v8ThreadIdEquals(threadId a, threadId b) {
 #endif
 }
 
+void EIO_CallJs(DynamicProxyJsCallData *callData);
+
+void uvAsyncCb_dynamicProxyJsCall(uv_async_t *handle) {
+  DynamicProxyJsCallData *callData;
+  do {
+    uv_mutex_lock(&uvMutex_dynamicProxyJsCall);
+    if(!queue_dynamicProxyJsCallData.empty()) {
+      callData = queue_dynamicProxyJsCallData.front();
+      queue_dynamicProxyJsCallData.pop();
+    } else {
+      callData = NULL;
+    }
+    uv_mutex_unlock(&uvMutex_dynamicProxyJsCall);
+
+    if(callData) {
+      EIO_CallJs(callData);
+    }
+  } while(callData);
+}
+
 /*static*/ void Java::Init(v8::Local<v8::Object> target) {
   Nan::HandleScope scope;
 
   v8ThreadId = my_getThreadId();
+
+  uv_mutex_init(&uvMutex_dynamicProxyJsCall);
+  uv_async_init(uv_default_loop(), &uvAsync_dynamicProxyJsCall, uvAsyncCb_dynamicProxyJsCall);
 
   v8::Local<v8::FunctionTemplate> t = Nan::New<v8::FunctionTemplate>(New);
   s_ct.Reset(t);
@@ -203,7 +231,7 @@ v8::Local<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
         classPath << ":";
       #endif
     }
-    v8::Local<v8::Value> arrayItemValue = classPathArrayTemp->Get(i);
+    v8::Local<v8::Value> arrayItemValue = classPathArrayTemp->Get(Nan::GetCurrentContext(), i).ToLocalChecked();
     if(!arrayItemValue->IsString()) {
       return Nan::TypeError("Classpath must only contain strings");
     }
@@ -231,7 +259,7 @@ v8::Local<v8::Value> Java::createJVM(JavaVM** jvm, JNIEnv** env) {
   //printf("classPath: %s\n", classPath.str().c_str());
   vmOptions[0].optionString = strdup(classPath.str().c_str());
   for(uint32_t i=0; i<optionsArrayTemp->Length(); i++) {
-    v8::Local<v8::Value> arrayItemValue = optionsArrayTemp->Get(i);
+    v8::Local<v8::Value> arrayItemValue = optionsArrayTemp->Get(Nan::GetCurrentContext(), i).ToLocalChecked();
     if(!arrayItemValue->IsString()) {
       delete[] vmOptions;
       return Nan::TypeError("options must only contain strings");
@@ -769,7 +797,7 @@ NAN_METHOD(Java::newArray) {
   if(strcmp(className.c_str(), "byte") == 0) {
     results = env->NewByteArray(arrayObj->Length());
     for(uint32_t i=0; i<arrayObj->Length(); i++) {
-      v8::Local<v8::Value> item = arrayObj->Get(i);
+      v8::Local<v8::Value> item = arrayObj->Get(Nan::GetCurrentContext(), i).ToLocalChecked();
       jobject val = v8ToJava(env, item);
       jclass byteClazz = env->FindClass("java/lang/Byte");
       jmethodID byte_byteValue = env->GetMethodID(byteClazz, "byteValue", "()B");
@@ -783,7 +811,7 @@ NAN_METHOD(Java::newArray) {
   else if(strcmp(className.c_str(), "char") == 0) {
     results = env->NewCharArray(arrayObj->Length());
     for(uint32_t i=0; i<arrayObj->Length(); i++) {
-      v8::Local<v8::Value> item = arrayObj->Get(i);
+      v8::Local<v8::Value> item = arrayObj->Get(Nan::GetCurrentContext(), i).ToLocalChecked();
       jobject val = v8ToJava(env, item);
       jclass stringClazz = env->FindClass("java/lang/String");
       jmethodID string_charAt = env->GetMethodID(stringClazz, "charAt", "(I)C");
@@ -797,7 +825,7 @@ NAN_METHOD(Java::newArray) {
   else if(strcmp(className.c_str(), "short") == 0) {
     results = env->NewShortArray(arrayObj->Length());
     for(uint32_t i=0; i<arrayObj->Length(); i++) {
-      v8::Local<v8::Value> item = arrayObj->Get(i);
+      v8::Local<v8::Value> item = arrayObj->Get(Nan::GetCurrentContext(), i).ToLocalChecked();
       jobject val = v8ToJava(env, item);
       jclass shortClazz = env->FindClass("java/lang/Short");
       jmethodID short_shortValue = env->GetMethodID(shortClazz, "shortValue", "()S");
@@ -811,7 +839,7 @@ NAN_METHOD(Java::newArray) {
   else if(strcmp(className.c_str(), "double") == 0) {
     results = env->NewDoubleArray(arrayObj->Length());
     for(uint32_t i=0; i<arrayObj->Length(); i++) {
-      v8::Local<v8::Value> item = arrayObj->Get(i);
+      v8::Local<v8::Value> item = arrayObj->Get(Nan::GetCurrentContext(), i).ToLocalChecked();
       jobject val = v8ToJava(env, item);
       jclass doubleClazz = env->FindClass("java/lang/Double");
       jmethodID double_doubleValue = env->GetMethodID(doubleClazz, "doubleValue", "()D");
@@ -825,7 +853,7 @@ NAN_METHOD(Java::newArray) {
   else if(strcmp(className.c_str(), "int") == 0) {
     results = env->NewIntArray(arrayObj->Length());
     for(uint32_t i=0; i<arrayObj->Length(); i++) {
-      v8::Local<v8::Value> item = arrayObj->Get(i);
+      v8::Local<v8::Value> item = arrayObj->Get(Nan::GetCurrentContext(), i).ToLocalChecked();
       jobject val = v8ToJava(env, item);
       jclass integerClazz = env->FindClass("java/lang/Integer");
       jmethodID integer_intValue = env->GetMethodID(integerClazz, "intValue", "()I");
@@ -839,7 +867,7 @@ NAN_METHOD(Java::newArray) {
   else if(strcmp(className.c_str(), "float") == 0) {
     results = env->NewFloatArray(arrayObj->Length());
     for(uint32_t i=0; i<arrayObj->Length(); i++) {
-      v8::Local<v8::Value> item = arrayObj->Get(i);
+      v8::Local<v8::Value> item = arrayObj->Get(Nan::GetCurrentContext(), i).ToLocalChecked();
       jobject val = v8ToJava(env, item);
       jclass floatClazz = env->FindClass("java/lang/Float");
       jmethodID float_floatValue = env->GetMethodID(floatClazz, "floatValue", "()F");
@@ -853,7 +881,7 @@ NAN_METHOD(Java::newArray) {
   else if(strcmp(className.c_str(), "boolean") == 0) {
     results = env->NewBooleanArray(arrayObj->Length());
     for(uint32_t i=0; i<arrayObj->Length(); i++) {
-      v8::Local<v8::Value> item = arrayObj->Get(i);
+      v8::Local<v8::Value> item = arrayObj->Get(Nan::GetCurrentContext(), i).ToLocalChecked();
       jobject val = v8ToJava(env, item);
       jclass booleanClazz = env->FindClass("java/lang/Boolean");
       jmethodID boolean_booleanValue = env->GetMethodID(booleanClazz, "booleanValue", "()Z");
@@ -877,7 +905,7 @@ NAN_METHOD(Java::newArray) {
     results = env->NewObjectArray(arrayObj->Length(), clazz, NULL);
 
     for(uint32_t i=0; i<arrayObj->Length(); i++) {
-      v8::Local<v8::Value> item = arrayObj->Get(i);
+      v8::Local<v8::Value> item = arrayObj->Get(Nan::GetCurrentContext(), i).ToLocalChecked();
       jobject val = v8ToJava(env, item);
       env->SetObjectArrayElement((jobjectArray)results, i, val);
       if(env->ExceptionOccurred()) {
@@ -1211,9 +1239,6 @@ NAN_METHOD(Java::instanceOf) {
   info.GetReturnValue().Set(Nan::New<v8::Boolean>(res));
 }
 
-void EIO_CallJs(uv_work_t* req) {
-}
-
 template <typename T>
 std::string to_string(T value) {
   std::ostringstream os;
@@ -1221,23 +1246,22 @@ std::string to_string(T value) {
   return os.str();
 }
 
-#if NODE_MINOR_VERSION >= 10
-void EIO_AfterCallJs(uv_work_t* req, int status) {
-#else
-void EIO_AfterCallJs(uv_work_t* req) {
-#endif
-  DynamicProxyData* dynamicProxyData = static_cast<DynamicProxyData*>(req->data);
+void EIO_CallJs(DynamicProxyJsCallData *callData) {
+  DynamicProxyData* dynamicProxyData = callData->dynamicProxyData;
+
+  assert(callData->done == 0);
+
   if(!dynamicProxyDataVerify(dynamicProxyData)) {
     return;
   }
-  dynamicProxyData->result = NULL;
+  callData->result = NULL;
 
   JNIEnv* env;
   int ret = dynamicProxyData->java->getJvm()->GetEnv((void**)&env, JNI_BEST_VERSION);
   if (ret != JNI_OK) {
-    dynamicProxyData->throwableClass = "java/lang/IllegalStateException";
-    dynamicProxyData->throwableMessage = "Could not retrieve JNIEnv: jvm->GetEnv returned " + to_string<int>(ret);
-    dynamicProxyData->done = DYNAMIC_PROXY_JS_ERROR;
+    callData->throwableClass = "java/lang/IllegalStateException";
+    callData->throwableMessage = "Could not retrieve JNIEnv: jvm->GetEnv returned " + to_string<int>(ret);
+    callData->done = DYNAMIC_PROXY_JS_ERROR;
     return;
   }
 
@@ -1251,31 +1275,31 @@ void EIO_AfterCallJs(uv_work_t* req) {
   jobject javaResult;
 
   v8::Local<v8::Object> dynamicProxyDataFunctions = Nan::New(dynamicProxyData->functions);
-  v8::Local<v8::Value> fnObj = dynamicProxyDataFunctions->Get(Nan::New<v8::String>(dynamicProxyData->methodName.c_str()).ToLocalChecked());
+  v8::Local<v8::Value> fnObj = dynamicProxyDataFunctions->Get(Nan::GetCurrentContext(), Nan::New<v8::String>(callData->methodName.c_str()).ToLocalChecked()).ToLocalChecked();
   if(fnObj->IsUndefined() || fnObj->IsNull()) {
-    dynamicProxyData->throwableClass = "java/lang/NoSuchMethodError";
-    dynamicProxyData->throwableMessage = "Could not find js function " + dynamicProxyData->methodName;
-    dynamicProxyData->done = DYNAMIC_PROXY_JS_ERROR;
+    callData->throwableClass = "java/lang/NoSuchMethodError";
+    callData->throwableMessage = "Could not find js function " + callData->methodName;
+    callData->done = DYNAMIC_PROXY_JS_ERROR;
     return;
   }
   if(!fnObj->IsFunction()) {
-    dynamicProxyData->throwableClass = "java/lang/IllegalStateException";
-    dynamicProxyData->throwableMessage = dynamicProxyData->methodName + " is not a function";
-    dynamicProxyData->done = DYNAMIC_PROXY_JS_ERROR;
+    callData->throwableClass = "java/lang/IllegalStateException";
+    callData->throwableMessage = callData->methodName + " is not a function";
+    callData->done = DYNAMIC_PROXY_JS_ERROR;
     return;
   }
 
   fn = fnObj.As<v8::Function>();
 
-  if(dynamicProxyData->args) {
-    v8Args = v8::Array::Cast(*javaArrayToV8(dynamicProxyData->java, env, dynamicProxyData->args));
+  if(callData->args) {
+    v8Args = v8::Array::Cast(*javaArrayToV8(dynamicProxyData->java, env, callData->args));
     argc = v8Args->Length();
   } else {
     argc = 0;
   }
   argv = new v8::Local<v8::Value>[argc];
   for(i=0; i<argc; i++) {
-    argv[i] = v8Args->Get(i);
+    argv[i] = v8Args->Get(Nan::GetCurrentContext(), i).ToLocalChecked();
   }
 
   Nan::TryCatch tryCatch;
@@ -1283,11 +1307,11 @@ void EIO_AfterCallJs(uv_work_t* req) {
   v8Result = Nan::Call(fn, dynamicProxyDataFunctions, argc, argv).FromMaybe(v8::Local<v8::Value>());
   delete[] argv;
   if (tryCatch.HasCaught()) {
-    dynamicProxyData->throwableClass = "node/NodeJsException";
+    callData->throwableClass = "node/NodeJsException";
     Nan::Utf8String message(tryCatch.Message()->Get());
-    dynamicProxyData->throwableMessage = std::string(*message);
+    callData->throwableMessage = std::string(*message);
     tryCatch.Reset();
-    dynamicProxyData->done = DYNAMIC_PROXY_JS_ERROR;
+    callData->done = DYNAMIC_PROXY_JS_ERROR;
     return;
   }
 
@@ -1297,12 +1321,12 @@ void EIO_AfterCallJs(uv_work_t* req) {
 
   javaResult = v8ToJava(env, v8Result);
   if(javaResult == NULL) {
-    dynamicProxyData->result = NULL;
+    callData->result = NULL;
   } else {
-    dynamicProxyData->result = env->NewGlobalRef(javaResult);
+    callData->result = env->NewGlobalRef(javaResult);
   }
 
-  dynamicProxyData->done = true;
+  callData->done = true;
 }
 
 void throwNewThrowable(JNIEnv* env, const char * excClassName, std::string msg) {
@@ -1319,37 +1343,37 @@ JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jo
 
   bool hasArgsGlobalRef = false;
 
-  // args needs to be global, you can't send env across thread boundaries
   DynamicProxyData* dynamicProxyData = (DynamicProxyData*)ptr;
-  dynamicProxyData->args = args;
-  dynamicProxyData->done = false;
-  dynamicProxyData->result = NULL;
-  dynamicProxyData->throwableClass = "";
-  dynamicProxyData->throwableMessage = "";
+
+  // args needs to be global, you can't send env across thread boundaries
+  DynamicProxyJsCallData callData;
+  callData.dynamicProxyData = dynamicProxyData;
+  callData.args = args;
+  callData.done = false;
+  callData.result = NULL;
+  callData.throwableClass = "";
+  callData.throwableMessage = "";
 
   jclass methodClazz = env->FindClass("java/lang/reflect/Method");
   jmethodID method_getName = env->GetMethodID(methodClazz, "getName", "()Ljava/lang/String;");
-  dynamicProxyData->methodName = javaObjectToString(env, env->CallObjectMethod(method, method_getName));
+  callData.methodName = javaObjectToString(env, env->CallObjectMethod(method, method_getName));
   assertNoException(env);
 
-  uv_work_t* req = new uv_work_t();
-  req->data = dynamicProxyData;
   if(v8ThreadIdEquals(myThreadId, v8ThreadId)) {
-#if NODE_MINOR_VERSION >= 10
-    EIO_AfterCallJs(req, 0);
-#else
-    EIO_AfterCallJs(req);
-#endif
+    EIO_CallJs(&callData);
   } else {
     if (args) {
       // if args is not null and we have to kick this across the thread boundary, make it a global ref
-      dynamicProxyData->args = (jobjectArray) env->NewGlobalRef(args);
+      callData.args = (jobjectArray) env->NewGlobalRef(args);
       hasArgsGlobalRef = true;
     }
 
-    uv_queue_work(uv_default_loop(), req, EIO_CallJs, (uv_after_work_cb)EIO_AfterCallJs);
+    uv_mutex_lock(&uvMutex_dynamicProxyJsCall);
+    queue_dynamicProxyJsCallData.push(&callData); // we wait for work to finish, so ok to pass ref to local var
+    uv_mutex_unlock(&uvMutex_dynamicProxyJsCall);
+    uv_async_send(&uvAsync_dynamicProxyJsCall);
 
-    while(!dynamicProxyData->done) {
+    while(!callData.done) {
       my_sleep(100);
     }
   }
@@ -1358,18 +1382,18 @@ JNIEXPORT jobject JNICALL Java_node_NodeDynamicProxyClass_callJs(JNIEnv *env, jo
     throwNewThrowable(env, "java/lang/IllegalStateException", "dynamicProxyData was corrupted");
   }
   if(hasArgsGlobalRef) {
-    env->DeleteGlobalRef(dynamicProxyData->args);
+    env->DeleteGlobalRef(callData.args);
   }
 
-  if (dynamicProxyData->done == DYNAMIC_PROXY_JS_ERROR) {
-    throwNewThrowable(env, dynamicProxyData->throwableClass.c_str(), dynamicProxyData->throwableMessage);
+  if (callData.done == DYNAMIC_PROXY_JS_ERROR) {
+    throwNewThrowable(env, callData.throwableClass.c_str(), callData.throwableMessage);
   }
 
   jobject result = NULL;
-  if(dynamicProxyData->result) {
+  if(callData.result) {
     // need to retain a local ref so that we can return it, otherwise the returned object gets corrupted
-    result = env->NewLocalRef(dynamicProxyData->result);
-    env->DeleteGlobalRef(dynamicProxyData->result);
+    result = env->NewLocalRef(callData.result);
+    env->DeleteGlobalRef(callData.result);
   }
   return result;
 }
