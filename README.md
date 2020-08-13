@@ -86,7 +86,7 @@ docker run -it joeferner/node-java bash
 Then inside the docker container create a directory and run
 
 ```bash
-npm install java
+npm install --unsafe-perm java
 ```
 
 Then create a file called `test.js` with the following contents
