@@ -137,6 +137,8 @@ exports['Promises'] = nodeunit.testCase({
         return it.nextPromise();
       })
       .catch(function(err) {
+        console.log("DEBUG: expectException is %s. err = %s",
+                    expectException, err);
         test.ok(expectException);
       })
       .then(function() {
