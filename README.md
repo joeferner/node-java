@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/joeferner/node-java.svg?branch=master)](https://travis-ci.org/joeferner/node-java)
+[![Build Status](https://travis-ci.com/joeferner/node-java.svg?branch=master)](https://travis-ci.com/joeferner/node-java)
 
 # java
 
