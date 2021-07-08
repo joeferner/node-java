@@ -23,7 +23,7 @@ main () {
   fi
 
   local jre_dir
-  if [[ "${java_version}" =~ (6|7|8) ]]; then
+  if [[ "${java_version}" =~ (6|7|8) && "${os}" != "zos" ]]; then
     jre_dir="${java_home}/jre/lib"
   else
     jre_dir="${java_home}/lib"
@@ -43,6 +43,8 @@ main () {
     if [[ -d ${jre_dir}/amd64/classic ]]; then lib_dir="${jre_dir}"/amd64/classic; else lib_dir="${jre_dir}"/amd64/server; fi
   elif [[ "${os}" == "linux" ]] && [[ "${target_arch}" == "s390x" || "${target_arch}" == "s390" ]]; then
     if [[ -d ${jre_dir}/s390x/classic ]]; then lib_dir="${jre_dir}"/s390x/classic; else lib_dir="${jre_dir}"/s390/classic; fi
+  elif [[ "${os}" == "zos" ]]; then
+    lib_dir="${jre_dir}"/s390x/classic
   elif [[ "${os}" == "linux" ]] && [[ "${target_arch}" == "ppc64" || "${target_arch}" == "ppc" ]]; then
     target_arch=`uname -m`
     if [[ -d ${jre_dir}/${target_arch}/classic ]]; then lib_dir="${jre_dir}"/${target_arch}/classic; else lib_dir="${jre_dir}"/${target_arch}/server; fi

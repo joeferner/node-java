@@ -236,5 +236,8 @@ InstanceMethodCallBaton::InstanceMethodCallBaton(
 }
 
 InstanceMethodCallBaton::~InstanceMethodCallBaton() {
-  m_javaObject->Unref();
+  if (m_javaObject) {
+    m_javaObject->Unref();
+    m_javaObject = NULL;
+  }
 }
