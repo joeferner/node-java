@@ -7,7 +7,7 @@
     "jvm",
     "bridge"
   ],
-  "version": "0.12.1",
+  "version": "0.12.2",
   "engines": {
     "node": ">=7.0.0"
   },
