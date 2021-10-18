@@ -66,8 +66,8 @@ main () {
     fi
   fi
 
-  if [[ -z "${lib_dir}" ]]; then
-    error "Can't find lib dir for ${os} ${target_arch}, java home: ${java_home}"
+  if [[ ! -d "${lib_dir}" ]]; then
+    error "Can't find lib dir '${lib_dir}' for ${os} ${target_arch}, java home: ${java_home}"
   fi
   echo "${lib_dir}"
 }
