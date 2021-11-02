@@ -79,7 +79,7 @@ Some issues with the OpenSDK7 so take the Oracle version for compiling.
 
 If you want to play with node-java but don't want to setup the build environment you can run it in docker.
 
-```
+```bash
 docker run -it joeferner/node-java bash
 ```
 
@@ -91,7 +91,7 @@ npm install --unsafe-perm java
 
 Then create a file called `test.js` with the following contents
 
-```
+```javascript
 var java = require('java');
 var javaLangSystem = java.import('java.lang.System');
 
@@ -163,7 +163,6 @@ exports.getJavaInstance = function() {
 and then in the consuming class write:
 
 ```javascript
-
 var javaInit = require('./javaInit');
 var java = javaInit.getJavaInstance();
 
@@ -240,7 +239,7 @@ try {
 }
 ```
 
-<a name="asyncOptionsDetails" >
+<a name="asyncOptionsDetails"></a>
 
 ### AsyncOptions: control over the generation of sync, async & promise method variants.
 
@@ -287,7 +286,7 @@ With v0.5.0 node-java now supports methods with variadic arguments (varargs). Pr
 
 In most cases it is still acceptable to use `java.newArray()`. But it is now possible to pass a plain JavaScript array, or use the variadic style. For example, consider these snippets from the unit test file `test/varargs-test.js`:
 
-```
+```javascript
     test.equal(Test.staticVarargsSync(5, 'a', 'b', 'c'), '5abc');
     test.equal(Test.staticVarargsSync(5, ['a', 'b', 'c']), '5abc');
     test.equal(Test.staticVarargsSync(5, java.newArray('java.lang.String', ['a', 'b', 'c'])), '5abc');
@@ -346,11 +345,11 @@ With v0.5.1 a new API is available to make it easier for a complex application t
 
 # API Documentation
 
-<a name="java">
+<a name="java"></a>
 
 # java
 
-<a name="javaClasspath" >
+<a name="javaClasspath"></a>
 
 ## classpath
 
@@ -367,7 +366,7 @@ __Example__
 
 ## options
 
-<a name="javaOptions" >
+<a name="javaOptions"></a>
 
 *java.options**
 
@@ -402,7 +401,7 @@ See [Async Options](#asyncOptionsDetails) for details.
 
 ## import
 
-<a name="javaImport" >
+<a name="javaImport"></a>
 
 *java.import(className)**
 
@@ -425,7 +424,7 @@ __Example__
 
 ## newInstance
 
-<a name="javaNewInstance" >
+<a name="javaNewInstance"></a>
 
 *java.newInstance(className, [args...], callback)**
 
@@ -450,7 +449,7 @@ __Example__
 
 ## instanceOf
 
-<a name="javaInstanceOf" >
+<a name="javaInstanceOf"></a>
 
 *java.instanceOf(javaObject, className)**
 
@@ -471,7 +470,7 @@ __Example__
 
 ## callStaticMethod
 
-<a name="javaCallStaticMethod" >
+<a name="javaCallStaticMethod"></a>
 
 *java.callStaticMethod(className, methodName, [args...], callback)**
 
@@ -497,7 +496,7 @@ __Example__
 
 ## callMethod
 
-<a name="javaCallMethod" >
+<a name="javaCallMethod"></a>
 
 *java.callMethod(instance, methodName, [args...], callback)**
 
@@ -525,7 +524,7 @@ __Example__
 
 ## getStaticFieldValue
 
-<a name="javaGetStaticFieldValue" >
+<a name="javaGetStaticFieldValue"></a>
 
 *java.getStaticFieldValue(className, fieldName)**
 
@@ -542,7 +541,7 @@ __Example__
 
 ## setStaticFieldValue
 
-<a name="javaSetStaticFieldValue" >
+<a name="javaSetStaticFieldValue"></a>
 
 *java.setStaticFieldValue(className, fieldName, newValue)**
 
@@ -560,7 +559,7 @@ __Example__
 
 ## newArray
 
-<a name="javaNewArray" >
+<a name="javaNewArray"></a>
 
 *java.newArray(className, values[])**
 
@@ -577,7 +576,7 @@ __Example__
 
 ## newByte
 
-<a name="javaNewByte" >
+<a name="javaNewByte"></a>
 
 *java.newByte(val)**
 
@@ -593,7 +592,7 @@ __Example__
 
 ## newShort
 
-<a name="javaNewShort" >
+<a name="javaNewShort"></a>
 
 *java.newShort(val)**
 
@@ -609,7 +608,7 @@ __Example__
 
 ## newLong
 
-<a name="javaNewLong" >
+<a name="javaNewLong"></a>
 
 *java.newLong(val)**
 
@@ -625,7 +624,7 @@ __Example__
 
 ## newChar
 
-<a name="javaNewChar" >
+<a name="javaNewChar"></a>
 
 *java.newChar(val)**
 
@@ -641,7 +640,7 @@ __Example__
 
 ## newDouble
 
-<a name="javaNewDouble" >
+<a name="javaNewDouble"></a>
 
 *java.newDouble(val)**
 
@@ -657,7 +656,7 @@ __Example__
 
 ## newFloat
 
-<a name="javaNewFloat" >
+<a name="javaNewFloat"></a>
 
 *java.newFloat(val)**
 
@@ -673,7 +672,7 @@ __Example__
 
 ## newProxy
 
-<a name="javaNewProxy" >
+<a name="javaNewProxy"></a>
 
 *java.newProxy(interfaceName, functions)**
 
@@ -701,7 +700,7 @@ __Example__
 
 ## isJvmCreated 
 
-<a name="javaisJvmCreated" >
+<a name="javaisJvmCreated"></a>
 
 *java.isJvmCreated()**
 
@@ -709,7 +708,7 @@ Returns true if the JVM has been created. The JVM can only be created once.
 
 ## registerClient
 
-<a name="javaRegisterClient" >
+<a name="javaRegisterClient"></a>
 
 *java.registerClient(before, after)**
 
@@ -717,7 +716,7 @@ Register that a client wants to be called back immediately before and/or immedia
 
 ## registerClientP
 
-<a name="javaRegisterClientP" >
+<a name="javaRegisterClientP"></a>
 
 *java.registerClientP(before, after)**
 
@@ -725,7 +724,7 @@ Like java.registerClient, but before and after are assumed to be functions retur
 
 ## ensureJvm
 
-<a name="javaEnsureJvm" >
+<a name="javaEnsureJvm"></a>
 
 *java.ensureJvm(callback)**
 
@@ -733,13 +732,13 @@ If the JVM has not yet been created, execute the full JVM initialization process
 
 
 
-<a name="javaObject">
+<a name="javaObject"></a>
 
 # `java` object
 
 ## Call Method
 
-<a name="javaObjectCallMethod" >
+<a name="javaObjectCallMethod"></a>
 
 *obj._methodName_([args...], callback)**
 
@@ -763,7 +762,7 @@ __Example__
 
 ## Field Access
 
-<a name="javaObjectGetSetField" >
+<a name="javaObjectGetSetField"></a>
 
 *obj._fieldName_ = val**
 
@@ -780,7 +779,7 @@ __Example__
 
 ## Getting the Full Method Signature
 
-<a name="getFullMethodSignature" >
+<a name="getFullMethodSignature"></a>
 
 Run `javap -s -classpath <your-class-path> <your-class-name>`. Find the method name you are looking for. For example:
 
@@ -845,7 +844,7 @@ ShutdownHookHelper.setShutdownHookSync(java.newProxy('java.lang.Runnable', {
 When you call a Java method through node-java, any arguments (V8/JavaScript objects) will be converted to Java objects  on the v8 main thread via a call to v8ToJava (found in utils.cpp). The JavaScript object is not held on to and can be garbage collected by v8. If this is an async call, the reference count on the Java objects will be incremented. The Java method will be invoked in a node.js async thread (see uv_queue_work). When the method returns, the resulting object will be returned to the main v8 thread and converted to JavaScript objects via a call to javaToV8 and the Java object's reference count will then be decremented to allow for garbage collection. The resulting v8 object will then be returned to the callers callback function.
 
 
-<a name="staticMemberNameConflicts" >
+<a name="staticMemberNameConflicts"></a>
 
 # Static member name conflicts ('name', 'arguments', 'caller')
 
