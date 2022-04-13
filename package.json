@@ -26,7 +26,7 @@
     "url": "https://github.com/joeferner/node-java.git"
   },
   "dependencies": {
-    "async": "2.6.1",
+    "async": "3.2.2",
     "find-java-home": "1.1.0",
     "glob": "7.1.6",
     "lodash": "^4.17.21",
