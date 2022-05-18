@@ -106,6 +106,7 @@ void uvAsyncCb_dynamicProxyJsCall(uv_async_t *handle) {
   Nan::SetPrototypeMethod(t, "getStaticFieldValue", getStaticFieldValue);
   Nan::SetPrototypeMethod(t, "setStaticFieldValue", setStaticFieldValue);
   Nan::SetPrototypeMethod(t, "instanceOf", instanceOf);
+  Nan::SetPrototypeMethod(t, "stop", stop);
 
   Nan::Set(target, Nan::New<v8::String>("Java").ToLocalChecked(), Nan::GetFunction(t).ToLocalChecked());
 
@@ -1237,6 +1238,10 @@ NAN_METHOD(Java::instanceOf) {
 
   jboolean res = env->IsInstanceOf(instance, clazz);
   info.GetReturnValue().Set(Nan::New<v8::Boolean>(res));
+}
+
+NAN_METHOD(Java::stop) {
+  uv_close((uv_handle_t *)&uvAsync_dynamicProxyJsCall, NULL);
 }
 
 template <typename T>

@@ -56,6 +56,7 @@ private:
   static NAN_METHOD(getStaticFieldValue);
   static NAN_METHOD(setStaticFieldValue);
   static NAN_METHOD(instanceOf);
+  static NAN_METHOD(stop);
   static NAN_GETTER(AccessorProhibitsOverwritingGetter);
   static NAN_SETTER(AccessorProhibitsOverwritingSetter);
   v8::Local<v8::Value> ensureJvm();
