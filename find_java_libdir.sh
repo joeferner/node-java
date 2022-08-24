@@ -23,14 +23,14 @@ main () {
   fi
 
   local jre_dir
-  if [[ "${java_version}" =~ (6|7|8) && "${os}" != "zos" ]]; then
+  if [[ "${java_version}" =~ ^(6|7|8)$ && "${os}" != "zos" ]]; then
     jre_dir="${java_home}/jre/lib"
   else
     jre_dir="${java_home}/lib"
   fi
 
   local lib_dir=""
-  if [[ "${os}" == "linux" && ! "${java_version}" =~ (6|7|8) ]]; then
+  if [[ "${os}" == "linux" && ! "${java_version}" =~ ^(6|7|8)$ ]]; then
     # no arch on JDK 9+
     lib_dir="${jre_dir}/server"
   elif [[ "${os}" == "linux" && "${target_arch}" == "arm" ]]; then
