@@ -213,7 +213,7 @@ jvalueType javaGetType(JNIEnv *env, jclass type) {
   }
 }
 
-jclass javaFindClass(JNIEnv* env, std::string& className) {
+jclass javaFindClass(JNIEnv* env, const std::string& className) {
   std::string searchClassName = className;
   std::replace(searchClassName.begin(), searchClassName.end(), '.', '/');
 
@@ -234,7 +234,7 @@ jclass javaFindClass(JNIEnv* env, std::string& className) {
   return clazz;
 }
 
-jobject javaFindField(JNIEnv* env, jclass clazz, std::string& fieldName) {
+jobject javaFindField(JNIEnv* env, jclass clazz, const std::string& fieldName) {
   jobject result = NULL;
   jclass clazzclazz = env->GetObjectClass(clazz);
   jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
@@ -789,18 +789,18 @@ jobjectArray javaObjectArrayToClasses(JNIEnv *env, jobjectArray objs) {
   return results;
 }
 
-jobject javaFindMethod(JNIEnv *env, jclass clazz, std::string& methodName, jobjectArray methodArgs) {
+jobject javaFindMethod(JNIEnv *env, jclass clazz, const std::string& methodName, jobjectArray methodArgs) {
   std::string::size_type parenLoc = methodName.find("(");
   if(parenLoc != std::string::npos) {
     jobject method = NULL;
 
     std::string methodSig = methodName.substr(parenLoc);
-    methodName = methodName.substr(0, parenLoc);
-    jmethodID methodID = env->GetStaticMethodID(clazz, methodName.c_str(), methodSig.c_str());
+    std::string methodRealName = methodName.substr(0, parenLoc);
+    jmethodID methodID = env->GetStaticMethodID(clazz, methodRealName.c_str(), methodSig.c_str());
     if(methodID != 0) {
       method = env->ToReflectedMethod(clazz, methodID, true);
     } else {
-      methodID = env->GetMethodID(clazz, methodName.c_str(), methodSig.c_str());
+      methodID = env->GetMethodID(clazz, methodRealName.c_str(), methodSig.c_str());
       if(methodID != 0) {
         method = env->ToReflectedMethod(clazz, methodID, true);
       }
@@ -810,6 +810,10 @@ jobject javaFindMethod(JNIEnv *env, jclass clazz, std::string& methodName, jobje
     // cast arguments
     if(method != NULL) {
       javaCastArguments(env, methodArgs, method);
+      if(env->ExceptionCheck()) {
+        env->ExceptionClear();
+        method = NULL;
+      }
     }
 
     return method;
@@ -856,14 +860,20 @@ int dynamicProxyDataVerify(DynamicProxyData* data) {
   return 0;
 }
 
-std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string methodName, bool constructor, Nan::NAN_METHOD_ARGS_TYPE args, int argStart, int argEnd) {
+std::string methodNotFoundToString(JNIEnv *env, jclass clazz, const std::string& methodNameSig, bool constructor, Nan::NAN_METHOD_ARGS_TYPE args, int argStart, int argEnd) {
   std::ostringstream startOfMessage;
   std::ostringstream msg;
+  std::string methodName = methodNameSig.substr(0, methodNameSig.find('('));
 
   jclass classClazz = env->FindClass("java/lang/Class");
   jmethodID class_getName = env->GetMethodID(classClazz, "getName", "()Ljava/lang/String;");
 
-  startOfMessage << "Could not find method \"" << methodName.c_str() << "(";
+  if (methodName != methodNameSig) {
+    startOfMessage << "Could not find method for signature \"" << methodNameSig.c_str() << "\" and arguments \"(";
+  } else {
+    startOfMessage << "Could not find method \"" << methodName.c_str() << "(";
+  }
+
   for(int i=argStart; i<argEnd; i++) {
     jobject val = v8ToJava(env, args[i]);
     if(i != argStart) {

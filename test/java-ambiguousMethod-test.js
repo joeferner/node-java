@@ -28,7 +28,7 @@ exports['Java - Call Ambiguous Method'] = nodeunit.testCase({
 
   "staticMethodAmbiguous (sync) - method failed because argument count mismatch": function(test) {
     try {
-      java.callStaticMethodSync('Test', 'staticMethodAmbiguous(Ljava/lang/String;)I', 1, 2);
+      java.callStaticMethodSync('Test', 'staticMethodAmbiguous(Ljava/lang/Integer;)I', 1, 2);
       test.fail("should throw argument length mismatch");
     } catch (e) {
       console.log(e);
@@ -61,7 +61,7 @@ exports['Java - Call Ambiguous Method'] = nodeunit.testCase({
   },
 
   "staticMethodAmbiguous - method argument count mismatch": function(test) {
-    java.callStaticMethod('Test', 'staticMethodAmbiguous(Ljava/lang/String;)I', 1, 2, function(err, result) {
+    java.callStaticMethod('Test', 'staticMethodAmbiguous(Ljava/lang/Integer;)I', 1, 2, function(err, result) {
       test.ok(err);
       console.log(err);
       test.done();
@@ -96,7 +96,7 @@ exports['Java - Call Ambiguous Method'] = nodeunit.testCase({
   "methodAmbiguous (sync) - method failed because argument count mismatch": function(test) {
     var myTest = java.newInstanceSync("Test");
     try {
-      java.callMethodSync(myTest, 'methodAmbiguous(Ljava/lang/String;)I', 1, 2);
+      java.callMethodSync(myTest, 'methodAmbiguous(Ljava/lang/Integer;)I', 1, 2);
       test.fail("should throw argument length mismatch");
     } catch (e) {
       console.log(e);
