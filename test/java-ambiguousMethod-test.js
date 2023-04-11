@@ -70,7 +70,7 @@ exports['Java - Call Ambiguous Method'] = nodeunit.testCase({
 
   "methodAmbiguous (sync) - int passed to double": function(test) {
     var myTest = java.newInstanceSync("Test");
-    var result = java.callMethodSync(myTest, 'staticMethodAmbiguous(Ljava/lang/Double;)I', 1);
+    var result = java.callMethodSync(myTest, 'methodAmbiguous(Ljava/lang/Double;)I', 1);
     test.equal(result, 1);
     test.done();
   },
