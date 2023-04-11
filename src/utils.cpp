@@ -797,15 +797,16 @@ jobject javaFindMethod(JNIEnv *env, jclass clazz, const std::string& methodName,
     std::string methodSig = methodName.substr(parenLoc);
     std::string methodRealName = methodName.substr(0, parenLoc);
     jmethodID methodID = env->GetStaticMethodID(clazz, methodRealName.c_str(), methodSig.c_str());
+    env->ExceptionClear(); // If GetStaticMethodID can't find the method it throws an exception and we need to just return NULL
     if(methodID != 0) {
       method = env->ToReflectedMethod(clazz, methodID, true);
     } else {
       methodID = env->GetMethodID(clazz, methodRealName.c_str(), methodSig.c_str());
+      env->ExceptionClear(); // If GetMethodID can't find the method it throws an exception and we need to just return NULL
       if(methodID != 0) {
         method = env->ToReflectedMethod(clazz, methodID, true);
       }
     }
-    env->ExceptionClear(); // If GetStaticMethodID can't find the method it throws an exception and we need to just return NULL
 
     // cast arguments
     if(method != NULL) {
