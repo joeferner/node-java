@@ -80,9 +80,9 @@ jobject longToJavaLongObj(JNIEnv *env, jlong l);
 jarray javaGetArgsForMethod(JNIEnv *env, jobject method, jarray args);
 jarray javaGetArgsForConstructor(JNIEnv *env, jobject method, jarray args);
 
-jclass javaFindClass(JNIEnv* env, std::string& className);
-jobject javaFindField(JNIEnv* env, jclass clazz, std::string& fieldName);
-jobject javaFindMethod(JNIEnv *env, jclass clazz, std::string& methodName, jobjectArray methodArgs);
+jclass javaFindClass(JNIEnv* env, const std::string& className);
+jobject javaFindField(JNIEnv* env, jclass clazz, const std::string& fieldName);
+jobject javaFindMethod(JNIEnv *env, jclass clazz, const std::string& methodName, jobjectArray methodArgs);
 jobject javaFindConstructor(JNIEnv *env, jclass clazz, jobjectArray methodArgs);
 void javaCastArguments(JNIEnv *env, jobjectArray methodArgs, jobject method);
 
@@ -97,7 +97,7 @@ void SetHiddenValue(v8::NumberObject*, v8::Local<v8::String> key, v8::Local<v8::
     assert(false);                  \
   }
 
-std::string methodNotFoundToString(JNIEnv *env, jclass clazz, std::string methodName, bool constructor, Nan::NAN_METHOD_ARGS_TYPE args, int argStart, int argEnd);
+std::string methodNotFoundToString(JNIEnv *env, jclass clazz, const std::string& methodNameSig, bool constructor, Nan::NAN_METHOD_ARGS_TYPE args, int argStart, int argEnd);
 
 void unref(DynamicProxyData* dynamicProxyData);
 
