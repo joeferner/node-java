@@ -15,11 +15,8 @@
       ['OS=="win"', {
         'javahome%': '<!(node findJavaHome.js)'
       }],
-      ['OS=="linux" or OS=="mac" or OS=="freebsd" or OS=="openbsd" or OS=="solaris" or OS=="zos"'  , {
+      ['OS=="linux" or OS=="mac" or OS=="freebsd" or OS=="openbsd" or OS=="solaris" or OS=="zos"', {
         'javahome%': '<!(node findJavaHome.js)'
-      }],
-      ['OS=="mac"', {
-        'javaver%' : "<!(awk -F/ -v h=`node findJavaHome.js` 'BEGIN {n=split(h, a); print a[2]; exit}')"
       }],
       ['OS=="linux" or OS=="mac" or OS=="freebsd" or OS=="openbsd" or OS=="solaris" or OS=="zos"', {
         'javalibdir%': "<!(./find_java_libdir.sh <(target_arch) <(OS))"
@@ -128,40 +125,14 @@
             'xcode_settings': {
               'OTHER_CFLAGS': ['-O3'],
             },
-            'conditions': [
-              ['javaver=="Library"',
-                {
-                  'include_dirs': [
-                    '<(javahome)/include',
-                    '<(javahome)/include/darwin'
-                  ],
-                  'libraries': [
-                    '-L<(javalibdir)',
-                    '-Wl,-rpath,<(javalibdir)',
-                    '-ljli'
-                  ],
-                },
-              ],
-              ['javaver=="System"',
-                {
-                  'include_dirs': [
-                    '/System/Library/Frameworks/JavaVM.framework/Headers'
-                  ],
-                  'libraries': [
-                    '-framework JavaVM'
-                  ],
-                },
-              ],
-              ['javaver==""',
-                {
-                  'include_dirs': [
-                    '/System/Library/Frameworks/JavaVM.framework/Headers'
-                  ],
-                  'libraries': [
-                    '-framework JavaVM'
-                  ],
-                },
-              ],
+            'include_dirs': [
+              '<(javahome)/include',
+              '<(javahome)/include/darwin'
+            ],
+            'libraries': [
+              '-L<(javalibdir)',
+              '-Wl,-rpath,<(javalibdir)',
+              '-ljli'
             ],
           },
         ],
