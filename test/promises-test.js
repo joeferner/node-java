@@ -96,13 +96,13 @@ exports['Promises'] = nodeunit.testCase({
         test.strictEqual(name, "java.util.ArrayList");
       })
       .then(function() {
-        list.addPromise('hello');
+        return list.addPromise('hello');
       })
       .then(function() {
-        list.addPromise('world');
+        return list.addPromise('world');
       })
       .then(function() {
-        list.addPromise('boo');
+        return list.addPromise('boo');
       })
       .then(function() {
         return list.iteratorPromise();
