@@ -119,13 +119,12 @@ v8::Local<v8::Value> MethodCallBaton::resultsToV8(JNIEnv *env) {
 }
 
 void NewInstanceBaton::ExecuteInternal(JNIEnv* env) {
-  jclass constructorClazz = env->FindClass("java/lang/reflect/Constructor");
-  jmethodID constructor_newInstance = env->GetMethodID(constructorClazz, "newInstance", "([Ljava/lang/Object;)Ljava/lang/Object;");
-
-  //printf("invoke: %s\n", javaMethodCallToString(env, m_method, constructor_newInstance, m_args).c_str());
+  jclass batonClazz = env->FindClass("node/MethodCallBaton");
+  jmethodID newInstance = env->GetStaticMethodID(batonClazz, "newInstance", "(Ljava/lang/reflect/Constructor;[Ljava/lang/Object;)Ljava/lang/Object;");
 
   jarray args = javaGetArgsForConstructor(env, m_method, m_args);
-  jobject result = env->CallObjectMethod(m_method, constructor_newInstance, args);
+  jobject result = env->CallStaticObjectMethod(batonClazz, newInstance, m_method, args);
+
   if(env->ExceptionCheck()) {
     jthrowable ex = env->ExceptionOccurred();
     env->ExceptionClear();
@@ -138,8 +137,6 @@ void NewInstanceBaton::ExecuteInternal(JNIEnv* env) {
 }
 
 void StaticMethodCallBaton::ExecuteInternal(JNIEnv* env) {
-  jmethodID method_invoke = getMethodInvokeMethodId(env);
-
   /*
   printf("calling %s\n", javaObjectToString(env, m_method).c_str());
   printf("arguments\n");
@@ -150,8 +147,11 @@ void StaticMethodCallBaton::ExecuteInternal(JNIEnv* env) {
   }
   */
 
+  jclass batonClazz = env->FindClass("node/MethodCallBaton");
+  jmethodID invokeMethod = env->GetStaticMethodID(batonClazz, env->GetVersion() >= 0x90000 ? "invokeMethod9" : "invokeMethod", "(Ljava/lang/reflect/Method;Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;");
+
   jarray args = javaGetArgsForMethod(env, m_method, m_args);
-  jobject result = env->CallObjectMethod(m_method, method_invoke, NULL, args);
+  jobject result = env->CallStaticObjectMethod(batonClazz, invokeMethod, m_method, NULL, args);
 
   if(env->ExceptionCheck()) {
     jthrowable ex = env->ExceptionOccurred();
@@ -165,8 +165,6 @@ void StaticMethodCallBaton::ExecuteInternal(JNIEnv* env) {
 }
 
 void InstanceMethodCallBaton::ExecuteInternal(JNIEnv* env) {
-  jmethodID method_invoke = getMethodInvokeMethodId(env);
-
   /*
   printf("calling %s\n", javaObjectToString(env, m_method).c_str());
   printf("arguments\n");
@@ -174,9 +172,12 @@ void InstanceMethodCallBaton::ExecuteInternal(JNIEnv* env) {
     printf("  %s\n", javaObjectToString(env, env->GetObjectArrayElement((jobjectArray)m_args, i)).c_str());
   }
   */
-  
+
+  jclass batonClazz = env->FindClass("node/MethodCallBaton");
+  jmethodID invokeMethod = env->GetStaticMethodID(batonClazz, env->GetVersion() >= 0x90000 ? "invokeMethod9" : "invokeMethod", "(Ljava/lang/reflect/Method;Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;");
+
   jarray args = javaGetArgsForMethod(env, m_method, m_args);
-  jobject result = env->CallObjectMethod(m_method, method_invoke, m_javaObject->getObject(), args);
+  jobject result = env->CallStaticObjectMethod(batonClazz, invokeMethod, m_method, m_javaObject->getObject(), args);
 
   if(env->ExceptionCheck()) {
     jthrowable ex = env->ExceptionOccurred();
