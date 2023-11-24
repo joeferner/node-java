@@ -1,6 +1,6 @@
-[![Build Status](https://travis-ci.com/joeferner/node-java.svg?branch=master)](https://travis-ci.com/joeferner/node-java)
 
-# java
+
+[![master](https://github.com/joeferner/node-java/actions/workflows/master.yml/badge.svg)](https://github.com/joeferner/node-java/actions/workflows/master.yml)
 
 Bridge API to connect with existing Java APIs.
 
