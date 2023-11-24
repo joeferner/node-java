@@ -1,0 +1,9 @@
+# These files will be normalized on commit (CRLF converted to LF) - asterisk is a wildcard
+* text eol=lf
+
+# These files will NOT be normalized
+*.png -text
+*.gif -text
+*.jpg -text
+*.jpeg -text
+*.ico -text
