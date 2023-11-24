@@ -10,3 +10,5 @@ node-java.cbp
 *.kdev4
 */.kdev_include_paths
 .vscode
+CMakeLists.txt
+cmake-build-debug/

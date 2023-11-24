@@ -4,11 +4,11 @@ jdk:
   - openjdk9
   - openjdk10
   - openjdk11
+  - openjdk21
 env:
-  - NODE_VERSION=7 CC=clang CXX=clang++
-  - NODE_VERSION=8 CC=clang CXX=clang++
-  - NODE_VERSION=11 CC=clang CXX=clang++
-  - NODE_VERSION=12 CC=clang CXX=clang++
+  - NODE_VERSION=16 CC=clang CXX=clang++
+  - NODE_VERSION=18 CC=clang CXX=clang++
+  - NODE_VERSION=20 CC=clang CXX=clang++
 before_install:
   - nvm install $NODE_VERSION
 before_script:
