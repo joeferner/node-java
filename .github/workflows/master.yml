@@ -1,0 +1,23 @@
+name: master
+on:
+  push:
+    branches:
+      - master
+jobs:
+  unit-test:
+    name: Unit Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        nodeVersion: [ 16, 18, 20 ]
+        jdkVersion: [ openjdk9, openjdk10, openjdk11, openjdk21 ]
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.nodeVersion }}
+      - name: npm ci
+        run: npm ci
+      - name: Unit test
+        run: npm test
