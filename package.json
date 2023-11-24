@@ -26,12 +26,12 @@
     "url": "https://github.com/joeferner/node-java.git"
   },
   "dependencies": {
-    "async": "2.6.4",
-    "find-java-home": "1.1.0",
-    "glob": "7.1.6",
+    "async": "^3.2.5",
+    "find-java-home": "^2.0.0",
+    "glob": "^10.3.10",
     "lodash": "^4.17.21",
-    "nan": "2.14.1",
-    "node-gyp": "^9.1.0"
+    "nan": "^2.18.0",
+    "node-gyp": "^10.0.1"
   },
   "devDependencies": {
     "chalk": "2.4.1",
