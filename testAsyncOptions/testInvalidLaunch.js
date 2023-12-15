@@ -1,6 +1,5 @@
 // testInvalidLaunch.js
 
-var _ = require('lodash');
 var java = require("../");
 var nodeunit = require("nodeunit");
 

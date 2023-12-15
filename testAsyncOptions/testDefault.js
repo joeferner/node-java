@@ -3,7 +3,6 @@
 // In the default case, the developer does not set asyncOptions.
 // We should get the defacto standard behavior.
 
-var _ = require('lodash');
 var java = require("../");
 var nodeunit = require("nodeunit");
 
@@ -16,9 +15,9 @@ module.exports = {
     test.ok(arrayList);
     test.ok(java.instanceOf(arrayList, "java.util.ArrayList"));
 
-    test.ok(!_.isUndefined(arrayList.addSync), 'Expected `addSync` to be present, but it is NOT.');
-    test.ok(!_.isUndefined(arrayList.add), 'Expected `add` to be present, but it is NOT.');
-    test.ok(_.isUndefined(arrayList.addPromise), 'Expected `addPromise` to NOT be present, but it is.');
+    test.ok(typeof arrayList.addSync !== 'undefined', 'Expected `addSync` to be present, but it is NOT.');
+    test.ok(typeof arrayList.add !== 'undefined', 'Expected `add` to be present, but it is NOT.');
+    test.ok(typeof arrayList.addPromise === 'undefined', 'Expected `addPromise` to NOT be present, but it is.');
     test.done();
   },
 
@@ -38,12 +37,12 @@ module.exports = {
     var String = java.import("java.lang.String");
     test.ok(String);
 
-    var api = _.functions(String);
-    test.ok(_.includes(api, 'format'), 'Expected `format` to be present, but it is NOT.');
-    test.ok(_.includes(api, 'formatSync'), 'Expected `formatSync` to be present, but it is NOT.');
-    test.ok(!_.includes(api, 'formatAsync'), 'Expected `formatAsync` to NOT be present, but it is.');
-    test.ok(!_.includes(api, 'formatPromise'), 'Expected `formatPromise` to NOT be present, but it is.');
-    test.ok(!_.includes(api, 'formatundefined'), 'Expected `formatundefined` to NOT be present, but it is.');
+    var api = Object.keys(String).filter((key) => typeof String[key] === 'function');
+    test.ok(api.includes('format'), 'Expected `format` to be present, but it is NOT.');
+    test.ok(api.includes('formatSync'), 'Expected `formatSync` to be present, but it is NOT.');
+    test.ok(!api.includes('formatAsync'), 'Expected `formatAsync` to NOT be present, but it is.');
+    test.ok(!api.includes('formatPromise'), 'Expected `formatPromise` to NOT be present, but it is.');
+    test.ok(!api.includes('formatundefined'), 'Expected `formatundefined` to NOT be present, but it is.');
     test.done();
   },
 

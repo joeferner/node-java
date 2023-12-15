@@ -4,7 +4,6 @@
 
 var java = require("../");
 var assert = require("assert");
-var _ = require('lodash');
 
 java.asyncOptions = {
   syncSuffix: "Sync",
@@ -20,10 +19,10 @@ module.exports = {
     test.ok(arrayList);
     test.ok(java.instanceOf(arrayList, "java.util.ArrayList"));
 
-    test.ok(!_.isUndefined(arrayList.addSync), 'Expected `addSync` to be present, but it is NOT.');
-    test.ok(!_.isUndefined(arrayList.addAsync), 'Expected `addAsync` to be present, but it is NOT.');
-    test.ok(!_.isUndefined(arrayList.addPromise), 'Expected `addPromise` to be present, but it is NOT.');
-    test.ok(_.isUndefined(arrayList.add), 'Expected `add` to NOT be present, but it is.');
+    test.ok(typeof arrayList.addSync !== 'undefined', 'Expected `addSync` to be present, but it is NOT.');
+    test.ok(typeof arrayList.addAsync !== 'undefined', 'Expected `addAsync` to be present, but it is NOT.');
+    test.ok(typeof arrayList.addPromise !== 'undefined', 'Expected `addPromise` to be present, but it is NOT.');
+    test.ok(typeof arrayList.add === 'undefined', 'Expected `add` to NOT be present, but it is.');
     test.done();
   },
 
@@ -43,12 +42,12 @@ module.exports = {
     var String = java.import("java.lang.String");
     test.ok(String);
 
-    var api = _.functions(String);
-    test.ok(_.includes(api, 'formatSync'), 'Expected `formatSync` to be present, but it is NOT.');
-    test.ok(_.includes(api, 'formatAsync'), 'Expected `formatAsync` to be present, but it is NOT.');
-    test.ok(_.includes(api, 'formatPromise'), 'Expected `formatPromise` to be present, but it is NOT.');
-    test.ok(!_.includes(api, 'format'), 'Expected `format` to NOT be present, but it is.');
-    test.ok(!_.includes(api, 'formatundefined'), 'Expected `formatundefined` to NOT be present, but it is.');
+    var api = Object.keys(String).filter((key) => typeof String[key] === 'function');
+    test.ok(api.includes('formatSync'), 'Expected `formatSync` to be present, but it is NOT.');
+    test.ok(api.includes('formatAsync'), 'Expected `formatAsync` to be present, but it is NOT.');
+    test.ok(api.includes('formatPromise'), 'Expected `formatPromise` to be present, but it is NOT.');
+    test.ok(!api.includes('format'), 'Expected `format` to NOT be present, but it is.');
+    test.ok(!api.includes('formatundefined'), 'Expected `formatundefined` to NOT be present, but it is.');
     test.done();
   },
 
