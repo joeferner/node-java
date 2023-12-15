@@ -7,7 +7,6 @@
 // node-java attempts to set assign the static method to the .name property of constructor-like function.
 // As a workaround, node-java will append the `ifReadOnlySuffix` to the property name.
 
-var _ = require('lodash');
 var java = require("../");
 var nodeunit = require("nodeunit");
 

@@ -3,7 +3,6 @@
 var java = require("../testHelpers").java;
 var nodeunit = require("nodeunit");
 var util = require("util");
-var _ = require("lodash");
 
 exports['Import Class'] = nodeunit.testCase({
   tearDown: function (callback) {
@@ -36,7 +35,7 @@ exports['Import Class'] = nodeunit.testCase({
     test.strictEqual(TestEnum.foo.toStringSync(), "foo");
     test.strictEqual(TestEnum.bar.toStringSync(), "bar");
 
-    _.forEach(['name', 'arguments', 'caller'], function(prop) {
+    ['name', 'arguments', 'caller'].forEach(function(prop) {
       test.throws(
         function() {
           // The enum also defines 'name', 'caller', and 'attributes', but Javascript prevents us from using them,

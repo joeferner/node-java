@@ -1,6 +1,5 @@
 // testClientBeforeError.js
 
-var _ = require('lodash');
 var java = require("../");
 var nodeunit = require("nodeunit");
 
@@ -22,7 +21,7 @@ module.exports = {
     java.registerClient(before);
 
     java.ensureJvm(function(err) {
-      test.ok(_.isObject(err));
+      test.ok(err && typeof err === 'object');
       test.ok(err instanceof Error);
       test.strictEqual(err.message, 'dummy error');
       test.ok(!java.isJvmCreated());

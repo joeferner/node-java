@@ -1,6 +1,5 @@
 // testClientPBeforeError.js
 
-var _ = require('lodash');
 var java = require("../");
 var nodeunit = require("nodeunit");
 var when = require('when');
@@ -32,7 +31,7 @@ module.exports = {
         test.ok(false);
       },
       function(err) {
-        test.ok(_.isObject(err));
+        test.ok(err && typeof err === 'object');
         test.ok(err instanceof Error);
         test.strictEqual(err.message, 'dummy error');
         test.ok(!java.isJvmCreated());
