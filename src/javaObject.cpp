@@ -242,7 +242,7 @@ NAN_GETTER(JavaObject::fieldGetter) {
         jmethodID array_getLength = env->GetStaticMethodID(arrayClass, "getLength", "(Ljava/lang/Object;)I");
         jint arrayLength = env->CallStaticIntMethod(arrayClass, array_getLength, self->m_obj);
         assertNoException(env);
-        info.GetReturnValue().Set(arrayLength);
+        info.GetReturnValue().Set(Nan::New<v8::Int32>(static_cast<int32_t>(arrayLength)));
         return;
       }
     }
