@@ -71,7 +71,7 @@
               '<(javahome)/include/solaris',
             ],
             'libraries': [
-               '-L<(javalibdir)',
+              '-L<(javalibdir)',
               '-Wl,-rpath,<(javalibdir)',
               '-ljvm'
             ]

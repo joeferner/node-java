@@ -728,7 +728,8 @@ v8::Local<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj, DynamicProxy
         jmethodID integer_intValue = env->GetMethodID(integerClazz, "intValue", "()I");
         jint result = env->CallIntMethod(obj, integer_intValue);
         checkJavaException(env);
-        return Nan::New<v8::Integer>(result);
+        // <-- use the Int32 factory, not the generic Integer one
+        return Nan::New<v8::Int32>(static_cast<int32_t>(result));
       }
     case TYPE_SHORT:
       {

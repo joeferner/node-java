@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        nodeVersion: [ 16, 18, 20 ]
+        nodeVersion: [ 16, 18, 20, 22 ]
         jdkVersion: [ openjdk9, openjdk10, openjdk11, openjdk21 ]
     steps:
       - name: Checkout source code
