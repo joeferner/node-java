@@ -7,3 +7,5 @@
 *.jpg -text
 *.jpeg -text
 *.ico -text
+*.jar -text
+*.class -text
