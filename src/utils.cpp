@@ -575,17 +575,10 @@ v8::Local<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArra
   case TYPE_BOOLEAN:
     {
       jboolean* elems = env->GetBooleanArrayElements((jbooleanArray)objArray, 0);
-#if (NODE_VERSION_AT_LEAST(4, 0, 0))
-      size_t byteLength = arraySize;
-      v8::Local<v8::ArrayBuffer> ab = newArrayBuffer(elems, byteLength);
-      env->ReleaseBooleanArrayElements((jbooleanArray)objArray, elems, 0);
-      return v8::Uint8Array::New(ab, 0, arraySize);
-#else
       for(jsize i=0; i<arraySize; i++) {
-        result->Set(i, Nan::New<v8::Boolean>(elems[i]));
+        result->Set(Nan::GetCurrentContext(), i, Nan::New<v8::Boolean>(elems[i]));
       }
       env->ReleaseBooleanArrayElements((jbooleanArray)objArray, elems, 0);
-#endif
     }
     break;
 
