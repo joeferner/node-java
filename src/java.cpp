@@ -22,6 +22,7 @@
 #endif
 
 threadId v8ThreadId;
+bool isDefaultLoopRunning = false;
 
 std::queue<DynamicProxyJsCallData *> queue_dynamicProxyJsCallData;
 uv_mutex_t uvMutex_dynamicProxyJsCall;
@@ -78,9 +79,9 @@ void uvAsyncCb_dynamicProxyJsCall(uv_async_t *handle) {
   Nan::HandleScope scope;
 
   v8ThreadId = my_getThreadId();
+  isDefaultLoopRunning = false; //init as false
 
   uv_mutex_init(&uvMutex_dynamicProxyJsCall);
-  uv_async_init(uv_default_loop(), &uvAsync_dynamicProxyJsCall, uvAsyncCb_dynamicProxyJsCall);
 
   v8::Local<v8::FunctionTemplate> t = Nan::New<v8::FunctionTemplate>(New);
   s_ct.Reset(t);
@@ -106,6 +107,7 @@ void uvAsyncCb_dynamicProxyJsCall(uv_async_t *handle) {
   Nan::SetPrototypeMethod(t, "getStaticFieldValue", getStaticFieldValue);
   Nan::SetPrototypeMethod(t, "setStaticFieldValue", setStaticFieldValue);
   Nan::SetPrototypeMethod(t, "instanceOf", instanceOf);
+  Nan::SetPrototypeMethod(t, "stop", stop);
 
   Nan::Set(target, Nan::New<v8::String>("Java").ToLocalChecked(), Nan::GetFunction(t).ToLocalChecked());
 
@@ -114,6 +116,11 @@ void uvAsyncCb_dynamicProxyJsCall(uv_async_t *handle) {
 
 NAN_METHOD(Java::New) {
   Nan::HandleScope scope;
+
+  if (!isDefaultLoopRunning) {
+    uv_async_init(uv_default_loop(), &uvAsync_dynamicProxyJsCall, uvAsyncCb_dynamicProxyJsCall);
+    isDefaultLoopRunning = true;
+  }
 
   Java *self = new Java();
   self->Wrap(info.This());
@@ -1237,6 +1244,12 @@ NAN_METHOD(Java::instanceOf) {
 
   jboolean res = env->IsInstanceOf(instance, clazz);
   info.GetReturnValue().Set(Nan::New<v8::Boolean>(res));
+}
+
+NAN_METHOD(Java::stop) {
+  if (isDefaultLoopRunning) {
+    uv_close((uv_handle_t *)&uvAsync_dynamicProxyJsCall, NULL);
+  }
 }
 
 template <typename T>
