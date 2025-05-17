@@ -115,7 +115,7 @@ v8::Local<v8::Value> MethodCallBaton::resultsToV8(JNIEnv *env) {
     return scope.Escape(err);
   }
 
-  return scope.Escape(javaToV8(m_java, 	env, m_result));
+  return scope.Escape(javaToV8(m_java, env, m_result));
 }
 
 void NewInstanceBaton::ExecuteInternal(JNIEnv* env) {

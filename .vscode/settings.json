@@ -1,5 +1,25 @@
 {
     "cSpell.words": [
-        "Ferner"
+        "clazz",
+        "clazzclazz",
+        "Ferner",
+        "jarray",
+        "jboolean",
+        "jbyte",
+        "jchar",
+        "jclass",
+        "jdouble",
+        "jfloat",
+        "jint",
+        "jlong",
+        "jmethod",
+        "jobj",
+        "jobject",
+        "jshort",
+        "jsize",
+        "jthrowable",
+        "jvalue",
+        "Ljava",
+        "varargs"
     ]
 }

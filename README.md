@@ -904,7 +904,7 @@ Either `postInstall.js` didn't run or there was a problem detecting java. Try ru
 
         npm install
         node-gyp build --debug
-        gdb --args `which node` ./node_modules/.bin/nodeunit test
+        gdb --args "$(which node)" ./node_modules/.bin/vitest test
 
 ## License
 

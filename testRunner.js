@@ -1,38 +1,38 @@
 // testRunner.js
 
-// This is a custom test runner. All tests are run with nodeunit, but in separate
+// This is a custom test runner. All tests are run with vitest, but in separate
 // processes, which allows us to test java with different configuration options.
 
-var async = require('async');
-var chalk = require('chalk');
-var childProcess = require('child_process');
-var glob = require('glob');
-var path = require('path');
+const async = require('async');
+const chalk = require('chalk');
+const childProcess = require('child_process');
+const glob = require('glob');
+const path = require('path');
 
-var tests = glob.sync(path.join('testAsyncOptions', '*.js'));
+const tests = glob.sync(path.join('testAsyncOptions', '*.test.js')).sort((a, b) => a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase()));
 
-tests.unshift('test test8');  // Arrange to run the primary tests first, in a single process
+tests.unshift('test');  // Arrange to run the primary tests first, in a single process
 
 function runTest(testArgs, done) {
-  var cmd = 'node_modules/.bin/nodeunit ';
-  if(process.platform == "win32")
-    cmd = 'node_modules\\.bin\\nodeunit ';  
-  cmd += testArgs;
+  const vitest = path.join('node_modules', '.bin', 'vitest');
+  const cmd = testArgs === 'test' ? `vitest --dir test` : `${vitest} ${testArgs}`;
+  console.log(`running "${cmd}"...`);
   childProcess.exec(cmd, function (error, stdout, stderr) {
-    // It appears that nodeunit merges error output into the stdout
-    // so these three lines are probably useless.
     var errText = stderr.toString();
-    if (errText !== '')
+    if (errText !== '') {
       console.error(chalk.bold.red(errText));
+    }
 
     process.stdout.write(stdout.toString());
     done(error);
   });
 }
 
-async.eachSeries(tests, runTest, function(err) {
+async.eachSeries(tests, runTest, function (err) {
   if (err) {
     console.error(chalk.bold.red(err));
     process.exit(1);
+    return;
   }
+  console.log(chalk.green('Tests completed successfully!'));
 });
