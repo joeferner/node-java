@@ -3,19 +3,19 @@ import { getJava } from "../testHelpers";
 
 const java = getJava();
 
-describe('Import Class', () => {
+describe("Import Class", () => {
   afterEach(() => {
     java.setStaticFieldValue("Test", "staticFieldInt", 42);
   });
 
   test("import", async () => {
-    const Test = java.import('Test');
+    const Test = java.import("Test");
     expect(Test.staticFieldInt).toBe(42);
     Test.staticFieldInt = 200;
     expect(Test.staticFieldInt).toBe(200);
 
     expect(Test.staticMethodSync(99)).toBe(100);
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       Test.staticMethod(99, (err, result) => {
         expect(err).toBeFalsy();
         expect(result).toBe(100);
@@ -28,23 +28,23 @@ describe('Import Class', () => {
   });
 
   test("import TestEnum with unsable name", () => {
-    const TestEnum = java.import('Test$Enum');
+    const TestEnum = java.import("Test$Enum");
 
     // 'foo' and 'bar' are valid enum names
     expect(TestEnum.foo.toStringSync()).toBe("foo");
     expect(TestEnum.bar.toStringSync()).toBe("bar");
 
-    ['name', 'arguments', 'caller'].forEach(function (prop) {
+    ["name", "arguments", "caller"].forEach(function (prop) {
       expect(() => {
         // The enum also defines 'name', 'caller', and 'attributes', but Javascript prevents us from using them,
         // since these are unwritable properties of Function.
-        const x = TestEnum[prop].toStringSync();
-      }).toThrow(TypeError)
+        TestEnum[prop].toStringSync();
+      }).toThrow(TypeError);
     });
   });
 
   test("import TestEnum and use alternate name", () => {
-    const TestEnum = java.import('Test$Enum');
+    const TestEnum = java.import("Test$Enum");
 
     // 'foo' and 'bar' are valid enum names
     expect(TestEnum.foo.toStringSync()).toBe("foo");

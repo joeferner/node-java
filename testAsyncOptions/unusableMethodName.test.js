@@ -8,11 +8,11 @@
 import { beforeAll, describe, expect, test } from "vitest";
 import { java } from "../testHelpers";
 
-describe('unusableMethodName', () => {
+describe("unusableMethodName", () => {
   beforeAll(async () => {
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       function before(callback) {
-        java.classpath.push('test/');
+        java.classpath.push("test/");
         expect(java.isJvmCreated()).toBeFalsy();
         callback();
       }
@@ -25,8 +25,8 @@ describe('unusableMethodName', () => {
       java.asyncOptions = {
         syncSuffix: "Sync",
         asyncSuffix: "",
-        ifReadOnlySuffix: "_alt"
-      }
+        ifReadOnlySuffix: "_alt",
+      };
       java.registerClient(before, after);
 
       java.ensureJvm(function (err) {
@@ -37,40 +37,40 @@ describe('unusableMethodName', () => {
     });
   });
 
-  test('unusableMethodName_nameThrows', () => {
-    var Test = java.import("Test");
+  test("unusableMethodName_nameThrows", () => {
+    const Test = java.import("Test");
     expect(Test).toBeTruthy();
     expect(() => {
       Test.name(function (_err) {
-        throw new Error('should not get here');
+        throw new Error("should not get here");
       });
     }).toThrowError(TypeError);
   });
 
-  test('unusableMethodName_callerThrows', () => {
-    var Test = java.import("Test");
+  test("unusableMethodName_callerThrows", () => {
+    const Test = java.import("Test");
     expect(Test).toBeTruthy();
     expect(() => {
       Test.caller(function (_err) {
-        throw new Error('should not get here');
+        throw new Error("should not get here");
       });
     }).toThrowError(TypeError);
   });
 
-  test('unusableMethodName_argumentsThrows', () => {
-    var Test = java.import("Test");
+  test("unusableMethodName_argumentsThrows", () => {
+    const Test = java.import("Test");
     expect(Test).toBeTruthy();
     expect(() => {
       Test.arguments(function (_err) {
-        throw new Error('should not get here');
+        throw new Error("should not get here");
       });
     }).toThrowError(TypeError);
   });
 
-  test('alternateMethodName_name_altWorks', async () => {
-    var Test = java.import("Test");
+  test("alternateMethodName_name_altWorks", async () => {
+    const Test = java.import("Test");
     expect(Test).toBeTruthy();
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       Test.name_alt(function (err, val) {
         expect(err).toBeFalsy();
         expect(val).toBe("name");
@@ -79,10 +79,10 @@ describe('unusableMethodName', () => {
     });
   });
 
-  test('alternateMethodName_caller_altWorks', async () => {
-    var Test = java.import("Test");
+  test("alternateMethodName_caller_altWorks", async () => {
+    const Test = java.import("Test");
     expect(Test).toBeTruthy();
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       Test.caller_alt(function (err, val) {
         expect(err).toBeFalsy();
         expect(val).toBe("caller");
@@ -91,10 +91,10 @@ describe('unusableMethodName', () => {
     });
   });
 
-  test('alternateMethodName_arguments_altWorks', async () => {
-    var Test = java.import("Test");
+  test("alternateMethodName_arguments_altWorks", async () => {
+    const Test = java.import("Test");
     expect(Test).toBeTruthy();
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       Test.arguments_alt(function (err, val) {
         expect(err).toBeFalsy();
         expect(val).toBe("arguments");
@@ -103,8 +103,8 @@ describe('unusableMethodName', () => {
     });
   });
 
-  test('reservedFieldName', () => {
-    var TestEnum = java.import("Test$Enum");
+  test("reservedFieldName", () => {
+    const TestEnum = java.import("Test$Enum");
     expect(TestEnum).toBeTruthy();
 
     // 'foo' and 'bar' are valid enum names

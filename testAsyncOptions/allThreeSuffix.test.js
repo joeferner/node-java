@@ -6,23 +6,26 @@ import { describe, test, expect } from "vitest";
 const java = getJava({
   syncSuffix: "Sync",
   asyncSuffix: "Async",
-  promiseSuffix: 'Promise',
-  promisify: require('when/node').lift // https://github.com/cujojs/when
+  promiseSuffix: "Promise",
+  promisify: require("when/node").lift, // https://github.com/cujojs/when
 });
 
-describe('allThreeSuffix', () => {
-  test('api', () => {
+describe("allThreeSuffix", () => {
+  test("api", () => {
     const arrayList = java.newInstanceSync("java.util.ArrayList");
     expect(arrayList).toBeDefined();
     expect(java.instanceOf(arrayList, "java.util.ArrayList")).toBeTruthy();
 
-    expect(typeof arrayList.addSync !== 'undefined', 'Expected `addSync` to be present, but it is NOT.').toBeTruthy();
-    expect(typeof arrayList.addAsync !== 'undefined', 'Expected `addAsync` to be present, but it is NOT.').toBeTruthy();
-    expect(typeof arrayList.addPromise !== 'undefined', 'Expected `addPromise` to be present, but it is NOT.').toBeTruthy();
-    expect(typeof arrayList.add === 'undefined', 'Expected `add` to NOT be present, but it is.').toBeTruthy();
+    expect(typeof arrayList.addSync !== "undefined", "Expected `addSync` to be present, but it is NOT.").toBeTruthy();
+    expect(typeof arrayList.addAsync !== "undefined", "Expected `addAsync` to be present, but it is NOT.").toBeTruthy();
+    expect(
+      typeof arrayList.addPromise !== "undefined",
+      "Expected `addPromise` to be present, but it is NOT."
+    ).toBeTruthy();
+    expect(typeof arrayList.add === "undefined", "Expected `add` to NOT be present, but it is.").toBeTruthy();
   });
 
-  test('importClass', () => {
+  test("importClass", () => {
     // Note: java.import executes javascript code in lib/nodeJavaBridge that makes sync calls to java classes.
     const ArrayList = java.import("java.util.ArrayList");
     expect(ArrayList).toBeTruthy();
@@ -31,38 +34,38 @@ describe('allThreeSuffix', () => {
     expect(arrayList.sizeSync()).toBe(0);
   });
 
-  test('staticAPI', () => {
+  test("staticAPI", () => {
     const String = java.import("java.lang.String");
     expect(String).toBeTruthy();
 
-    const api = Object.keys(String).filter((key) => typeof String[key] === 'function');
-    expect(api.includes('formatSync'), 'Expected `formatSync` to be present, but it is NOT.').toBeTruthy();
-    expect(api.includes('formatAsync'), 'Expected `formatAsync` to be present, but it is NOT.').toBeTruthy();
-    expect(api.includes('formatPromise'), 'Expected `formatPromise` to be present, but it is NOT.').toBeTruthy();
-    expect(!api.includes('format'), 'Expected `format` to NOT be present, but it is.').toBeTruthy();
-    expect(!api.includes('formatundefined'), 'Expected `formatundefined` to NOT be present, but it is.').toBeTruthy();
+    const api = Object.keys(String).filter((key) => typeof String[key] === "function");
+    expect(api.includes("formatSync"), "Expected `formatSync` to be present, but it is NOT.").toBeTruthy();
+    expect(api.includes("formatAsync"), "Expected `formatAsync` to be present, but it is NOT.").toBeTruthy();
+    expect(api.includes("formatPromise"), "Expected `formatPromise` to be present, but it is NOT.").toBeTruthy();
+    expect(!api.includes("format"), "Expected `format` to NOT be present, but it is.").toBeTruthy();
+    expect(!api.includes("formatundefined"), "Expected `formatundefined` to NOT be present, but it is.").toBeTruthy();
   });
 
-  test('syncCalls', () => {
+  test("syncCalls", () => {
     const arrayList = java.newInstanceSync("java.util.ArrayList");
     arrayList.addSync("hello");
     arrayList.addSync("world");
     expect(arrayList.sizeSync()).toBe(2);
   });
 
-  test('staticSyncCalls', () => {
+  test("staticSyncCalls", () => {
     // Note: java.import executes javascript code in lib/nodeJavaBridge that makes sync calls to java classes.
     // Among other things, java.import creates Sync functions for static methods.
     const String = java.import("java.lang.String");
-    expect(String.formatSync('%s--%s', "hello", "world")).toBe("hello--world");
+    expect(String.formatSync("%s--%s", "hello", "world")).toBe("hello--world");
   });
 
-  test('asyncCalls', async () => {
+  test("asyncCalls", async () => {
     const arrayList = java.newInstanceSync("java.util.ArrayList");
-    await new Promise(resolve => {
-      arrayList.addAsync("hello", function (err, result) {
+    await new Promise((resolve) => {
+      arrayList.addAsync("hello", function (err) {
         expect(err).toBeUndefined();
-        arrayList.addAsync("world", function (err, result) {
+        arrayList.addAsync("world", function (err) {
           expect(err).toBeUndefined();
           arrayList.sizeAsync(function (err, size) {
             expect(err).toBeUndefined();
@@ -74,11 +77,16 @@ describe('allThreeSuffix', () => {
     });
   });
 
-  test('promiseCalls', async () => {
+  test("promiseCalls", async () => {
     const arrayList = java.newInstanceSync("java.util.ArrayList");
-    await arrayList.addPromise("hello")
-      .then(() => { return arrayList.addPromise("world"); })
-      .then(() => { return arrayList.sizePromise(); })
+    await arrayList
+      .addPromise("hello")
+      .then(() => {
+        return arrayList.addPromise("world");
+      })
+      .then(() => {
+        return arrayList.sizePromise();
+      })
       .then((size) => {
         expect(size).toBe(2);
       });

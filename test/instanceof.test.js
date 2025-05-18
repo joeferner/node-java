@@ -3,7 +3,7 @@ import { getJava } from "../testHelpers";
 
 const java = getJava();
 
-describe('instanceOf', () => {
+describe("instanceOf", () => {
   test("working", () => {
     const subclass = java.newInstanceSync("Test$SubClass");
     if (!java.instanceOf(subclass, "Test$SuperClass")) {

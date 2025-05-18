@@ -2,11 +2,11 @@
 #ifndef _node_java_h_
 #define _node_java_h_
 
-#include <v8.h>
-#include <node.h>
 #include <jni.h>
-#include <string>
 #include <nan.h>
+#include <node.h>
+#include <string>
+#include <v8.h>
 
 #ifdef JNI_VERSION_1_8
 #define JNI_BEST_VERSION JNI_VERSION_1_8
@@ -17,8 +17,10 @@
 class Java : public Nan::ObjectWrap {
 public:
   static void Init(v8::Local<v8::Object> target);
-  JavaVM* getJvm() { return m_jvm; }
-  JNIEnv* getJavaEnv() { return m_env; } // can only be used safely by the main thread as this is the thread it belongs to
+  JavaVM *getJvm() { return m_jvm; }
+  JNIEnv *getJavaEnv() {
+    return m_env;
+  } // can only be used safely by the main thread as this is the thread it belongs to
   jobject getClassLoader() { return m_classLoader; }
 
 public:
@@ -32,9 +34,9 @@ public:
 private:
   Java();
   ~Java();
-  v8::Local<v8::Value> createJVM(JavaVM** jvm, JNIEnv** env);
-  void destroyJVM(JavaVM** jvm, JNIEnv** env);
-  void configureAsync(v8::Local<v8::Value>& asyncOptions);
+  v8::Local<v8::Value> createJVM(JavaVM **jvm, JNIEnv **env);
+  void destroyJVM(JavaVM **jvm, JNIEnv **env);
+  void configureAsync(v8::Local<v8::Value> &asyncOptions);
 
   static NAN_METHOD(New);
   static NAN_METHOD(getClassLoader);
@@ -62,8 +64,8 @@ private:
   v8::Local<v8::Value> ensureJvm();
 
   static Nan::Persistent<v8::FunctionTemplate> s_ct;
-  JavaVM* m_jvm;
-  JNIEnv* m_env; // can only be used safely by the main thread as this is the thread it belongs to
+  JavaVM *m_jvm;
+  JNIEnv *m_env; // can only be used safely by the main thread as this is the thread it belongs to
   jobject m_classLoader;
   std::string m_classPath;
   static std::string s_nativeBindingLocation;

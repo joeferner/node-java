@@ -1,66 +1,73 @@
-'use strict';
+"use strict";
 
-var memwatch = require('memwatch');
+const memwatch = require("memwatch");
 
-var dbServerName = '192.168.13.190';
-var dbPort = 1433;
-var dbName = 'test';
-var dbUserId = 'test';
-var dbPassword = 'test';
-var dbConnectString = 'jdbc:sqlserver://' + dbServerName + ':' + dbPort + ';databaseName=' + dbName + ';selectMethod=direct;responseBuffering=adaptive;packetSize=0;programName=nodeJavaTest;hostProcess=nodeJavaTest;sendStringParametersAsUnicode=false;';
-var dbConnectionClass = 'com.microsoft.sqlserver.jdbc.SQLServerDriver';
+const dbServerName = "192.168.13.190";
+const dbPort = 1433;
+const dbName = "test";
+const dbUserId = "test";
+const dbPassword = "test";
+const dbConnectString =
+  "jdbc:sqlserver://" +
+  dbServerName +
+  ":" +
+  dbPort +
+  ";databaseName=" +
+  dbName +
+  ";selectMethod=direct;responseBuffering=adaptive;packetSize=0;programName=nodeJavaTest;hostProcess=nodeJavaTest;sendStringParametersAsUnicode=false;";
+const dbConnectionClass = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
 
-//var dbUserId = 'test';
-//var dbPassword = 'test';
-//var dbConnectString = "jdbc:mysql://localhost/test";
-//var dbConnectionClass = 'com.mysql.jdbc.Driver';
+//const dbUserId = 'test';
+//const dbPassword = 'test';
+//const dbConnectString = "jdbc:mysql://localhost/test";
+//const dbConnectionClass = 'com.mysql.jdbc.Driver';
 
-var util = require('util');
-var path = require('path');
-var java = require('../../');
-java.classpath.push(path.join(__dirname, 'sqljdbc4.jar'));
-java.classpath.push(path.join(__dirname, 'mysql-connector-java-5.1.22-bin.jar'));
-var DriverManager = java.import('java.sql.DriverManager');
+const util = require("util");
+const path = require("path");
+const java = require("../../");
+java.classpath.push(path.join(__dirname, "sqljdbc4.jar"));
+java.classpath.push(path.join(__dirname, "mysql-connector-java-5.1.22-bin.jar"));
+const DriverManager = java.import("java.sql.DriverManager");
 
-setTimeout(function() {
-  console.log('start heap diff');
-  var hd = new memwatch.HeapDiff();
-  var loopStart = new Date();
-  for (var loopCount = 0; loopCount < 500000; loopCount++) {
-    console.log('loopCount:', loopCount);
+setTimeout(function () {
+  console.log("start heap diff");
+  const hd = new memwatch.HeapDiff();
+  const loopStart = new Date();
+  for (let loopCount = 0; loopCount < 500000; loopCount++) {
+    console.log("loopCount:", loopCount);
     doLoop();
   }
-  var loopEnd = new Date();
-  console.log('end loop', loopEnd - loopStart);
+  const loopEnd = new Date();
+  console.log("end loop", loopEnd - loopStart);
   memwatch.gc();
-  var diff = hd.end();
+  const diff = hd.end();
   console.log(util.inspect(diff.change, false, 10, true));
 
   console.log("done... waiting 30seconds");
-  setTimeout(function() {
+  setTimeout(function () {
     console.log("really done");
   }, 30 * 1000);
 }, 1);
 
 function doLoop() {
   java.findClassSync(dbConnectionClass);
-  var conn = DriverManager.getConnectionSync(dbConnectString, dbUserId, dbPassword);
+  const conn = DriverManager.getConnectionSync(dbConnectString, dbUserId, dbPassword);
   //console.log("connected");
-  var statement = conn.createStatementSync();
-  var queryString = "select * from Person";
-  var rs = statement.executeQuerySync(queryString);
-  var metaData = rs.getMetaDataSync();
-  var columnCount = metaData.getColumnCountSync();
+  const statement = conn.createStatementSync();
+  const queryString = "select * from Person";
+  const rs = statement.executeQuerySync(queryString);
+  const metaData = rs.getMetaDataSync();
+  const columnCount = metaData.getColumnCountSync();
   while (rs.nextSync()) {
-    for (var i = 1; i <= columnCount; i++) {
-      var obj = rs.getObjectSync(i);
+    for (let i = 1; i <= columnCount; i++) {
+      const obj = rs.getObjectSync(i);
       if (obj) {
-        if (obj.hasOwnProperty('getClassSync')) {
-          if (obj.getClassSync().toString() == 'class java.math.BigDecimal') {
+        if (Object.prototype.hasOwnProperty.call(obj, "getClassSync")) {
+          if (obj.getClassSync().toString() == "class java.math.BigDecimal") {
             //console.log(obj.doubleValueSync());
             continue;
           }
-          if (obj.getClassSync().toString() == 'class java.sql.Timestamp') {
+          if (obj.getClassSync().toString() == "class java.sql.Timestamp") {
             //console.log(obj.getTimeSync());
             continue;
           }

@@ -7,9 +7,7 @@ JavaScope::JavaScope(JNIEnv *env) {
   m_env->PushLocalFrame(LOCAL_FRAME_SIZE);
 }
 
-JavaScope::~JavaScope() {
-  m_env->PopLocalFrame(m_result);
-}
+JavaScope::~JavaScope() { m_env->PopLocalFrame(m_result); }
 
 jobject JavaScope::Close(jobject result) {
   m_result = result;

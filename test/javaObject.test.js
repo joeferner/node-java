@@ -3,12 +3,12 @@ import { getJava } from "../testHelpers";
 
 const java = getJava();
 
-describe('Java Object', () => {
+describe("Java Object", () => {
   let testObj;
 
   beforeEach(() => {
     testObj = java.newInstanceSync("Test");
-  })
+  });
 
   test("field", () => {
     expect(testObj.nonstaticInt).toBe(42);

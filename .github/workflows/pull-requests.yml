@@ -20,5 +20,11 @@ jobs:
           node-version: ${{ matrix.nodeVersion }}
       - name: npm ci
         run: npm ci
+      - name: npm run format-cpp
+        run: npm run format-cpp
+      - name: npm run format
+        run: npm run format
+      - name: npm run lint
+        run: npm run lint
       - name: Unit test
         run: npm test
