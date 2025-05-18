@@ -1,15 +1,15 @@
 #include "utils.h"
-#include <string.h>
-#include <algorithm>
-#include <sstream>
-#include <set>
-#include "javaObject.h"
 #include "java.h"
+#include "javaObject.h"
+#include <algorithm>
+#include <set>
+#include <sstream>
+#include <string.h>
 
 #define MODIFIER_STATIC 9
 
-jobject v8ToJava_javaObject(JNIEnv* env, v8::Local<v8::Object> obj);
-jobject v8ToJava_javaLong(JNIEnv* env, v8::Local<v8::Object> obj);
+jobject v8ToJava_javaObject(JNIEnv *env, v8::Local<v8::Object> obj);
+jobject v8ToJava_javaLong(JNIEnv *env, v8::Local<v8::Object> obj);
 
 bool hasSetFailed(Nan::Maybe<bool> v) {
   if (v.IsNothing()) {
@@ -18,7 +18,7 @@ bool hasSetFailed(Nan::Maybe<bool> v) {
   return v.ToChecked() == false;
 }
 
-void javaReflectionGetMethods(JNIEnv *env, jclass clazz, std::list<jobject>* methods, bool includeStatic) {
+void javaReflectionGetMethods(JNIEnv *env, jclass clazz, std::list<jobject> *methods, bool includeStatic) {
   jclass clazzclazz = env->FindClass("java/lang/Class");
   jmethodID clazz_getMethods = env->GetMethodID(clazzclazz, "getMethods", "()[Ljava/lang/reflect/Method;");
   jclass methodClazz = env->FindClass("java/lang/reflect/Method");
@@ -27,31 +27,32 @@ void javaReflectionGetMethods(JNIEnv *env, jclass clazz, std::list<jobject>* met
   jobjectArray methodObjects = (jobjectArray)env->CallObjectMethod(clazz, clazz_getMethods);
   checkJavaException(env);
   jsize methodCount = env->GetArrayLength(methodObjects);
-  for(jsize i=0; i<methodCount; i++) {
+  for (jsize i = 0; i < methodCount; i++) {
     jobject method = env->GetObjectArrayElement(methodObjects, i);
     jint methodModifiers = env->CallIntMethod(method, method_getModifiers);
     assertNoException(env);
-    if(!includeStatic && (methodModifiers & MODIFIER_STATIC) == MODIFIER_STATIC) {
+    if (!includeStatic && (methodModifiers & MODIFIER_STATIC) == MODIFIER_STATIC) {
       continue;
     }
     methods->push_back(method);
   }
 }
 
-void javaReflectionGetConstructors(JNIEnv *env, jclass clazz, std::list<jobject>* methods) {
+void javaReflectionGetConstructors(JNIEnv *env, jclass clazz, std::list<jobject> *methods) {
   jclass clazzclazz = env->FindClass("java/lang/Class");
-  jmethodID clazz_getConstructors = env->GetMethodID(clazzclazz, "getConstructors", "()[Ljava/lang/reflect/Constructor;");
+  jmethodID clazz_getConstructors =
+      env->GetMethodID(clazzclazz, "getConstructors", "()[Ljava/lang/reflect/Constructor;");
 
   jobjectArray constructorObjects = (jobjectArray)env->CallObjectMethod(clazz, clazz_getConstructors);
   checkJavaException(env);
   jsize constructorCount = env->GetArrayLength(constructorObjects);
-  for(jsize i=0; i<constructorCount; i++) {
+  for (jsize i = 0; i < constructorCount; i++) {
     jobject constructor = env->GetObjectArrayElement(constructorObjects, i);
     methods->push_back(constructor);
   }
 }
 
-void javaReflectionGetFields(JNIEnv *env, jclass clazz, std::list<jobject>* fields) {
+void javaReflectionGetFields(JNIEnv *env, jclass clazz, std::list<jobject> *fields) {
   jclass clazzclazz = env->FindClass("java/lang/Class");
   jmethodID clazz_getFields = env->GetMethodID(clazzclazz, "getFields", "()[Ljava/lang/reflect/Field;");
   jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
@@ -60,11 +61,11 @@ void javaReflectionGetFields(JNIEnv *env, jclass clazz, std::list<jobject>* fiel
   jobjectArray fieldObjects = (jobjectArray)env->CallObjectMethod(clazz, clazz_getFields);
   assertNoException(env);
   jsize fieldCount = env->GetArrayLength(fieldObjects);
-  for(jsize i=0; i<fieldCount; i++) {
+  for (jsize i = 0; i < fieldCount; i++) {
     jobject field = env->GetObjectArrayElement(fieldObjects, i);
     jint fieldModifiers = env->CallIntMethod(field, field_getModifiers);
     checkJavaException(env);
-    if((fieldModifiers & MODIFIER_STATIC) == MODIFIER_STATIC) {
+    if ((fieldModifiers & MODIFIER_STATIC) == MODIFIER_STATIC) {
       continue;
     }
     fields->push_back(field);
@@ -79,10 +80,10 @@ std::string javaToString(JNIEnv *env, jstring str) {
   jbyteArray stringJbytes = (jbyteArray)env->CallObjectMethod(str, methodId, charsetName);
   env->DeleteLocalRef(charsetName);
 
-  jbyte* pBytes = env->GetByteArrayElements(stringJbytes, NULL);
+  jbyte *pBytes = env->GetByteArrayElements(stringJbytes, NULL);
 
   const jsize length = env->GetArrayLength(stringJbytes);
-  std::string results((const char*)pBytes, length);
+  std::string results((const char *)pBytes, length);
 
   env->ReleaseByteArrayElements(stringJbytes, pBytes, JNI_ABORT);
   env->DeleteLocalRef(stringJbytes);
@@ -91,15 +92,15 @@ std::string javaToString(JNIEnv *env, jstring str) {
 }
 
 std::string javaArrayToString(JNIEnv *env, jobjectArray arr) {
-  if(arr == NULL) {
+  if (arr == NULL) {
     return "(null)";
   }
 
   std::ostringstream result;
   result << "[";
   jsize count = env->GetArrayLength(arr);
-  for(jsize i=0; i<count; i++) {
-    if(i != 0) {
+  for (jsize i = 0; i < count; i++) {
+    if (i != 0) {
       result << ", ";
     }
     jobject obj = env->GetObjectArrayElement(arr, i);
@@ -110,7 +111,7 @@ std::string javaArrayToString(JNIEnv *env, jobjectArray arr) {
 }
 
 std::string javaObjectToString(JNIEnv *env, jobject obj) {
-  if(obj == NULL) {
+  if (obj == NULL) {
     return "(null)";
   }
   jclass objClazz = env->GetObjectClass(obj);
@@ -133,8 +134,8 @@ std::string javaMethodCallToString(JNIEnv *env, jobject obj, jmethodID methodId,
   result << temp;
   result << ": (";
   jsize arraySize = env->GetArrayLength(args);
-  for(int i=0; i<arraySize; i++) {
-    if(i != 0) {
+  for (int i = 0; i < arraySize; i++) {
+    if (i != 0) {
       result << ", ";
     }
     jobject arg = env->GetObjectArrayElement((jobjectArray)args, i);
@@ -145,20 +146,21 @@ std::string javaMethodCallToString(JNIEnv *env, jobject obj, jmethodID methodId,
   return result.str();
 }
 
-JNIEnv* javaGetEnv(JavaVM* jvm, jobject classLoader) {
+JNIEnv *javaGetEnv(JavaVM *jvm, jobject classLoader) {
   JNIEnv *env = NULL;
-  int ret = jvm->GetEnv((void**)&env, JNI_BEST_VERSION);
+  int ret = jvm->GetEnv((void **)&env, JNI_BEST_VERSION);
 
   if (ret == JNI_EDETACHED) {
     JavaVMAttachArgs attachArgs;
     attachArgs.version = JNI_BEST_VERSION;
     attachArgs.name = NULL;
     attachArgs.group = NULL;
-    jvm->AttachCurrentThread((void**)&env, &attachArgs);
+    jvm->AttachCurrentThread((void **)&env, &attachArgs);
 
     jclass threadClazz = env->FindClass("java/lang/Thread");
     jmethodID thread_currentThread = env->GetStaticMethodID(threadClazz, "currentThread", "()Ljava/lang/Thread;");
-    jmethodID thread_setContextClassLoader = env->GetMethodID(threadClazz, "setContextClassLoader", "(Ljava/lang/ClassLoader;)V");
+    jmethodID thread_setContextClassLoader =
+        env->GetMethodID(threadClazz, "setContextClassLoader", "(Ljava/lang/ClassLoader;)V");
     jobject currentThread = env->CallStaticObjectMethod(threadClazz, thread_currentThread);
     checkJavaException(env);
     env->CallObjectMethod(currentThread, thread_setContextClassLoader, classLoader);
@@ -174,7 +176,8 @@ JNIEnv* javaGetEnv(JavaVM* jvm, jobject classLoader) {
 jobject getSystemClassLoader(JNIEnv *env) {
   jclass threadClazz = env->FindClass("java/lang/Thread");
   jmethodID thread_currentThread = env->GetStaticMethodID(threadClazz, "currentThread", "()Ljava/lang/Thread;");
-  jmethodID thread_getContextClassLoader = env->GetMethodID(threadClazz, "getContextClassLoader", "()Ljava/lang/ClassLoader;");
+  jmethodID thread_getContextClassLoader =
+      env->GetMethodID(threadClazz, "getContextClassLoader", "()Ljava/lang/ClassLoader;");
   jobject currentThread = env->CallStaticObjectMethod(threadClazz, thread_currentThread);
   checkJavaException(env);
   jobject result = env->CallObjectMethod(currentThread, thread_getContextClassLoader);
@@ -188,60 +191,62 @@ jvalueType javaGetType(JNIEnv *env, jclass type) {
 
   jboolean isArray = env->CallBooleanMethod(type, class_isArray);
   assertNoException(env);
-  if(isArray) {
+  if (isArray) {
     return TYPE_ARRAY;
   } else {
     // TODO: has to be a better way
     std::string str = javaObjectToString(env, type);
     const char *typeStr = str.c_str();
-    //printf("javaGetType: %s\n", typeStr);
-    if(strcmp(typeStr, "void") == 0) {
+    // printf("javaGetType: %s\n", typeStr);
+    if (strcmp(typeStr, "void") == 0) {
       return TYPE_VOID;
-    } else if(strcmp(typeStr, "char") == 0 || strcmp(typeStr, "class java.lang.Character") == 0) {
+    } else if (strcmp(typeStr, "char") == 0 || strcmp(typeStr, "class java.lang.Character") == 0) {
       return TYPE_CHAR;
-    } else if(strcmp(typeStr, "int") == 0 || strcmp(typeStr, "class java.lang.Integer") == 0) {
+    } else if (strcmp(typeStr, "int") == 0 || strcmp(typeStr, "class java.lang.Integer") == 0) {
       return TYPE_INT;
-    } else if(strcmp(typeStr, "double") == 0 || strcmp(typeStr, "class java.lang.Double") == 0) {
+    } else if (strcmp(typeStr, "double") == 0 || strcmp(typeStr, "class java.lang.Double") == 0) {
       return TYPE_DOUBLE;
-    } else if(strcmp(typeStr, "float") == 0 || strcmp(typeStr, "class java.lang.Float") == 0) {
+    } else if (strcmp(typeStr, "float") == 0 || strcmp(typeStr, "class java.lang.Float") == 0) {
       return TYPE_FLOAT;
-    } else if(strcmp(typeStr, "long") == 0 || strcmp(typeStr, "class java.lang.Long") == 0) {
+    } else if (strcmp(typeStr, "long") == 0 || strcmp(typeStr, "class java.lang.Long") == 0) {
       return TYPE_LONG;
-    } else if(strcmp(typeStr, "boolean") == 0 || strcmp(typeStr, "class java.lang.Boolean") == 0) {
+    } else if (strcmp(typeStr, "boolean") == 0 || strcmp(typeStr, "class java.lang.Boolean") == 0) {
       return TYPE_BOOLEAN;
-    } else if(strcmp(typeStr, "short") == 0 || strcmp(typeStr, "class java.lang.Short") == 0) {
+    } else if (strcmp(typeStr, "short") == 0 || strcmp(typeStr, "class java.lang.Short") == 0) {
       return TYPE_SHORT;
-    } else if(strcmp(typeStr, "byte") == 0 || strcmp(typeStr, "class java.lang.Byte") == 0) {
+    } else if (strcmp(typeStr, "byte") == 0 || strcmp(typeStr, "class java.lang.Byte") == 0) {
       return TYPE_BYTE;
-    } else if(strcmp(typeStr, "class java.lang.String") == 0) {
+    } else if (strcmp(typeStr, "class java.lang.String") == 0) {
       return TYPE_STRING;
     }
     return TYPE_OBJECT;
   }
 }
 
-jclass javaFindClass(JNIEnv* env, const std::string& className) {
+jclass javaFindClass(JNIEnv *env, const std::string &className) {
   std::string searchClassName = className;
   std::replace(searchClassName.begin(), searchClassName.end(), '.', '/');
 
-// Alternate find class trying to fix Class.forName
-//  jclass threadClazz = env->FindClass("java/lang/Thread");
-//  jmethodID thread_getCurrentThread = env->GetStaticMethodID(threadClazz, "currentThread", "()Ljava/lang/Thread;");
-//  jmethodID thread_getContextClassLoader = env->GetMethodID(threadClazz, "getContextClassLoader", "()Ljava/lang/ClassLoader;");
-//
-//  jclass classLoaderClazz = env->FindClass("java/lang/ClassLoader");
-//  jmethodID classLoader_loadClass = env->GetMethodID(classLoaderClazz, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
-//
-//  jobject currentThread = env->CallObjectMethod(threadClazz, thread_getCurrentThread);
-//  jobject classLoader = env->CallObjectMethod(currentThread, thread_getContextClassLoader);
-//  jstring searchClassNameJava = env->NewStringUTF(className.c_str());
-//  jclass clazz = (jclass)env->CallObjectMethod(classLoader, classLoader_loadClass, searchClassNameJava);
+  // Alternate find class trying to fix Class.forName
+  //  jclass threadClazz = env->FindClass("java/lang/Thread");
+  //  jmethodID thread_getCurrentThread = env->GetStaticMethodID(threadClazz, "currentThread", "()Ljava/lang/Thread;");
+  //  jmethodID thread_getContextClassLoader = env->GetMethodID(threadClazz, "getContextClassLoader",
+  //  "()Ljava/lang/ClassLoader;");
+  //
+  //  jclass classLoaderClazz = env->FindClass("java/lang/ClassLoader");
+  //  jmethodID classLoader_loadClass = env->GetMethodID(classLoaderClazz, "loadClass",
+  //  "(Ljava/lang/String;)Ljava/lang/Class;");
+  //
+  //  jobject currentThread = env->CallObjectMethod(threadClazz, thread_getCurrentThread);
+  //  jobject classLoader = env->CallObjectMethod(currentThread, thread_getContextClassLoader);
+  //  jstring searchClassNameJava = env->NewStringUTF(className.c_str());
+  //  jclass clazz = (jclass)env->CallObjectMethod(classLoader, classLoader_loadClass, searchClassNameJava);
 
   jclass clazz = env->FindClass(searchClassName.c_str());
   return clazz;
 }
 
-jobject javaFindField(JNIEnv* env, jclass clazz, const std::string& fieldName) {
+jobject javaFindField(JNIEnv *env, jclass clazz, const std::string &fieldName) {
   jobject result = NULL;
   jclass clazzclazz = env->GetObjectClass(clazz);
   jclass fieldClazz = env->FindClass("java/lang/reflect/Field");
@@ -251,13 +256,13 @@ jobject javaFindField(JNIEnv* env, jclass clazz, const std::string& fieldName) {
   checkJavaException(env);
 
   jsize fieldCount = env->GetArrayLength(fieldObjects);
-  for(jsize i=0; i<fieldCount; i++) {
+  for (jsize i = 0; i < fieldCount; i++) {
     jobject field = env->GetObjectArrayElement(fieldObjects, i);
     jstring fieldNameJava = (jstring)env->CallObjectMethod(field, field_getName);
     checkJavaException(env);
 
     std::string itFieldName = javaToString(env, fieldNameJava);
-    if(strcmp(itFieldName.c_str(), fieldName.c_str()) == 0) {
+    if (strcmp(itFieldName.c_str(), fieldName.c_str()) == 0) {
       result = field;
       break;
     }
@@ -281,71 +286,66 @@ static std::string getArrayElementType(v8::Local<v8::Array> array, uint32_t arra
     return kObject;
   }
 
-  for(uint32_t i=0; i<arraySize; i++) {
+  for (uint32_t i = 0; i < arraySize; i++) {
     v8::Local<v8::Value> arg = array->Get(Nan::GetCurrentContext(), i).ToLocalChecked();
     if (arg->IsArray()) {
       return kObject; // We can exit as soon as we know java/lang/Object is required.
-    }
-    else if(arg->IsString()) {
+    } else if (arg->IsString()) {
       types.insert(kString);
-    }
-    else if(arg->IsInt32() || arg->IsUint32()) {
+    } else if (arg->IsInt32() || arg->IsUint32()) {
       types.insert(kInteger);
-    }
-    else if(arg->IsNumber()) {
+    } else if (arg->IsNumber()) {
       types.insert(kDouble);
-    }
-    else if(arg->IsBoolean()) {
+    } else if (arg->IsBoolean()) {
       types.insert(kBoolean);
-    }
-    else if(arg->IsObject()) {
+    } else if (arg->IsObject()) {
       v8::Local<v8::Object> obj = v8::Local<v8::Object>::Cast(arg);
-      v8::Local<v8::Value> isJavaLong = GetHiddenValue(obj, Nan::New<v8::String>(V8_HIDDEN_MARKER_JAVA_LONG).ToLocalChecked());
-      if(!isJavaLong.IsEmpty() && isJavaLong->IsBoolean()) {
+      v8::Local<v8::Value> isJavaLong =
+          GetHiddenValue(obj, Nan::New<v8::String>(V8_HIDDEN_MARKER_JAVA_LONG).ToLocalChecked());
+      if (!isJavaLong.IsEmpty() && isJavaLong->IsBoolean()) {
         types.insert(kLong);
-      }
-      else {
+      } else {
         return kObject; // We can exit as soon as we know java/lang/Object is required.
       }
     }
   }
 
-  if(types.size() == 1) {
+  if (types.size() == 1) {
     return *(types.begin());
   }
 
   assert(types.size() >= 1);
-  assert(types.find(kObject)==types.end());
+  assert(types.find(kObject) == types.end());
 
   // We have an array with two or more types. All types can be converted to Object, but there is one other
   // case we support, which is when all the types are numeric types.
   // We currently have only two non-numeric types. If neither is present in the set, the rest must be numeric.
-  if (types.find(kString)==types.end() && types.find(kBoolean)==types.end()) {
+  if (types.find(kString) == types.end() && types.find(kBoolean) == types.end()) {
     return kNumber;
   }
 
   return kObject;
 }
 
-jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
-  if(arg.IsEmpty() || arg->IsNull() || arg->IsUndefined()) {
+jobject v8ToJava(JNIEnv *env, v8::Local<v8::Value> arg) {
+  if (arg.IsEmpty() || arg->IsNull() || arg->IsUndefined()) {
     return NULL;
   }
 
-  if(arg->IsArray()) {
+  if (arg->IsArray()) {
     v8::Local<v8::Array> array = v8::Local<v8::Array>::Cast(arg);
     uint32_t arraySize = array->Length();
     std::string arrayType = getArrayElementType(array, arraySize);
     jclass objectClazz = env->FindClass(arrayType.c_str());
     jobjectArray result = env->NewObjectArray(arraySize, objectClazz, NULL);
-    for(uint32_t i=0; i<arraySize; i++) {
+    for (uint32_t i = 0; i < arraySize; i++) {
       jobject val = v8ToJava(env, array->Get(Nan::GetCurrentContext(), i).ToLocalChecked());
       env->SetObjectArrayElement(result, i, val);
     }
     return result;
   }
 
-  if(arg->IsString()) {
+  if (arg->IsString()) {
 #if NODE_MAJOR_VERSION > 7
     v8::String::Value val(v8::Isolate::GetCurrent(), arg->ToString(Nan::GetCurrentContext()).ToLocalChecked());
 #else
@@ -354,37 +354,39 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
     return env->NewString(*val, val.length());
   }
 
-  if(arg->IsInt32() || arg->IsUint32()) {
+  if (arg->IsInt32() || arg->IsUint32()) {
     jint val = Nan::To<int32_t>(arg).FromJust();
     jclass clazz = env->FindClass("java/lang/Integer");
     jmethodID constructor = env->GetMethodID(clazz, "<init>", "(I)V");
     return env->NewObject(clazz, constructor, val);
   }
 
-  if(arg->IsNumber()) {
+  if (arg->IsNumber()) {
     jdouble val = Nan::To<double>(arg).FromJust();
     jclass clazz = env->FindClass("java/lang/Double");
     jmethodID constructor = env->GetMethodID(clazz, "<init>", "(D)V");
     return env->NewObject(clazz, constructor, val);
   }
 
-  if(arg->IsBoolean()) {
+  if (arg->IsBoolean()) {
     jboolean val = Nan::To<bool>(arg).FromJust();
     jclass clazz = env->FindClass("java/lang/Boolean");
     jmethodID constructor = env->GetMethodID(clazz, "<init>", "(Z)V");
     return env->NewObject(clazz, constructor, val);
   }
 
-  if(arg->IsObject()) {
+  if (arg->IsObject()) {
     v8::Local<v8::Object> obj = v8::Local<v8::Object>::Cast(arg);
 
-    v8::Local<v8::Value> isJavaObject = GetHiddenValue(obj, Nan::New<v8::String>(V8_HIDDEN_MARKER_JAVA_OBJECT).ToLocalChecked());
-    if(!isJavaObject.IsEmpty() && isJavaObject->IsBoolean()) {
+    v8::Local<v8::Value> isJavaObject =
+        GetHiddenValue(obj, Nan::New<v8::String>(V8_HIDDEN_MARKER_JAVA_OBJECT).ToLocalChecked());
+    if (!isJavaObject.IsEmpty() && isJavaObject->IsBoolean()) {
       return v8ToJava_javaObject(env, obj);
     }
 
-    v8::Local<v8::Value> isJavaLong = GetHiddenValue(obj, Nan::New<v8::String>(V8_HIDDEN_MARKER_JAVA_LONG).ToLocalChecked());
-    if(!isJavaLong.IsEmpty() && isJavaLong->IsBoolean()) {
+    v8::Local<v8::Value> isJavaLong =
+        GetHiddenValue(obj, Nan::New<v8::String>(V8_HIDDEN_MARKER_JAVA_LONG).ToLocalChecked());
+    if (!isJavaLong.IsEmpty() && isJavaLong->IsBoolean()) {
       return v8ToJava_javaLong(env, obj);
     }
   }
@@ -395,13 +397,13 @@ jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg) {
   return NULL;
 }
 
-jobject v8ToJava_javaObject(JNIEnv* env, v8::Local<v8::Object> obj) {
-  JavaObject* javaObject = Nan::ObjectWrap::Unwrap<JavaObject>(obj);
+jobject v8ToJava_javaObject(JNIEnv *env, v8::Local<v8::Object> obj) {
+  JavaObject *javaObject = Nan::ObjectWrap::Unwrap<JavaObject>(obj);
   return javaObject->getObject();
 }
 
-void checkJavaException(JNIEnv* env) {
-  if(env->ExceptionCheck()) {
+void checkJavaException(JNIEnv *env) {
+  if (env->ExceptionCheck()) {
     jthrowable ex = env->ExceptionOccurred();
     env->ExceptionClear();
 
@@ -411,19 +413,20 @@ void checkJavaException(JNIEnv* env) {
   }
 }
 
-jobject v8ToJava_javaLong(JNIEnv* env, v8::Local<v8::Object> obj) {
-  jobject longValue = v8ToJava(env, obj->Get(Nan::GetCurrentContext(), Nan::New<v8::String>("longValue").ToLocalChecked()).ToLocalChecked());
+jobject v8ToJava_javaLong(JNIEnv *env, v8::Local<v8::Object> obj) {
+  jobject longValue = v8ToJava(
+      env, obj->Get(Nan::GetCurrentContext(), Nan::New<v8::String>("longValue").ToLocalChecked()).ToLocalChecked());
   jclass longClazz = env->FindClass("java/lang/Long");
   jmethodID long_constructor = env->GetMethodID(longClazz, "<init>", "(Ljava/lang/String;)V");
   jobject jobj = env->NewObject(longClazz, long_constructor, longValue);
   return jobj;
 }
 
-jobjectArray v8ToJava(JNIEnv* env, Nan::NAN_METHOD_ARGS_TYPE args, int start, int end) {
+jobjectArray v8ToJava(JNIEnv *env, Nan::NAN_METHOD_ARGS_TYPE args, int start, int end) {
   jclass clazz = env->FindClass("java/lang/Object");
-  jobjectArray results = env->NewObjectArray(end-start, clazz, NULL);
+  jobjectArray results = env->NewObjectArray(end - start, clazz, NULL);
 
-  for(int i=start; i<end; i++) {
+  for (int i = start; i < end; i++) {
     jobject val = v8ToJava(env, args[i]);
     env->SetObjectArrayElement(results, i - start, val);
   }
@@ -431,7 +434,7 @@ jobjectArray v8ToJava(JNIEnv* env, Nan::NAN_METHOD_ARGS_TYPE args, int start, in
   return results;
 }
 
-std::string javaExceptionToString(JNIEnv* env, jthrowable ex) {
+std::string javaExceptionToString(JNIEnv *env, jthrowable ex) {
   jclass stringWriterClazz = env->FindClass("java/io/StringWriter");
   jmethodID stringWriter_constructor = env->GetMethodID(stringWriterClazz, "<init>", "()V");
   jmethodID stringWriter_toString = env->GetMethodID(stringWriterClazz, "toString", "()Ljava/lang/String;");
@@ -451,15 +454,17 @@ std::string javaExceptionToString(JNIEnv* env, jthrowable ex) {
   return javaToString(env, strObj);
 }
 
-v8::Local<v8::Value> javaExceptionToV8(Java* java, JNIEnv* env, jthrowable ex, const std::string& alternateMessage) {
+v8::Local<v8::Value> javaExceptionToV8(Java *java, JNIEnv *env, jthrowable ex, const std::string &alternateMessage) {
   std::ostringstream msg;
   msg << alternateMessage;
 
-  if(ex) {
+  if (ex) {
     msg << "\n" << javaExceptionToString(env, ex);
 
     v8::Local<v8::Value> v8ex = v8::Exception::Error(Nan::New<v8::String>(msg.str().c_str()).ToLocalChecked());
-    if (hasSetFailed(((v8::Object*)*v8ex)->Set(Nan::GetCurrentContext(), Nan::New<v8::String>("cause").ToLocalChecked(), javaToV8(java, env, ex)))) {
+    if (hasSetFailed(((v8::Object *)*v8ex)
+                         ->Set(Nan::GetCurrentContext(), Nan::New<v8::String>("cause").ToLocalChecked(),
+                               javaToV8(java, env, ex)))) {
       return v8::Exception::Error(Nan::New<v8::String>("could not set cause").ToLocalChecked());
     }
     return v8ex;
@@ -468,7 +473,7 @@ v8::Local<v8::Value> javaExceptionToV8(Java* java, JNIEnv* env, jthrowable ex, c
   return v8::Exception::Error(Nan::New<v8::String>(msg.str().c_str()).ToLocalChecked());
 }
 
-v8::Local<v8::Value> javaExceptionToV8(Java* java, JNIEnv* env, const std::string& alternateMessage) {
+v8::Local<v8::Value> javaExceptionToV8(Java *java, JNIEnv *env, const std::string &alternateMessage) {
   jthrowable ex = env->ExceptionOccurred();
   env->ExceptionClear();
   return javaExceptionToV8(java, env, ex, alternateMessage);
@@ -491,17 +496,17 @@ jvalueType javaGetArrayComponentType(JNIEnv *env, jobjectArray array) {
 }
 
 #if NODE_VERSION_AT_LEAST(13, 0, 0)
-  v8::Local<v8::ArrayBuffer> newArrayBuffer(void* elems, size_t length) {
-    v8::Local<v8::ArrayBuffer> ab = v8::ArrayBuffer::New(v8::Isolate::GetCurrent(), length);
-    memcpy(ab->GetBackingStore()->Data(), elems, length);
-    return ab;
-  }
+v8::Local<v8::ArrayBuffer> newArrayBuffer(void *elems, size_t length) {
+  v8::Local<v8::ArrayBuffer> ab = v8::ArrayBuffer::New(v8::Isolate::GetCurrent(), length);
+  memcpy(ab->GetBackingStore()->Data(), elems, length);
+  return ab;
+}
 #elif NODE_VERSION_AT_LEAST(4, 0, 0)
-  v8::Local<v8::ArrayBuffer> newArrayBuffer(void* elems, size_t length) {
-    v8::Local<v8::ArrayBuffer> ab = v8::ArrayBuffer::New(v8::Isolate::GetCurrent(), length);
-    memcpy(ab->GetContents().Data(), elems, length);
-    return ab;
-  }
+v8::Local<v8::ArrayBuffer> newArrayBuffer(void *elems, size_t length) {
+  v8::Local<v8::ArrayBuffer> ab = v8::ArrayBuffer::New(v8::Isolate::GetCurrent(), length);
+  memcpy(ab->GetContents().Data(), elems, length);
+  return ab;
+}
 #endif
 
 v8::Local<v8::String> javaCharToV8String(jchar c) {
@@ -514,156 +519,140 @@ v8::Local<v8::String> javaCharToV8String(jchar c) {
 #endif
 }
 
-v8::Local<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArray) {
-  if(objArray == NULL) {
+v8::Local<v8::Value> javaArrayToV8(Java *java, JNIEnv *env, jobjectArray objArray) {
+  if (objArray == NULL) {
     return Nan::Null();
   }
 
   jvalueType arrayComponentType = javaGetArrayComponentType(env, objArray);
-  //printf("javaArrayToV8: %d %s\n", arrayComponentType, javaObjectToString(env, objArray).c_str());
+  // printf("javaArrayToV8: %d %s\n", arrayComponentType, javaObjectToString(env, objArray).c_str());
 
   jsize arraySize = env->GetArrayLength(objArray);
-  //printf("array size: %d\n", arraySize);
+  // printf("array size: %d\n", arraySize);
 
   v8::Local<v8::Array> result = Nan::New<v8::Array>(arraySize);
   // http://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/types.html
-  switch(arrayComponentType) {
-  case TYPE_CHAR:
-    {
-      jchar* elems = env->GetCharArrayElements((jcharArray)objArray, 0);
+  switch (arrayComponentType) {
+  case TYPE_CHAR: {
+    jchar *elems = env->GetCharArrayElements((jcharArray)objArray, 0);
 #if (NODE_VERSION_AT_LEAST(4, 0, 0))
-      size_t byteLength = arraySize * 2;
-      v8::Local<v8::ArrayBuffer> ab = newArrayBuffer(elems, byteLength);
-      env->ReleaseCharArrayElements((jcharArray)objArray, elems, 0);
-      return v8::Uint16Array::New(ab, 0, arraySize);
+    size_t byteLength = arraySize * 2;
+    v8::Local<v8::ArrayBuffer> ab = newArrayBuffer(elems, byteLength);
+    env->ReleaseCharArrayElements((jcharArray)objArray, elems, 0);
+    return v8::Uint16Array::New(ab, 0, arraySize);
 #else
-      jchar str;
-      for(jsize i=0; i<arraySize; i++) {
-        str = elems[i];
-        result->Set(i, javaCharToV8String(str));
-      }
-      env->ReleaseCharArrayElements((jcharArray)objArray, elems, 0);
-#endif
+    jchar str;
+    for (jsize i = 0; i < arraySize; i++) {
+      str = elems[i];
+      result->Set(i, javaCharToV8String(str));
     }
-    break;
+    env->ReleaseCharArrayElements((jcharArray)objArray, elems, 0);
+#endif
+  } break;
 
-  case TYPE_INT:
-    {
-      jint* elems = env->GetIntArrayElements((jintArray)objArray, 0);
+  case TYPE_INT: {
+    jint *elems = env->GetIntArrayElements((jintArray)objArray, 0);
 #if (NODE_VERSION_AT_LEAST(4, 0, 0))
-      size_t byteLength = arraySize * 4;
-      v8::Local<v8::ArrayBuffer> ab = newArrayBuffer(elems, byteLength);
-      env->ReleaseIntArrayElements((jintArray)objArray, elems, 0);
-      return v8::Int32Array::New(ab, 0, arraySize);
+    size_t byteLength = arraySize * 4;
+    v8::Local<v8::ArrayBuffer> ab = newArrayBuffer(elems, byteLength);
+    env->ReleaseIntArrayElements((jintArray)objArray, elems, 0);
+    return v8::Int32Array::New(ab, 0, arraySize);
 #else
-      for(jsize i=0; i<arraySize; i++) {
-        result->Set(i, Nan::New<v8::Integer>(elems[i]));
-      }
-      env->ReleaseIntArrayElements((jintArray)objArray, elems, 0);
-#endif
+    for (jsize i = 0; i < arraySize; i++) {
+      result->Set(i, Nan::New<v8::Integer>(elems[i]));
     }
-    break;
+    env->ReleaseIntArrayElements((jintArray)objArray, elems, 0);
+#endif
+  } break;
 
-  case TYPE_BYTE:
-    {
-      jbyte* elems = env->GetByteArrayElements((jbyteArray)objArray, 0);
+  case TYPE_BYTE: {
+    jbyte *elems = env->GetByteArrayElements((jbyteArray)objArray, 0);
 #if (NODE_VERSION_AT_LEAST(4, 0, 0))
-      size_t byteLength = arraySize;
-      v8::Local<v8::ArrayBuffer> ab = newArrayBuffer(elems, byteLength);
-      env->ReleaseByteArrayElements((jbyteArray)objArray, elems, 0);
-      return v8::Int8Array::New(ab, 0, arraySize);
+    size_t byteLength = arraySize;
+    v8::Local<v8::ArrayBuffer> ab = newArrayBuffer(elems, byteLength);
+    env->ReleaseByteArrayElements((jbyteArray)objArray, elems, 0);
+    return v8::Int8Array::New(ab, 0, arraySize);
 #else
-      for(jsize i=0; i<arraySize; i++) {
-        result->Set(i, Nan::New<v8::Number>(elems[i]));
-      }
-      env->ReleaseByteArrayElements((jbyteArray)objArray, elems, 0);
+    for (jsize i = 0; i < arraySize; i++) {
+      result->Set(i, Nan::New<v8::Number>(elems[i]));
+    }
+    env->ReleaseByteArrayElements((jbyteArray)objArray, elems, 0);
 #endif
-    }
-    break;
+  } break;
 
-  case TYPE_BOOLEAN:
-    {
-      jboolean* elems = env->GetBooleanArrayElements((jbooleanArray)objArray, 0);
-      for(jsize i=0; i<arraySize; i++) {
-        if(hasSetFailed(result->Set(Nan::GetCurrentContext(), i, Nan::New<v8::Boolean>(elems[i])))) {
-          return v8::Exception::Error(Nan::New<v8::String>("set array element failed").ToLocalChecked());
-        }
+  case TYPE_BOOLEAN: {
+    jboolean *elems = env->GetBooleanArrayElements((jbooleanArray)objArray, 0);
+    for (jsize i = 0; i < arraySize; i++) {
+      if (hasSetFailed(result->Set(Nan::GetCurrentContext(), i, Nan::New<v8::Boolean>(elems[i])))) {
+        return v8::Exception::Error(Nan::New<v8::String>("set array element failed").ToLocalChecked());
       }
-      env->ReleaseBooleanArrayElements((jbooleanArray)objArray, elems, 0);
     }
-    break;
+    env->ReleaseBooleanArrayElements((jbooleanArray)objArray, elems, 0);
+  } break;
 
-  case TYPE_SHORT:
-    {
-      jshort* elems = env->GetShortArrayElements((jshortArray)objArray, 0);
+  case TYPE_SHORT: {
+    jshort *elems = env->GetShortArrayElements((jshortArray)objArray, 0);
 #if (NODE_VERSION_AT_LEAST(4, 0, 0))
-      size_t byteLength = arraySize * 2;
-      v8::Local<v8::ArrayBuffer> ab = newArrayBuffer(elems, byteLength);
-      env->ReleaseShortArrayElements((jshortArray)objArray, elems, 0);
-      return v8::Int16Array::New(ab, 0, arraySize);
+    size_t byteLength = arraySize * 2;
+    v8::Local<v8::ArrayBuffer> ab = newArrayBuffer(elems, byteLength);
+    env->ReleaseShortArrayElements((jshortArray)objArray, elems, 0);
+    return v8::Int16Array::New(ab, 0, arraySize);
 #else
-      for(jsize i=0; i<arraySize; i++) {
-        result->Set(i, Nan::New<v8::Number>(elems[i]));
-      }
-      env->ReleaseShortArrayElements((jshortArray)objArray, elems, 0);
-#endif
+    for (jsize i = 0; i < arraySize; i++) {
+      result->Set(i, Nan::New<v8::Number>(elems[i]));
     }
-    break;
+    env->ReleaseShortArrayElements((jshortArray)objArray, elems, 0);
+#endif
+  } break;
 
-  case TYPE_DOUBLE:
-    {
-      jdouble* elems = env->GetDoubleArrayElements((jdoubleArray)objArray, 0);
+  case TYPE_DOUBLE: {
+    jdouble *elems = env->GetDoubleArrayElements((jdoubleArray)objArray, 0);
 #if (NODE_VERSION_AT_LEAST(4, 0, 0))
-      size_t byteLength = arraySize * 8;
-      v8::Local<v8::ArrayBuffer> ab = newArrayBuffer(elems, byteLength);
-      env->ReleaseDoubleArrayElements((jdoubleArray)objArray, elems, 0);
-      return v8::Float64Array::New(ab, 0, arraySize);
+    size_t byteLength = arraySize * 8;
+    v8::Local<v8::ArrayBuffer> ab = newArrayBuffer(elems, byteLength);
+    env->ReleaseDoubleArrayElements((jdoubleArray)objArray, elems, 0);
+    return v8::Float64Array::New(ab, 0, arraySize);
 #else
-      for(jsize i=0; i<arraySize; i++) {
-        result->Set(i, Nan::New<v8::Number>(elems[i]));
-      }
-      env->ReleaseDoubleArrayElements((jdoubleArray)objArray, elems, 0);
-#endif
+    for (jsize i = 0; i < arraySize; i++) {
+      result->Set(i, Nan::New<v8::Number>(elems[i]));
     }
-    break;
+    env->ReleaseDoubleArrayElements((jdoubleArray)objArray, elems, 0);
+#endif
+  } break;
 
-  case TYPE_FLOAT:
-    {
-      jfloat* elems = env->GetFloatArrayElements((jfloatArray)objArray, 0);
+  case TYPE_FLOAT: {
+    jfloat *elems = env->GetFloatArrayElements((jfloatArray)objArray, 0);
 #if (NODE_VERSION_AT_LEAST(4, 0, 0))
-      size_t byteLength = arraySize * 4;
-      v8::Local<v8::ArrayBuffer> ab = newArrayBuffer(elems, byteLength);
-      env->ReleaseFloatArrayElements((jfloatArray)objArray, elems, 0);
-      return v8::Float32Array::New(ab, 0, arraySize);
+    size_t byteLength = arraySize * 4;
+    v8::Local<v8::ArrayBuffer> ab = newArrayBuffer(elems, byteLength);
+    env->ReleaseFloatArrayElements((jfloatArray)objArray, elems, 0);
+    return v8::Float32Array::New(ab, 0, arraySize);
 #else
-      for(jsize i=0; i<arraySize; i++) {
-        result->Set(i, Nan::New<v8::Number>(elems[i]));
-      }
-      env->ReleaseFloatArrayElements((jfloatArray)objArray, elems, 0);
+    for (jsize i = 0; i < arraySize; i++) {
+      result->Set(i, Nan::New<v8::Number>(elems[i]));
+    }
+    env->ReleaseFloatArrayElements((jfloatArray)objArray, elems, 0);
 #endif
-    }
-    break;
+  } break;
 
-  case TYPE_LONG:
-    {
-      jlong* elems = env->GetLongArrayElements((jlongArray)objArray, 0);
-      for(jsize i=0; i<arraySize; i++) {
-        jobject obj = longToJavaLongObj(env, elems[i]);
-        if(hasSetFailed(result->Set(Nan::GetCurrentContext(), i, JavaObject::New(java, obj)))) {
-          return v8::Exception::Error(Nan::New<v8::String>("could not set array element").ToLocalChecked());
-        }
+  case TYPE_LONG: {
+    jlong *elems = env->GetLongArrayElements((jlongArray)objArray, 0);
+    for (jsize i = 0; i < arraySize; i++) {
+      jobject obj = longToJavaLongObj(env, elems[i]);
+      if (hasSetFailed(result->Set(Nan::GetCurrentContext(), i, JavaObject::New(java, obj)))) {
+        return v8::Exception::Error(Nan::New<v8::String>("could not set array element").ToLocalChecked());
       }
-      env->ReleaseLongArrayElements((jlongArray)objArray, elems, 0);
     }
-    break;
+    env->ReleaseLongArrayElements((jlongArray)objArray, elems, 0);
+  } break;
 
   default:
-    for(jsize i=0; i<arraySize; i++) {
-        jobject obj = env->GetObjectArrayElement(objArray, i);
-        v8::Local<v8::Value> item = javaToV8(java, env, obj);
-        if(hasSetFailed(result->Set(Nan::GetCurrentContext(), i, item))) {
-          return v8::Exception::Error(Nan::New<v8::String>("could not set array element").ToLocalChecked());
-        }
+    for (jsize i = 0; i < arraySize; i++) {
+      jobject obj = env->GetObjectArrayElement(objArray, i);
+      v8::Local<v8::Value> item = javaToV8(java, env, obj);
+      if (hasSetFailed(result->Set(Nan::GetCurrentContext(), i, item))) {
+        return v8::Exception::Error(Nan::New<v8::String>("could not set array element").ToLocalChecked());
+      }
     }
     break;
   }
@@ -671,113 +660,104 @@ v8::Local<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArra
   return result;
 }
 
-v8::Local<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj) {
-  return javaToV8(java, env, obj, NULL);
-}
+v8::Local<v8::Value> javaToV8(Java *java, JNIEnv *env, jobject obj) { return javaToV8(java, env, obj, NULL); }
 
-v8::Local<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj, DynamicProxyData* dynamicProxyData) {
-  if(obj == NULL) {
+v8::Local<v8::Value> javaToV8(Java *java, JNIEnv *env, jobject obj, DynamicProxyData *dynamicProxyData) {
+  if (obj == NULL) {
     return Nan::Null();
   }
 
   jclass objClazz = env->GetObjectClass(obj);
   jvalueType resultType = javaGetType(env, objClazz);
 
-  //printf("javaToV8: %d %s\n", resultType, javaObjectToString(env, obj).c_str());
+  // printf("javaToV8: %d %s\n", resultType, javaObjectToString(env, obj).c_str());
 
-  switch(resultType) {
-    case TYPE_ARRAY:
-      {
-        v8::Local<v8::Value> result = javaArrayToV8(java, env, (jobjectArray)obj);
-        return result;
-      }
-    case TYPE_VOID:
-      return Nan::Undefined();
-    case TYPE_CHAR:
-      {
-        jclass charClazz = env->FindClass("java/lang/Character");
-        jmethodID char_charValue = env->GetMethodID(charClazz, "charValue", "()C");
-        jchar c = env->CallCharMethod(obj, char_charValue);
-        checkJavaException(env);
-        return javaCharToV8String(c);
-      }
-    case TYPE_BOOLEAN:
-      {
-        jclass booleanClazz = env->FindClass("java/lang/Boolean");
-        jmethodID boolean_booleanValue = env->GetMethodID(booleanClazz, "booleanValue", "()Z");
-        bool result = env->CallBooleanMethod(obj, boolean_booleanValue);
-        assertNoException(env);
-        return Nan::New<v8::Boolean>(result);
-      }
-    case TYPE_BYTE:
-      {
-        jclass byteClazz = env->FindClass("java/lang/Byte");
-        jmethodID byte_byteValue = env->GetMethodID(byteClazz, "byteValue", "()B");
-        jbyte result = env->CallByteMethod(obj, byte_byteValue);
-        checkJavaException(env);
-        return Nan::New<v8::Number>(result);
-      }
-    case TYPE_LONG:
-      {
-        jclass longClazz = env->FindClass("java/lang/Long");
-        jmethodID long_longValue = env->GetMethodID(longClazz, "longValue", "()J");
-        jlong result = env->CallLongMethod(obj, long_longValue);
-        checkJavaException(env);
-        std::string strValue = javaObjectToString(env, obj);
-        v8::Local<v8::Value> v8Result = Nan::New<v8::NumberObject>((double)result);
-        v8::NumberObject* v8ResultNumberObject = v8::NumberObject::Cast(*v8Result);
-        if(hasSetFailed(v8ResultNumberObject->Set(Nan::GetCurrentContext(), Nan::New<v8::String>("longValue").ToLocalChecked(), Nan::New<v8::String>(strValue.c_str()).ToLocalChecked()))) {
-          return v8::Exception::Error(Nan::New<v8::String>("could not set longValue").ToLocalChecked());
-        }
-        SetHiddenValue(v8ResultNumberObject, Nan::New<v8::String>(V8_HIDDEN_MARKER_JAVA_LONG).ToLocalChecked(), Nan::New<v8::Boolean>(true));
-        return v8Result;
-      }
-    case TYPE_INT:
-      {
-        jclass integerClazz = env->FindClass("java/lang/Integer");
-        jmethodID integer_intValue = env->GetMethodID(integerClazz, "intValue", "()I");
-        jint result = env->CallIntMethod(obj, integer_intValue);
-        checkJavaException(env);
-        // <-- use the Int32 factory, not the generic Integer one
-        return Nan::New<v8::Int32>(static_cast<int32_t>(result));
-      }
-    case TYPE_SHORT:
-      {
-        jclass shortClazz = env->FindClass("java/lang/Short");
-        jmethodID short_shortValue = env->GetMethodID(shortClazz, "shortValue", "()S");
-        jshort result = env->CallShortMethod(obj, short_shortValue);
-        assertNoException(env);
-        return Nan::New<v8::Integer>(result);
-      }
-    case TYPE_DOUBLE:
-      {
-        jclass doubleClazz = env->FindClass("java/lang/Double");
-        jmethodID double_doubleValue = env->GetMethodID(doubleClazz, "doubleValue", "()D");
-        jdouble result = env->CallDoubleMethod(obj, double_doubleValue);
-        checkJavaException(env);
-        return Nan::New<v8::Number>(result);
-      }
-    case TYPE_FLOAT:
-      {
-        jclass floatClazz = env->FindClass("java/lang/Float");
-        jmethodID float_floatValue = env->GetMethodID(floatClazz, "floatValue", "()F");
-        jfloat result = env->CallFloatMethod(obj, float_floatValue);
-        assertNoException(env);
-        return Nan::New<v8::Number>(result);
-      }
-    case TYPE_STRING:
-      {
-        std::string str = javaObjectToString(env, obj);
-        return Nan::New<v8::String>(str.c_str(), str.length()).ToLocalChecked();
-      }
-    case TYPE_OBJECT:
-      if (dynamicProxyData != NULL) {
-        return JavaProxyObject::New(java, obj, dynamicProxyData);
-      }
-      return JavaObject::New(java, obj);
-    default:
-      printf("javaToV8: unhandled type: 0x%03x\n", resultType);
-      return JavaObject::New(java, obj);
+  switch (resultType) {
+  case TYPE_ARRAY: {
+    v8::Local<v8::Value> result = javaArrayToV8(java, env, (jobjectArray)obj);
+    return result;
+  }
+  case TYPE_VOID:
+    return Nan::Undefined();
+  case TYPE_CHAR: {
+    jclass charClazz = env->FindClass("java/lang/Character");
+    jmethodID char_charValue = env->GetMethodID(charClazz, "charValue", "()C");
+    jchar c = env->CallCharMethod(obj, char_charValue);
+    checkJavaException(env);
+    return javaCharToV8String(c);
+  }
+  case TYPE_BOOLEAN: {
+    jclass booleanClazz = env->FindClass("java/lang/Boolean");
+    jmethodID boolean_booleanValue = env->GetMethodID(booleanClazz, "booleanValue", "()Z");
+    bool result = env->CallBooleanMethod(obj, boolean_booleanValue);
+    assertNoException(env);
+    return Nan::New<v8::Boolean>(result);
+  }
+  case TYPE_BYTE: {
+    jclass byteClazz = env->FindClass("java/lang/Byte");
+    jmethodID byte_byteValue = env->GetMethodID(byteClazz, "byteValue", "()B");
+    jbyte result = env->CallByteMethod(obj, byte_byteValue);
+    checkJavaException(env);
+    return Nan::New<v8::Number>(result);
+  }
+  case TYPE_LONG: {
+    jclass longClazz = env->FindClass("java/lang/Long");
+    jmethodID long_longValue = env->GetMethodID(longClazz, "longValue", "()J");
+    jlong result = env->CallLongMethod(obj, long_longValue);
+    checkJavaException(env);
+    std::string strValue = javaObjectToString(env, obj);
+    v8::Local<v8::Value> v8Result = Nan::New<v8::NumberObject>((double)result);
+    v8::NumberObject *v8ResultNumberObject = v8::NumberObject::Cast(*v8Result);
+    if (hasSetFailed(v8ResultNumberObject->Set(Nan::GetCurrentContext(),
+                                               Nan::New<v8::String>("longValue").ToLocalChecked(),
+                                               Nan::New<v8::String>(strValue.c_str()).ToLocalChecked()))) {
+      return v8::Exception::Error(Nan::New<v8::String>("could not set longValue").ToLocalChecked());
+    }
+    SetHiddenValue(v8ResultNumberObject, Nan::New<v8::String>(V8_HIDDEN_MARKER_JAVA_LONG).ToLocalChecked(),
+                   Nan::New<v8::Boolean>(true));
+    return v8Result;
+  }
+  case TYPE_INT: {
+    jclass integerClazz = env->FindClass("java/lang/Integer");
+    jmethodID integer_intValue = env->GetMethodID(integerClazz, "intValue", "()I");
+    jint result = env->CallIntMethod(obj, integer_intValue);
+    checkJavaException(env);
+    // <-- use the Int32 factory, not the generic Integer one
+    return Nan::New<v8::Int32>(static_cast<int32_t>(result));
+  }
+  case TYPE_SHORT: {
+    jclass shortClazz = env->FindClass("java/lang/Short");
+    jmethodID short_shortValue = env->GetMethodID(shortClazz, "shortValue", "()S");
+    jshort result = env->CallShortMethod(obj, short_shortValue);
+    assertNoException(env);
+    return Nan::New<v8::Integer>(result);
+  }
+  case TYPE_DOUBLE: {
+    jclass doubleClazz = env->FindClass("java/lang/Double");
+    jmethodID double_doubleValue = env->GetMethodID(doubleClazz, "doubleValue", "()D");
+    jdouble result = env->CallDoubleMethod(obj, double_doubleValue);
+    checkJavaException(env);
+    return Nan::New<v8::Number>(result);
+  }
+  case TYPE_FLOAT: {
+    jclass floatClazz = env->FindClass("java/lang/Float");
+    jmethodID float_floatValue = env->GetMethodID(floatClazz, "floatValue", "()F");
+    jfloat result = env->CallFloatMethod(obj, float_floatValue);
+    assertNoException(env);
+    return Nan::New<v8::Number>(result);
+  }
+  case TYPE_STRING: {
+    std::string str = javaObjectToString(env, obj);
+    return Nan::New<v8::String>(str.c_str(), str.length()).ToLocalChecked();
+  }
+  case TYPE_OBJECT:
+    if (dynamicProxyData != NULL) {
+      return JavaProxyObject::New(java, obj, dynamicProxyData);
+    }
+    return JavaObject::New(java, obj);
+  default:
+    printf("javaToV8: unhandled type: 0x%03x\n", resultType);
+    return JavaObject::New(java, obj);
   }
 
   return Nan::Undefined();
@@ -787,9 +767,9 @@ jobjectArray javaObjectArrayToClasses(JNIEnv *env, jobjectArray objs) {
   jclass clazzClazz = env->FindClass("java/lang/Class");
   jsize objsLength = env->GetArrayLength(objs);
   jobjectArray results = env->NewObjectArray(objsLength, clazzClazz, NULL);
-  for(jsize i=0; i<objsLength; i++) {
+  for (jsize i = 0; i < objsLength; i++) {
     jobject elem = env->GetObjectArrayElement(objs, i);
-    if(elem == NULL) {
+    if (elem == NULL) {
       env->SetObjectArrayElement(results, i, NULL);
     } else {
       jclass objClazz = env->GetObjectClass(elem);
@@ -800,29 +780,31 @@ jobjectArray javaObjectArrayToClasses(JNIEnv *env, jobjectArray objs) {
   return results;
 }
 
-jobject javaFindMethod(JNIEnv *env, jclass clazz, const std::string& methodName, jobjectArray methodArgs) {
+jobject javaFindMethod(JNIEnv *env, jclass clazz, const std::string &methodName, jobjectArray methodArgs) {
   std::string::size_type parenLoc = methodName.find("(");
-  if(parenLoc != std::string::npos) {
+  if (parenLoc != std::string::npos) {
     jobject method = NULL;
 
     std::string methodSig = methodName.substr(parenLoc);
     std::string methodRealName = methodName.substr(0, parenLoc);
     jmethodID methodID = env->GetStaticMethodID(clazz, methodRealName.c_str(), methodSig.c_str());
-    env->ExceptionClear(); // If GetStaticMethodID can't find the method it throws an exception and we need to just return NULL
-    if(methodID != 0) {
+    env->ExceptionClear(); // If GetStaticMethodID can't find the method it throws an exception and we need to just
+                           // return NULL
+    if (methodID != 0) {
       method = env->ToReflectedMethod(clazz, methodID, true);
     } else {
       methodID = env->GetMethodID(clazz, methodRealName.c_str(), methodSig.c_str());
-      env->ExceptionClear(); // If GetMethodID can't find the method it throws an exception and we need to just return NULL
-      if(methodID != 0) {
+      env->ExceptionClear(); // If GetMethodID can't find the method it throws an exception and we need to just return
+                             // NULL
+      if (methodID != 0) {
         method = env->ToReflectedMethod(clazz, methodID, true);
       }
     }
 
     // cast arguments
-    if(method != NULL) {
+    if (method != NULL) {
       javaCastArguments(env, methodArgs, method);
-      if(env->ExceptionCheck()) {
+      if (env->ExceptionCheck()) {
         env->ExceptionClear();
         method = NULL;
       }
@@ -831,11 +813,14 @@ jobject javaFindMethod(JNIEnv *env, jclass clazz, const std::string& methodName,
     return method;
   } else {
     jclass methodUtilsClazz = env->FindClass("nodejava/org/apache/commons/lang3/reflect/MethodUtils");
-    jmethodID methodUtils_getMatchingAccessibleMethod = env->GetStaticMethodID(methodUtilsClazz, "getMatchingAccessibleMethod", "(Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;");
+    jmethodID methodUtils_getMatchingAccessibleMethod =
+        env->GetStaticMethodID(methodUtilsClazz, "getMatchingAccessibleMethod",
+                               "(Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;");
     const char *methodNameCStr = methodName.c_str();
     jstring methodNameJavaStr = env->NewStringUTF(methodNameCStr);
     jobjectArray methodArgClasses = javaObjectArrayToClasses(env, methodArgs);
-    jobject method = env->CallStaticObjectMethod(methodUtilsClazz, methodUtils_getMatchingAccessibleMethod, clazz, methodNameJavaStr, methodArgClasses);
+    jobject method = env->CallStaticObjectMethod(methodUtilsClazz, methodUtils_getMatchingAccessibleMethod, clazz,
+                                                 methodNameJavaStr, methodArgClasses);
     checkJavaException(env);
     return method;
   }
@@ -843,15 +828,19 @@ jobject javaFindMethod(JNIEnv *env, jclass clazz, const std::string& methodName,
 
 void javaCastArguments(JNIEnv *env, jobjectArray methodArgs, jobject method) {
   jclass castingUtilsClazz = env->FindClass("node/CastingUtils");
-  jmethodID castingUtilsClazz_cast = env->GetStaticMethodID(castingUtilsClazz, "cast", "(Ljava/lang/reflect/Method;[Ljava/lang/Object;)V");
+  jmethodID castingUtilsClazz_cast =
+      env->GetStaticMethodID(castingUtilsClazz, "cast", "(Ljava/lang/reflect/Method;[Ljava/lang/Object;)V");
   env->CallStaticObjectMethod(castingUtilsClazz, castingUtilsClazz_cast, method, methodArgs);
 }
 
 jobject javaFindConstructor(JNIEnv *env, jclass clazz, jobjectArray methodArgs) {
   jclass constructorUtilsClazz = env->FindClass("nodejava/org/apache/commons/lang3/reflect/ConstructorUtils");
-  jmethodID constructorUtils_getMatchingAccessibleConstructor = env->GetStaticMethodID(constructorUtilsClazz, "getMatchingAccessibleConstructor", "(Ljava/lang/Class;[Ljava/lang/Class;)Ljava/lang/reflect/Constructor;");
+  jmethodID constructorUtils_getMatchingAccessibleConstructor =
+      env->GetStaticMethodID(constructorUtilsClazz, "getMatchingAccessibleConstructor",
+                             "(Ljava/lang/Class;[Ljava/lang/Class;)Ljava/lang/reflect/Constructor;");
   jobjectArray methodArgClasses = javaObjectArrayToClasses(env, methodArgs);
-  jobject method = env->CallStaticObjectMethod(constructorUtilsClazz, constructorUtils_getMatchingAccessibleConstructor, clazz, methodArgClasses);
+  jobject method = env->CallStaticObjectMethod(constructorUtilsClazz, constructorUtils_getMatchingAccessibleConstructor,
+                                               clazz, methodArgClasses);
   assertNoException(env);
   return method;
 }
@@ -863,16 +852,19 @@ jobject longToJavaLongObj(JNIEnv *env, jlong val) {
   return result;
 }
 
-int dynamicProxyDataVerify(DynamicProxyData* data) {
-  if(data->markerStart == DYNAMIC_PROXY_DATA_MARKER_START && data->markerEnd == DYNAMIC_PROXY_DATA_MARKER_END) {
+int dynamicProxyDataVerify(DynamicProxyData *data) {
+  if (data->markerStart == DYNAMIC_PROXY_DATA_MARKER_START && data->markerEnd == DYNAMIC_PROXY_DATA_MARKER_END) {
     return 1;
   }
 
-  printf("*** ERROR: Lost reference to the dynamic proxy. You must maintain a reference in javascript land using ref() and unref(). (%p) ***\n", data);
+  printf("*** ERROR: Lost reference to the dynamic proxy. You must maintain a reference in javascript land using ref() "
+         "and unref(). (%p) ***\n",
+         data);
   return 0;
 }
 
-std::string methodNotFoundToString(JNIEnv *env, jclass clazz, const std::string& methodNameSig, bool constructor, Nan::NAN_METHOD_ARGS_TYPE args, int argStart, int argEnd) {
+std::string methodNotFoundToString(JNIEnv *env, jclass clazz, const std::string &methodNameSig, bool constructor,
+                                   Nan::NAN_METHOD_ARGS_TYPE args, int argStart, int argEnd) {
   std::ostringstream startOfMessage;
   std::ostringstream msg;
   std::string methodName = methodNameSig.substr(0, methodNameSig.find('('));
@@ -886,12 +878,12 @@ std::string methodNotFoundToString(JNIEnv *env, jclass clazz, const std::string&
     startOfMessage << "Could not find method \"" << methodName.c_str() << "(";
   }
 
-  for(int i=argStart; i<argEnd; i++) {
+  for (int i = argStart; i < argEnd; i++) {
     jobject val = v8ToJava(env, args[i]);
-    if(i != argStart) {
+    if (i != argStart) {
       startOfMessage << ", ";
     }
-    if(val == NULL) {
+    if (val == NULL) {
       startOfMessage << "(null)";
     } else {
       jclass argClass = env->GetObjectClass(val);
@@ -902,7 +894,7 @@ std::string methodNotFoundToString(JNIEnv *env, jclass clazz, const std::string&
     }
   }
 
-  startOfMessage << ")\" on class \""<< javaObjectToString(env, clazz).c_str() << "\".";
+  startOfMessage << ")\" on class \"" << javaObjectToString(env, clazz).c_str() << "\".";
 
   msg << startOfMessage.str() << " Possible matches:\n";
 
@@ -910,24 +902,24 @@ std::string methodNotFoundToString(JNIEnv *env, jclass clazz, const std::string&
   jmethodID member_getName = env->GetMethodID(memberClazz, "getName", "()Ljava/lang/String;");
 
   std::list<jobject> methods;
-  if(constructor) {
+  if (constructor) {
     javaReflectionGetConstructors(env, clazz, &methods);
   } else {
     javaReflectionGetMethods(env, clazz, &methods, true);
   }
 
   int count = 0;
-  for(std::list<jobject>::iterator it = methods.begin(); it != methods.end(); ++it) {
+  for (std::list<jobject>::iterator it = methods.begin(); it != methods.end(); ++it) {
     jstring methodNameTestJava = (jstring)env->CallObjectMethod(*it, member_getName);
     assertNoException(env);
     std::string methodNameTest = javaToString(env, methodNameTestJava);
-    if(methodNameTest == methodName) {
+    if (methodNameTest == methodName) {
       msg << "  " << javaObjectToString(env, *it).c_str() << "\n";
       count++;
     }
   }
 
-  if(count == 0) {
+  if (count == 0) {
     std::ostringstream noMethodsMsg;
     noMethodsMsg << startOfMessage.str() << " No methods with that name.";
     return noMethodsMsg.str();
@@ -936,8 +928,8 @@ std::string methodNotFoundToString(JNIEnv *env, jclass clazz, const std::string&
   return msg.str();
 }
 
-void unref(DynamicProxyData* dynamicProxyData) {
-  if(!dynamicProxyDataVerify(dynamicProxyData)) {
+void unref(DynamicProxyData *dynamicProxyData) {
+  if (!dynamicProxyDataVerify(dynamicProxyData)) {
     return;
   }
   dynamicProxyData->jsObject.Reset();
@@ -949,7 +941,8 @@ void unref(DynamicProxyData* dynamicProxyData) {
 
 jarray javaGetArgsForMethod(JNIEnv *env, jobject method, jarray args) {
   jclass varArgsClazz = env->FindClass("node/VarArgs");
-  jmethodID method_getVarArgs = env->GetStaticMethodID(varArgsClazz, "getVarArgs", "(Ljava/lang/reflect/Method;[Ljava/lang/Object;)[Ljava/lang/Object;");
+  jmethodID method_getVarArgs = env->GetStaticMethodID(
+      varArgsClazz, "getVarArgs", "(Ljava/lang/reflect/Method;[Ljava/lang/Object;)[Ljava/lang/Object;");
   jarray result = (jarray)env->CallStaticObjectMethod(varArgsClazz, method_getVarArgs, method, args);
   checkJavaException(env);
   return result;
@@ -957,55 +950,56 @@ jarray javaGetArgsForMethod(JNIEnv *env, jobject method, jarray args) {
 
 jarray javaGetArgsForConstructor(JNIEnv *env, jobject method, jarray args) {
   jclass varArgsClazz = env->FindClass("node/VarArgs");
-  jmethodID method_getVarArgs = env->GetStaticMethodID(varArgsClazz, "getVarArgs", "(Ljava/lang/reflect/Constructor;[Ljava/lang/Object;)[Ljava/lang/Object;");
+  jmethodID method_getVarArgs = env->GetStaticMethodID(
+      varArgsClazz, "getVarArgs", "(Ljava/lang/reflect/Constructor;[Ljava/lang/Object;)[Ljava/lang/Object;");
   jarray result = (jarray)env->CallStaticObjectMethod(varArgsClazz, method_getVarArgs, method, args);
   checkJavaException(env);
   return result;
 }
 
 #if (NODE_MODULE_VERSION > 48)
-  // The two methods below were copied from
-  // https://github.com/electron/electron?branch=master&filepath=atom/common/api/atom_api_v8_util.cc
-  // Copyright (c) 2013 GitHub, Inc.
-  // Use of this source code is governed by the MIT license.
+// The two methods below were copied from
+// https://github.com/electron/electron?branch=master&filepath=atom/common/api/atom_api_v8_util.cc
+// Copyright (c) 2013 GitHub, Inc.
+// Use of this source code is governed by the MIT license.
 
-  v8::Local<v8::Value> GetHiddenValue(v8::Local<v8::Object> object, v8::Local<v8::String> key) {
-    v8::Local<v8::Context> context = v8::Isolate::GetCurrent()->GetCurrentContext();
-    v8::Local<v8::Private> privateKey = v8::Private::ForApi(v8::Isolate::GetCurrent(), key);
-    v8::Local<v8::Value> value;
-    v8::Maybe<bool> result = object->HasPrivate(context, privateKey);
-    if (!(result.IsJust() && result.FromJust()))
-      return v8::Local<v8::Value>();
-    if (object->GetPrivate(context, privateKey).ToLocal(&value))
-      return value;
+v8::Local<v8::Value> GetHiddenValue(v8::Local<v8::Object> object, v8::Local<v8::String> key) {
+  v8::Local<v8::Context> context = v8::Isolate::GetCurrent()->GetCurrentContext();
+  v8::Local<v8::Private> privateKey = v8::Private::ForApi(v8::Isolate::GetCurrent(), key);
+  v8::Local<v8::Value> value;
+  v8::Maybe<bool> result = object->HasPrivate(context, privateKey);
+  if (!(result.IsJust() && result.FromJust()))
     return v8::Local<v8::Value>();
-  }
+  if (object->GetPrivate(context, privateKey).ToLocal(&value))
+    return value;
+  return v8::Local<v8::Value>();
+}
 
-  void SetHiddenValue(v8::NumberObject* object, v8::Local<v8::String> key, v8::Local<v8::Value> value) {
-    if (value.IsEmpty())
-      return;
-    v8::Local<v8::Context> context = v8::Isolate::GetCurrent()->GetCurrentContext();
-    v8::Local<v8::Private> privateKey = v8::Private::ForApi(v8::Isolate::GetCurrent(), key);
-    object->SetPrivate(context, privateKey, value);
-  }
+void SetHiddenValue(v8::NumberObject *object, v8::Local<v8::String> key, v8::Local<v8::Value> value) {
+  if (value.IsEmpty())
+    return;
+  v8::Local<v8::Context> context = v8::Isolate::GetCurrent()->GetCurrentContext();
+  v8::Local<v8::Private> privateKey = v8::Private::ForApi(v8::Isolate::GetCurrent(), key);
+  object->SetPrivate(context, privateKey, value);
+}
 
-  void SetHiddenValue(v8::Local<v8::Object> object, v8::Local<v8::String> key, v8::Local<v8::Value> value) {
-    if (value.IsEmpty())
-      return;
-    v8::Local<v8::Context> context = v8::Isolate::GetCurrent()->GetCurrentContext();
-    v8::Local<v8::Private> privateKey = v8::Private::ForApi(v8::Isolate::GetCurrent(), key);
-    object->SetPrivate(context, privateKey, value);
-  }
+void SetHiddenValue(v8::Local<v8::Object> object, v8::Local<v8::String> key, v8::Local<v8::Value> value) {
+  if (value.IsEmpty())
+    return;
+  v8::Local<v8::Context> context = v8::Isolate::GetCurrent()->GetCurrentContext();
+  v8::Local<v8::Private> privateKey = v8::Private::ForApi(v8::Isolate::GetCurrent(), key);
+  object->SetPrivate(context, privateKey, value);
+}
 #else
-  v8::Local<v8::Value> GetHiddenValue(v8::Local<v8::Object> object, v8::Local<v8::String> key) {
-    return object->GetHiddenValue(key);
-  }
+v8::Local<v8::Value> GetHiddenValue(v8::Local<v8::Object> object, v8::Local<v8::String> key) {
+  return object->GetHiddenValue(key);
+}
 
-  void SetHiddenValue(v8::NumberObject* object, v8::Local<v8::String> key, v8::Local<v8::Value> value) {
-    object->SetHiddenValue(key, value);
-  }
+void SetHiddenValue(v8::NumberObject *object, v8::Local<v8::String> key, v8::Local<v8::Value> value) {
+  object->SetHiddenValue(key, value);
+}
 
-  void SetHiddenValue(v8::Local<v8::Object> object, v8::Local<v8::String> key, v8::Local<v8::Value> value) {
-    object->SetHiddenValue(key, value);
-  }
+void SetHiddenValue(v8::Local<v8::Object> object, v8::Local<v8::String> key, v8::Local<v8::Value> value) {
+  object->SetHiddenValue(key, value);
+}
 #endif

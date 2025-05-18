@@ -3,7 +3,7 @@ import { getJava } from "../testHelpers";
 
 const java = getJava();
 
-describe('Simple', () => {
+describe("Simple", () => {
   test("test classpath commons lang", () => {
     const result = java.callStaticMethodSync("org.apache.commons.lang3.ObjectUtils", "toString", "test");
     console.log("org.apache.commons.lang3.ObjectUtils.toString:", result);
@@ -12,35 +12,26 @@ describe('Simple', () => {
 
   test("test adding to classpath after other calls are made", () => {
     java.callStaticMethodSync("java.lang.System", "currentTimeMillis");
-    try {
-      console.log('classpath', java.classpath);
+    expect(() => {
+      console.log("classpath", java.classpath);
       java.classpath = ["test/"];
-      throw new Error("Exception should be thrown");
-    } catch (e) {
-      // ok
-    }
+    }).toThrow();
   });
 
   test("test changing options after other calls are made", () => {
     java.callStaticMethodSync("java.lang.System", "currentTimeMillis");
-    try {
-      console.log('options', java.options);
+    expect(() => {
+      console.log("options", java.options);
       java.options = ["newoption"];
-      throw new Error("Exception should be thrown");
-    } catch (e) {
-      // ok
-    }
+    }).toThrow();
   });
 
   test("test changing nativeBindingLocation after other calls are made", () => {
     java.callStaticMethodSync("java.lang.System", "currentTimeMillis");
-    try {
-      console.log('nativeBindingLocation', java.nativeBindingLocation);
+    expect(() => {
+      console.log("nativeBindingLocation", java.nativeBindingLocation);
       java.nativeBindingLocation = "newNativeBindingLocation";
-      throw new Error("Exception should be thrown");
-    } catch (e) {
-      // ok
-    }
+    }).toThrow();
   });
 
   test("test static calls", () => {
@@ -62,9 +53,8 @@ describe('Simple', () => {
   });
 
   test("test method does not exists (async)", () => {
-    java.callStaticMethod("java.lang.System", "badMethod", function (err, result) {
+    java.callStaticMethod("java.lang.System", "badMethod", (err) => {
       if (err) {
-
         return;
       }
       test.done(new Error("should throw exception"));
@@ -72,7 +62,7 @@ describe('Simple', () => {
   });
 
   test("create an instance of a class and call methods (getName) (async)", async () => {
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       java.newInstance("java.util.ArrayList", (err, list) => {
         expect(err).toBeFalsy();
         expect(list).toBeTruthy();
@@ -112,11 +102,13 @@ describe('Simple', () => {
           resolve();
         });
       });
-    })
+    });
   });
 
   test("passing objects to methods", () => {
-    const dataArray = "hello world\n".split('').map(function (c) { return java.newByte(c.charCodeAt(0)); });
+    const dataArray = "hello world\n".split("").map(function (c) {
+      return java.newByte(c.charCodeAt(0));
+    });
     const data = java.newArray("byte", dataArray);
     const stream = java.newInstanceSync("java.io.ByteArrayInputStream", data);
     const reader = java.newInstanceSync("java.io.InputStreamReader", stream);
@@ -181,11 +173,11 @@ describe('Simple', () => {
       return l.toStringSync();
     });
     expect(arr.length).toBe(5);
-    expect(arr[0]).toBe('9223372036854775807');
-    expect(arr[1]).toBe('-9223372036854775808');
-    expect(arr[2]).toBe('3');
-    expect(arr[3]).toBe('4');
-    expect(arr[4]).toBe('5');
+    expect(arr[0]).toBe("9223372036854775807");
+    expect(arr[1]).toBe("-9223372036854775808");
+    expect(arr[2]).toBe("3");
+    expect(arr[3]).toBe("4");
+    expect(arr[4]).toBe("5");
   });
 
   test("method returning a string (Unicode BMP)", () => {
@@ -206,56 +198,56 @@ describe('Simple', () => {
 
   test("method taking a byte", () => {
     const b = java.newByte(1);
-    expect(b.getClassSync().getNameSync()).toBe('java.lang.Byte');
-    expect(b.toStringSync()).toBe('1');
+    expect(b.getClassSync().getNameSync()).toBe("java.lang.Byte");
+    expect(b.toStringSync()).toBe("1");
     const r = java.callStaticMethodSync("Test", "staticByte", b);
     expect(r).toBe(1);
   });
 
   test("method taking a short", () => {
     const s = java.newShort(1);
-    expect(s.getClassSync().getNameSync()).toBe('java.lang.Short');
-    expect(s.toStringSync()).toBe('1');
+    expect(s.getClassSync().getNameSync()).toBe("java.lang.Short");
+    expect(s.toStringSync()).toBe("1");
     const r = java.callStaticMethodSync("Test", "staticShort", s);
     expect(r).toBe(1);
   });
 
   test("method taking a double", () => {
     const s = java.newDouble(3.14);
-    expect(s.getClassSync().getNameSync()).toBe('java.lang.Double');
-    expect(s.toStringSync()).toBe('3.14');
+    expect(s.getClassSync().getNameSync()).toBe("java.lang.Double");
+    expect(s.toStringSync()).toBe("3.14");
     const r = java.callStaticMethodSync("Test", "staticDouble", s);
     expect(Math.abs(r - 3.14) < 0.0001, r + " != 3.14").toBeTruthy();
   });
 
   test("method taking a float", () => {
     const s = java.newFloat(3.14);
-    expect(s.getClassSync().getNameSync()).toBe('java.lang.Float');
-    expect(s.toStringSync()).toBe('3.14');
+    expect(s.getClassSync().getNameSync()).toBe("java.lang.Float");
+    expect(s.toStringSync()).toBe("3.14");
     const r = java.callStaticMethodSync("Test", "staticFloat", s);
     expect(Math.abs(r - 3.14) < 0.0001, r + " != 3.14").toBeTruthy();
   });
 
   test("method taking a long", () => {
     const l = java.newLong(1);
-    expect(l.getClassSync().getNameSync()).toBe('java.lang.Long');
-    expect(l.toStringSync()).toBe('1');
+    expect(l.getClassSync().getNameSync()).toBe("java.lang.Long");
+    expect(l.toStringSync()).toBe("1");
     const r = java.callStaticMethodSync("Test", "staticLong", l);
     expect(r).toBe(1);
   });
 
   test("method taking a char (number)", () => {
     const ch = java.newChar(97); // 'a'
-    expect(ch.getClassSync().getNameSync()).toBe('java.lang.Character');
-    expect(ch.toStringSync()).toBe('a');
+    expect(ch.getClassSync().getNameSync()).toBe("java.lang.Character");
+    expect(ch.toStringSync()).toBe("a");
     const r = java.callStaticMethodSync("Test", "staticChar", ch);
     expect(r).toBe(97);
   });
 
   test("method taking a char (string)", () => {
-    const ch = java.newChar('a');
-    expect(ch.getClassSync().getNameSync()).toBe('java.lang.Character');
-    expect(ch.toStringSync()).toBe('a');
+    const ch = java.newChar("a");
+    expect(ch.getClassSync().getNameSync()).toBe("java.lang.Character");
+    expect(ch.toStringSync()).toBe("a");
     const r = java.callStaticMethodSync("Test", "staticChar", ch);
     expect(r).toBe(97);
   });
@@ -320,7 +312,12 @@ describe('Simple', () => {
   });
 
   test("new short array objects", () => {
-    const shortArray = java.newArray("java.lang.Short", [1, 2].map(function (c) { return java.newShort(c); }));
+    const shortArray = java.newArray(
+      "java.lang.Short",
+      [1, 2].map(function (c) {
+        return java.newShort(c);
+      })
+    );
     const r = java.callStaticMethodSync("Test", "staticShortArray", shortArray);
     expect(r.length).toBe(2);
     expect(r[0]).toBe(1);
@@ -335,4 +332,3 @@ describe('Simple', () => {
     expect(r[1]).toBe(2);
   });
 });
-

@@ -3,37 +3,37 @@
 #define _utils_h_
 
 #define BUILDING_NODE_EXTENSION 1
-#include <v8.h>
 #include <jni.h>
 #include <list>
-#include <vector>
+#include <nan.h>
 #include <string>
 #include <uv.h>
-#include <nan.h>
+#include <v8.h>
+#include <vector>
 
 class Java;
 
-#define V8_HIDDEN_MARKER_JAVA_LONG   "__isJavaLong"
+#define V8_HIDDEN_MARKER_JAVA_LONG "__isJavaLong"
 #define V8_HIDDEN_MARKER_JAVA_OBJECT "__isJavaObject"
 
 typedef enum _jvalueType {
-  TYPE_VOID    = 1,
-  TYPE_INT     = 2,
-  TYPE_LONG    = 3,
-  TYPE_OBJECT  = 4,
-  TYPE_STRING  = 5,
+  TYPE_VOID = 1,
+  TYPE_INT = 2,
+  TYPE_LONG = 3,
+  TYPE_OBJECT = 4,
+  TYPE_STRING = 5,
   TYPE_BOOLEAN = 6,
-  TYPE_SHORT   = 7,
-  TYPE_BYTE    = 8,
-  TYPE_DOUBLE  = 9,
-  TYPE_FLOAT   = 10,
-  TYPE_ARRAY   = 11,
-  TYPE_CHAR    = 12
+  TYPE_SHORT = 7,
+  TYPE_BYTE = 8,
+  TYPE_DOUBLE = 9,
+  TYPE_FLOAT = 10,
+  TYPE_ARRAY = 11,
+  TYPE_CHAR = 12
 } jvalueType;
 
 struct DynamicProxyData {
   unsigned int markerStart;
-  Java* java;
+  Java *java;
   std::string interfaceName;
   Nan::Persistent<v8::Object> functions;
   Nan::Persistent<v8::Value> jsObject;
@@ -51,116 +51,117 @@ struct DynamicProxyJsCallData {
 };
 
 #define DYNAMIC_PROXY_DATA_MARKER_START 0x12345678
-#define DYNAMIC_PROXY_DATA_MARKER_END   0x87654321
+#define DYNAMIC_PROXY_DATA_MARKER_END 0x87654321
 
-int dynamicProxyDataVerify(DynamicProxyData* data);
+int dynamicProxyDataVerify(DynamicProxyData *data);
 
-void javaReflectionGetMethods(JNIEnv *env, jclass clazz, std::list<jobject>* methods, bool includeStatic);
-void javaReflectionGetConstructors(JNIEnv *env, jclass clazz, std::list<jobject>* methods);
-void javaReflectionGetFields(JNIEnv *env, jclass clazz, std::list<jobject>* fields);
+void javaReflectionGetMethods(JNIEnv *env, jclass clazz, std::list<jobject> *methods, bool includeStatic);
+void javaReflectionGetConstructors(JNIEnv *env, jclass clazz, std::list<jobject> *methods);
+void javaReflectionGetFields(JNIEnv *env, jclass clazz, std::list<jobject> *fields);
 std::string javaToString(JNIEnv *env, jstring str);
 std::string javaObjectToString(JNIEnv *env, jobject obj);
 std::string javaArrayToString(JNIEnv *env, jobjectArray arr);
 std::string javaMethodCallToString(JNIEnv *env, jobject obj, jmethodID methodId, jarray args);
-JNIEnv* javaGetEnv(JavaVM* jvm, jobject classLoader);
+JNIEnv *javaGetEnv(JavaVM *jvm, jobject classLoader);
 jobject getSystemClassLoader(JNIEnv *env);
 jvalueType javaGetArrayComponentType(JNIEnv *env, jobjectArray array);
 jvalueType javaGetType(JNIEnv *env, jclass type);
-jobjectArray v8ToJava(JNIEnv* env, Nan::NAN_METHOD_ARGS_TYPE args, int start, int end);
-jobject v8ToJava(JNIEnv* env, v8::Local<v8::Value> arg);
-v8::Local<v8::Value> javaExceptionToV8(Java* java, JNIEnv* env, const std::string& alternateMessage);
-v8::Local<v8::Value> javaExceptionToV8(Java* java, JNIEnv* env, jthrowable ex, const std::string& alternateMessage);
-std::string javaExceptionToString(JNIEnv* env, jthrowable ex);
-void checkJavaException(JNIEnv* env);
-v8::Local<v8::Value> javaArrayToV8(Java* java, JNIEnv* env, jobjectArray objArray);
-v8::Local<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj);
-v8::Local<v8::Value> javaToV8(Java* java, JNIEnv* env, jobject obj, DynamicProxyData* dynamicProxyData);
+jobjectArray v8ToJava(JNIEnv *env, Nan::NAN_METHOD_ARGS_TYPE args, int start, int end);
+jobject v8ToJava(JNIEnv *env, v8::Local<v8::Value> arg);
+v8::Local<v8::Value> javaExceptionToV8(Java *java, JNIEnv *env, const std::string &alternateMessage);
+v8::Local<v8::Value> javaExceptionToV8(Java *java, JNIEnv *env, jthrowable ex, const std::string &alternateMessage);
+std::string javaExceptionToString(JNIEnv *env, jthrowable ex);
+void checkJavaException(JNIEnv *env);
+v8::Local<v8::Value> javaArrayToV8(Java *java, JNIEnv *env, jobjectArray objArray);
+v8::Local<v8::Value> javaToV8(Java *java, JNIEnv *env, jobject obj);
+v8::Local<v8::Value> javaToV8(Java *java, JNIEnv *env, jobject obj, DynamicProxyData *dynamicProxyData);
 jobjectArray javaObjectArrayToClasses(JNIEnv *env, jobjectArray objs);
 jobject longToJavaLongObj(JNIEnv *env, jlong l);
 jarray javaGetArgsForMethod(JNIEnv *env, jobject method, jarray args);
 jarray javaGetArgsForConstructor(JNIEnv *env, jobject method, jarray args);
 
-jclass javaFindClass(JNIEnv* env, const std::string& className);
-jobject javaFindField(JNIEnv* env, jclass clazz, const std::string& fieldName);
-jobject javaFindMethod(JNIEnv *env, jclass clazz, const std::string& methodName, jobjectArray methodArgs);
+jclass javaFindClass(JNIEnv *env, const std::string &className);
+jobject javaFindField(JNIEnv *env, jclass clazz, const std::string &fieldName);
+jobject javaFindMethod(JNIEnv *env, jclass clazz, const std::string &methodName, jobjectArray methodArgs);
 jobject javaFindConstructor(JNIEnv *env, jclass clazz, jobjectArray methodArgs);
 void javaCastArguments(JNIEnv *env, jobjectArray methodArgs, jobject method);
 
 // TODO remove these functions after node nan gets updated
 v8::Local<v8::Value> GetHiddenValue(v8::Local<v8::Object> object, v8::Local<v8::String> key);
 void SetHiddenValue(v8::Local<v8::Object> object, v8::Local<v8::String> key, v8::Local<v8::Value> value);
-void SetHiddenValue(v8::NumberObject*, v8::Local<v8::String> key, v8::Local<v8::Value> value);
+void SetHiddenValue(v8::NumberObject *, v8::Local<v8::String> key, v8::Local<v8::Value> value);
 
-#define assertNoException(env)      \
-  if (env->ExceptionCheck()) {      \
-    env->ExceptionDescribe();       \
-    assert(false);                  \
+#define assertNoException(env)                                                                                         \
+  if (env->ExceptionCheck()) {                                                                                         \
+    env->ExceptionDescribe();                                                                                          \
+    assert(false);                                                                                                     \
   }
 
-std::string methodNotFoundToString(JNIEnv *env, jclass clazz, const std::string& methodNameSig, bool constructor, Nan::NAN_METHOD_ARGS_TYPE args, int argStart, int argEnd);
+std::string methodNotFoundToString(JNIEnv *env, jclass clazz, const std::string &methodNameSig, bool constructor,
+                                   Nan::NAN_METHOD_ARGS_TYPE args, int argStart, int argEnd);
 
-void unref(DynamicProxyData* dynamicProxyData);
+void unref(DynamicProxyData *dynamicProxyData);
 
 #define UNUSED_VARIABLE(var) var = var;
 
-#define ARGS_FRONT_OBJECT(ARGNAME) \
-  if(info.Length() < argsStart+1 || !info[argsStart]->IsObject()) {                          \
-    std::ostringstream errStr;                                                               \
-    errStr << "Argument " << (argsStart+1) << " must be an object";                          \
-    Nan::ThrowError(Nan::TypeError(errStr.str().c_str()));                                   \
-    return;                                                                                  \
-  }                                                                                          \
-  v8::Local<v8::Object> ARGNAME = v8::Local<v8::Object>::Cast(info[argsStart]);              \
+#define ARGS_FRONT_OBJECT(ARGNAME)                                                                                     \
+  if (info.Length() < argsStart + 1 || !info[argsStart]->IsObject()) {                                                 \
+    std::ostringstream errStr;                                                                                         \
+    errStr << "Argument " << (argsStart + 1) << " must be an object";                                                  \
+    Nan::ThrowError(Nan::TypeError(errStr.str().c_str()));                                                             \
+    return;                                                                                                            \
+  }                                                                                                                    \
+  v8::Local<v8::Object> ARGNAME = v8::Local<v8::Object>::Cast(info[argsStart]);                                        \
   argsStart++;
 
-#define ARGS_FRONT_STRING(ARGNAME) \
-  if(info.Length() < argsStart+1 || !info[argsStart]->IsString()) {                          \
-    std::ostringstream errStr;                                                               \
-    errStr << "Argument " << (argsStart+1) << " must be a string";                           \
-    Nan::ThrowError(Nan::TypeError(errStr.str().c_str()));                                   \
-    return;                                                                                  \
-  }                                                                                          \
-  v8::Local<v8::String> _##ARGNAME##_obj = v8::Local<v8::String>::Cast(info[argsStart]);     \
-  Nan::Utf8String _##ARGNAME##_val(_##ARGNAME##_obj);                                  \
-  std::string ARGNAME = *_##ARGNAME##_val;                                                   \
+#define ARGS_FRONT_STRING(ARGNAME)                                                                                     \
+  if (info.Length() < argsStart + 1 || !info[argsStart]->IsString()) {                                                 \
+    std::ostringstream errStr;                                                                                         \
+    errStr << "Argument " << (argsStart + 1) << " must be a string";                                                   \
+    Nan::ThrowError(Nan::TypeError(errStr.str().c_str()));                                                             \
+    return;                                                                                                            \
+  }                                                                                                                    \
+  v8::Local<v8::String> _##ARGNAME##_obj = v8::Local<v8::String>::Cast(info[argsStart]);                               \
+  Nan::Utf8String _##ARGNAME##_val(_##ARGNAME##_obj);                                                                  \
+  std::string ARGNAME = *_##ARGNAME##_val;                                                                             \
   argsStart++;
 
 #define ARGS_FRONT_CLASSNAME() ARGS_FRONT_STRING(className)
 
-#define ARGS_BACK_CALLBACK()                              \
-  bool callbackProvided;                                  \
-  v8::Local<v8::Value> callback;                          \
-  if(info[info.Length()-1]->IsFunction()) {               \
-    callback = info[argsEnd-1];                           \
-    argsEnd--;                                            \
-    callbackProvided = true;                              \
-  } else {                                                \
-    callback = Nan::Null();                               \
-    callbackProvided = false;                             \
+#define ARGS_BACK_CALLBACK()                                                                                           \
+  bool callbackProvided;                                                                                               \
+  v8::Local<v8::Value> callback;                                                                                       \
+  if (info[info.Length() - 1]->IsFunction()) {                                                                         \
+    callback = info[argsEnd - 1];                                                                                      \
+    argsEnd--;                                                                                                         \
+    callbackProvided = true;                                                                                           \
+  } else {                                                                                                             \
+    callback = Nan::Null();                                                                                            \
+    callbackProvided = false;                                                                                          \
   }
 
-#define EXCEPTION_CALL_CALLBACK(JAVA, STRBUILDER) \
-  std::ostringstream errStr;                                                            \
-  errStr << STRBUILDER;                                                                 \
-  v8::Local<v8::Value> error = javaExceptionToV8(JAVA, env, errStr.str());             \
-  v8::Local<v8::Value> argv[2];                                                        \
-  argv[0] = error;                                                                      \
-  argv[1] = Nan::Undefined();                                                           \
+#define EXCEPTION_CALL_CALLBACK(JAVA, STRBUILDER)                                                                      \
+  std::ostringstream errStr;                                                                                           \
+  errStr << STRBUILDER;                                                                                                \
+  v8::Local<v8::Value> error = javaExceptionToV8(JAVA, env, errStr.str());                                             \
+  v8::Local<v8::Value> argv[2];                                                                                        \
+  argv[0] = error;                                                                                                     \
+  argv[1] = Nan::Undefined();                                                                                          \
   Nan::Call(callback.As<v8::Function>(), Nan::GetCurrentContext()->Global(), 2, argv);
 
-#define END_CALLBACK_FUNCTION(MSG) \
-  if(callbackProvided) {                                     \
-    info.GetReturnValue().SetUndefined();                    \
-    return;                                                  \
-  } else {                                                   \
-    std::ostringstream str;                                  \
-    str << MSG;                                              \
-    info.GetReturnValue().Set(Nan::New(str.str().c_str()).ToLocalChecked()); \
-    return;                                                  \
+#define END_CALLBACK_FUNCTION(MSG)                                                                                     \
+  if (callbackProvided) {                                                                                              \
+    info.GetReturnValue().SetUndefined();                                                                              \
+    return;                                                                                                            \
+  } else {                                                                                                             \
+    std::ostringstream str;                                                                                            \
+    str << MSG;                                                                                                        \
+    info.GetReturnValue().Set(Nan::New(str.str().c_str()).ToLocalChecked());                                           \
+    return;                                                                                                            \
   }
 
 #ifndef UNUSED_VARIABLE
-  #define UNUSED_VARIABLE(a) a = a;
+#define UNUSED_VARIABLE(a) a = a;
 #endif
 
 #endif

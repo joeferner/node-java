@@ -1,11 +1,9 @@
 #!/usr/bin/env node
 
-var java = require("../../");
+const java = require("../../");
 java.classpath.push("./src");
 
-var MyClass = java.import("com.nearinfinity.nodeJava.MyClass");
+const MyClass = java.import("com.nearinfinity.nodeJava.MyClass");
 
-var result = MyClass.addNumbersSync(1, 2);
+const result = MyClass.addNumbersSync(1, 2);
 console.log(result);
-
-

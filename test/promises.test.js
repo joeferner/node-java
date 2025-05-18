@@ -3,7 +3,7 @@ import { getJava } from "../testHelpers";
 
 const java = getJava();
 
-describe('Promises', () => {
+describe("Promises", () => {
   test("create an instance of a class and call methods (getClassPromise & getNamePromise)", async () => {
     // Adapted from a test in simple-test.js
     const list = await java.newInstancePromise("java.util.ArrayList");
@@ -17,7 +17,7 @@ describe('Promises', () => {
   });
 
   test("import and execute promisified static method", async () => {
-    var Test = java.import('Test');
+    const Test = java.import("Test");
     const result = await Test.staticMethodPromise(99);
     expect(result).toBe(100);
   });
@@ -43,32 +43,31 @@ describe('Promises', () => {
     const name = await clazz.getNamePromise();
     expect(name).toBe("java.util.ArrayList");
 
-    await list.addPromise('hello');
-    await list.addPromise('world');
-    await list.addPromise('boo');
+    await list.addPromise("hello");
+    await list.addPromise("world");
+    await list.addPromise("boo");
     const it = await list.iteratorPromise();
     expect(it).toBeTruthy();
 
     let val = await it.nextPromise();
     expect(val).toBeTruthy();
     console.log(typeof val, val);
-    expect(val).toBe('hello'); // java.lang.InternalError exception thrown here with OpenJDK
+    expect(val).toBe("hello"); // java.lang.InternalError exception thrown here with OpenJDK
 
     val = await it.nextPromise();
     expect(val).toBeTruthy();
     console.log(typeof val, val);
-    expect(val).toBe('world');
+    expect(val).toBe("world");
 
     val = await it.nextPromise();
     expect(val).toBeTruthy();
     console.log(typeof val, val);
-    expect(val).toBe('boo');
+    expect(val).toBe("boo");
 
     const more = await it.hasNextPromise();
     console.log(typeof more, more);
     expect(more).toBeFalsy(false);
 
-    expect(async () => await it.nextPromise()).rejects.toThrowError();
+    await expect(async () => await it.nextPromise()).rejects.toThrowError();
   });
 });
-

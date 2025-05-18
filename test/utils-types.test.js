@@ -1,19 +1,22 @@
-
 import { describe, expect, test } from "vitest";
 import { getJava } from "../testHelpers";
 
 const java = getJava();
 
-describe('Utils - Types', () => {
+describe("Utils - Types", () => {
   test("Array of Objects", () => {
     let val = java.getStaticFieldValue("Test", "staticArrayObjects");
     expect(val).toBeNull();
 
-    java.setStaticFieldValue("Test", "staticArrayObjects", java.newArray("Test", [
-      java.newInstanceSync("Test", 1),
-      java.newInstanceSync("Test", 2),
-      java.newInstanceSync("Test", 3)
-    ]));
+    java.setStaticFieldValue(
+      "Test",
+      "staticArrayObjects",
+      java.newArray("Test", [
+        java.newInstanceSync("Test", 1),
+        java.newInstanceSync("Test", 2),
+        java.newInstanceSync("Test", 3),
+      ])
+    );
 
     val = java.getStaticFieldValue("Test", "staticArrayObjects");
     expect(val).toBeTruthy();
@@ -47,14 +50,14 @@ describe('Utils - Types', () => {
   });
 
   test("Char array", () => {
-    const originalArray = "hello 世界\n".split('');
+    const originalArray = "hello 世界\n".split("");
     const Arrays = java.import("java.util.Arrays");
     const arr1 = java.newArray("char", originalArray);
     const list = Arrays.asListSync(arr1);
     const arr2 = list.toArraySync();
     expect(arr2.length).toBe(1);
     expect(arr2[0].length).toBe(9);
-    const isTypedArrayReturn = !(typeof arr2[0][0] === 'string');
+    const isTypedArrayReturn = !(typeof arr2[0][0] === "string");
     for (let i = 0; i < originalArray.length; i++) {
       if (isTypedArrayReturn) {
         expect(arr2[0][i]).toBe(originalArray[i].charCodeAt(0));

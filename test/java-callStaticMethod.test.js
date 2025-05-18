@@ -3,9 +3,9 @@ import { getJava } from "../testHelpers";
 
 const java = getJava();
 
-describe('Java - Call Static Method', () => {
+describe("Java - Call Static Method", () => {
   test("callStaticMethod", async () => {
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       java.callStaticMethod("Test", "staticMethod", (err, result) => {
         expect(err).toBeFalsy();
         expect(result).toBeTruthy();
@@ -17,7 +17,9 @@ describe('Java - Call Static Method', () => {
 
   test("callStaticMethod without a callback", () => {
     const result = java.callStaticMethod("Test", "staticMethod");
-    expect(result).toBe(`"Static method 'staticMethod' called without a callback did you mean to use the Sync version?"`);
+    expect(result).toBe(
+      `"Static method 'staticMethod' called without a callback did you mean to use the Sync version?"`
+    );
   });
 
   test("callStaticMethodSync", () => {
@@ -27,7 +29,7 @@ describe('Java - Call Static Method', () => {
   });
 
   test("callStaticMethod with args", async () => {
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       java.callStaticMethod("Test", "staticMethod", 42, (err, result) => {
         expect(err).toBeFalsy();
         expect(result).toBeTruthy();
@@ -51,7 +53,7 @@ describe('Java - Call Static Method', () => {
   });
 
   test("callStaticMethod bad class name", async () => {
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       java.callStaticMethod("BadClassName", "staticMethod", function (err, result) {
         expect(err).toBeTruthy();
         expect(result).toBeFalsy();
@@ -60,7 +62,6 @@ describe('Java - Call Static Method', () => {
     });
   });
 
-
   test("callStaticMethodSync bad class name", () => {
     expect(() => {
       java.callStaticMethodSync("BadClassName", "staticMethod");
@@ -68,7 +69,7 @@ describe('Java - Call Static Method', () => {
   });
 
   test("callStaticMethod bad arg types", async () => {
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       java.callStaticMethod("Test", "staticMethod", "z", function (err, result) {
         expect(err).toBeTruthy();
         expect(result).toBeFalsy();
@@ -84,7 +85,7 @@ describe('Java - Call Static Method', () => {
   });
 
   test("callStaticMethod bad number of args", async () => {
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       java.callStaticMethod("Test", "staticMethod", 42, "z", function (err, result) {
         expect(err).toBeTruthy();
         expect(result).toBeFalsy();
@@ -100,7 +101,7 @@ describe('Java - Call Static Method', () => {
   });
 
   test("callStaticMethod bad method name", async () => {
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       java.callStaticMethod("Test", "badMethodName", function (err, result) {
         expect(err).toBeTruthy();
         expect(result).toBeFalsy();
@@ -120,9 +121,9 @@ describe('Java - Call Static Method', () => {
     let result;
     try {
       result = java.callStaticMethodSync("Test", "staticMethodThrows", ex);
-      throw new Error('expected error');
+      throw new Error("expected error");
     } catch (err) {
-      expect(err.cause.getMessageSync()).toBe('my exception');
+      expect(err.cause.getMessageSync()).toBe("my exception");
       expect(err.toString()).toMatch(/my exception/);
       expect(result).toBeFalsy();
     }
@@ -140,10 +141,10 @@ describe('Java - Call Static Method', () => {
 
   test("staticMethodThrows exception thrown from method", async () => {
     const ex = java.newInstanceSync("java.lang.Exception", "my exception");
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       java.callStaticMethod("Test", "staticMethodThrows", ex, function (err, result) {
         expect(err).toBeTruthy();
-        expect(err.cause.getMessageSync()).toBe('my exception');
+        expect(err.cause.getMessageSync()).toBe("my exception");
         expect(err.toString()).toMatch(/my exception/);
         expect(result).toBeFalsy();
         resolve();
@@ -161,10 +162,10 @@ describe('Java - Call Static Method', () => {
   });
 
   test("staticMethodThrowsNewException exception thrown from method", async () => {
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       java.callStaticMethod("Test", "staticMethodThrowsNewException", function (err, result) {
         expect(err).toBeTruthy();
-        expect(err.cause.getMessageSync()).toBe('my exception');
+        expect(err.cause.getMessageSync()).toBe("my exception");
         expect(err.toString()).toMatch(/my exception/);
         expect(result).toBeFalsy();
         resolve();
@@ -186,7 +187,7 @@ describe('Java - Call Static Method', () => {
   test("methodThrows exception thrown from method", async () => {
     const ex = java.newInstanceSync("java.lang.Exception", "my exception");
     const myTest = java.newInstanceSync("Test");
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       return myTest.methodThrows(ex, function (err) {
         expect(err.toString()).toMatch(/my exception/);
         resolve();
@@ -206,7 +207,7 @@ describe('Java - Call Static Method', () => {
 
   test("methodThrowsNewException exception thrown from method", async () => {
     const myTest = java.newInstanceSync("Test");
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       myTest.methodThrowsNewException((err) => {
         expect(err.toString()).toMatch(/my exception/);
         resolve();
@@ -215,8 +216,8 @@ describe('Java - Call Static Method', () => {
   });
 
   test("char array", async () => {
-    const charArray = java.newArray("char", "hello world\n".split(''));
-    await new Promise(resolve => {
+    const charArray = java.newArray("char", "hello world\n".split(""));
+    await new Promise((resolve) => {
       java.callStaticMethod("Test", "staticMethodCharArrayToString", charArray, function (err, result) {
         expect(err).toBeFalsy();
         expect(result).toBeTruthy();
@@ -227,7 +228,7 @@ describe('Java - Call Static Method', () => {
   });
 
   test("String passed in for Object", async () => {
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       java.callStaticMethod("Test", "static2Objects", "1", "2", function (err, result) {
         expect(err).toBeFalsy();
         expect(result).toBe(false);
@@ -238,14 +239,14 @@ describe('Java - Call Static Method', () => {
 
   test("java.lang.Long addition", () => {
     const javaLong = java.newInstanceSync("java.lang.Long", 5);
-    expect(javaLong.toString()).toBe('5');
+    expect(javaLong.toString()).toBe("5");
     const result = javaLong + 1;
     expect(result).toBe(6);
   });
 
   test("java.lang.Long calls (java Long)", async () => {
     const javaLong = java.newInstanceSync("java.lang.Long", 5);
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       java.callStaticMethod("Test", "staticMethodLongToString", javaLong, function (err, result) {
         expect(err).toBeFalsy();
         expect(result).toBeTruthy();
@@ -273,15 +274,15 @@ describe('Java - Call Static Method', () => {
   test("Call static method with varargs", () => {
     const Test = java.import("Test");
 
-    let str = Test.staticVarargsSync(5, java.newArray('java.lang.String', ['a', 'b', 'c']));
+    let str = Test.staticVarargsSync(5, java.newArray("java.lang.String", ["a", "b", "c"]));
     expect(str).toBe("5abc");
 
-    str = Test.staticVarargsSync(5, 'a', 'b', 'c');
+    str = Test.staticVarargsSync(5, "a", "b", "c");
     expect(str).toBe("5abc");
   });
 
   test("Call static method named name_", async () => {
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       const Test = java.import("Test");
       Test.name_((err) => {
         expect(err).toBeFalsy();

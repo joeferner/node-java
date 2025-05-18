@@ -10,8 +10,8 @@ export function getJava(asyncOptions) {
   java.asyncOptions = asyncOptions ?? {
     syncSuffix: "Sync",
     asyncSuffix: "",
-    promiseSuffix: 'Promise',
-    promisify: require('when/node').lift // https://github.com/cujojs/when
+    promiseSuffix: "Promise",
+    promisify: require("when/node").lift, // https://github.com/cujojs/when
   };
 
   // force initialization

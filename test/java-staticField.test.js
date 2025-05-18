@@ -3,7 +3,7 @@ import { getJava } from "../testHelpers";
 
 const java = getJava();
 
-describe('Java - Static Field', () => {
+describe("Java - Static Field", () => {
   afterEach(() => {
     java.setStaticFieldValue("Test", "staticFieldInt", 42);
   });

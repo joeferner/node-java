@@ -3,14 +3,14 @@ import { getJava } from "../testHelpers";
 
 const java = getJava();
 
-describe('Dynamic Proxy', () => {
+describe("Dynamic Proxy", () => {
   test("0 Arguments", () => {
     let callCount = 0;
 
-    const myProxy = java.newProxy('RunInterface$Interface0Arg', {
+    const myProxy = java.newProxy("RunInterface$Interface0Arg", {
       run: function () {
         callCount++;
-      }
+      },
     });
 
     const runInterface = java.newInstanceSync("RunInterface");
@@ -20,25 +20,25 @@ describe('Dynamic Proxy', () => {
   });
 
   test("1 Arguments", () => {
-    let runData = '';
+    let runData = "";
 
-    const myProxy = java.newProxy('RunInterface$Interface1Arg', {
+    const myProxy = java.newProxy("RunInterface$Interface1Arg", {
       run: function (str) {
         runData += str;
-      }
+      },
     });
 
     const runInterface = java.newInstanceSync("RunInterface");
     runInterface.run1ArgsSync(myProxy);
 
-    expect(runData).toBe('test1test1');
+    expect(runData).toBe("test1test1");
   });
 
   test("1 Arguments with return data", () => {
-    const myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {
+    const myProxy = java.newProxy("RunInterface$InterfaceWithReturn", {
       run: function (i) {
         return i + 1;
-      }
+      },
     });
 
     const runInterface = java.newInstanceSync("RunInterface");
@@ -48,29 +48,29 @@ describe('Dynamic Proxy', () => {
   });
 
   test("Listener test", () => {
-    let runData = '';
+    let runData = "";
 
-    const myProxy = java.newProxy('ListenerInterface', {
-      onEvent: function (list, runtime) {
-        runData = 'onEvent';
-      }
+    const myProxy = java.newProxy("ListenerInterface", {
+      onEvent: function (_list, _runtime) {
+        runData = "onEvent";
+      },
     });
 
     const listenerTester = java.newInstanceSync("ListenerTester");
     listenerTester.setListenerSync(myProxy);
     listenerTester.raiseEventSync();
 
-    expect(runData).toBe('onEvent');
+    expect(runData).toBe("onEvent");
   });
 
   test("thread", async () => {
     await new Promise((resolve, reject) => {
       let callCount = 0;
 
-      const myProxy = java.newProxy('java.lang.Runnable', {
+      const myProxy = java.newProxy("java.lang.Runnable", {
         run: function () {
           callCount++;
-        }
+        },
       });
 
       const thread = java.newInstanceSync("java.lang.Thread", myProxy);
@@ -94,11 +94,11 @@ describe('Dynamic Proxy', () => {
   });
 
   test("thread issue #143", async () => {
-    await new Promise(resolve => {
-      const myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {
+    await new Promise((resolve) => {
+      const myProxy = java.newProxy("RunInterface$InterfaceWithReturn", {
         run: function (i) {
           return i - 1;
-        }
+        },
       });
 
       const runInterface = java.newInstanceSync("RunInterface");
@@ -110,8 +110,7 @@ describe('Dynamic Proxy', () => {
   });
 
   test("java equals()", () => {
-    const myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {
-    });
+    const myProxy = java.newProxy("RunInterface$InterfaceWithReturn", {});
 
     const runInterface = java.newInstanceSync("RunInterface");
     const result = runInterface.runEqualsSync(myProxy);
@@ -120,8 +119,7 @@ describe('Dynamic Proxy', () => {
   });
 
   test("java equals() same instance", () => {
-    const myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {
-    });
+    const myProxy = java.newProxy("RunInterface$InterfaceWithReturn", {});
 
     const runInterface = java.newInstanceSync("RunInterface");
     runInterface.setInstanceSync(myProxy);
@@ -131,8 +129,8 @@ describe('Dynamic Proxy', () => {
   });
 
   test("java equals() different instance", () => {
-    const myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {});
-    const myProxy2 = java.newProxy('RunInterface$InterfaceWithReturn', {});
+    const myProxy = java.newProxy("RunInterface$InterfaceWithReturn", {});
+    const myProxy2 = java.newProxy("RunInterface$InterfaceWithReturn", {});
 
     const runInterface = java.newInstanceSync("RunInterface");
     runInterface.setInstanceSync(myProxy);
@@ -142,10 +140,10 @@ describe('Dynamic Proxy', () => {
   });
 
   test("js equals()", () => {
-    const myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {
-      equals: function (obj) {
+    const myProxy = java.newProxy("RunInterface$InterfaceWithReturn", {
+      equals: function (_obj) {
         return true;
-      }
+      },
     });
 
     const runInterface = java.newInstanceSync("RunInterface");
@@ -155,8 +153,7 @@ describe('Dynamic Proxy', () => {
   });
 
   test("java hashCode()", () => {
-    const myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {
-    });
+    const myProxy = java.newProxy("RunInterface$InterfaceWithReturn", {});
 
     const runInterface = java.newInstanceSync("RunInterface");
     const result = runInterface.runHashCodeSync(myProxy);
@@ -168,10 +165,10 @@ describe('Dynamic Proxy', () => {
   });
 
   test("js hashCode()", () => {
-    const myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {
+    const myProxy = java.newProxy("RunInterface$InterfaceWithReturn", {
       hashCode: function () {
         return 1234;
-      }
+      },
     });
 
     const runInterface = java.newInstanceSync("RunInterface");
@@ -181,7 +178,7 @@ describe('Dynamic Proxy', () => {
   });
 
   test("java toString()", () => {
-    const myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {});
+    const myProxy = java.newProxy("RunInterface$InterfaceWithReturn", {});
 
     const runInterface = java.newInstanceSync("RunInterface");
     const result = runInterface.runToStringSync(myProxy);
@@ -190,10 +187,10 @@ describe('Dynamic Proxy', () => {
   });
 
   test("js toString()", () => {
-    const myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {
-      toString: function () {
+    const myProxy = java.newProxy("RunInterface$InterfaceWithReturn", {
+      toString: () => {
         return "myRunInterface";
-      }
+      },
     });
 
     const runInterface = java.newInstanceSync("RunInterface");
@@ -203,10 +200,10 @@ describe('Dynamic Proxy', () => {
   });
 
   test("js string error", () => {
-    const myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {
-      run: function (i) {
-        throw 'myError';
-      }
+    const myProxy = java.newProxy("RunInterface$InterfaceWithReturn", {
+      run: (_i) => {
+        throw "myError";
+      },
     });
 
     const runInterface = java.newInstanceSync("RunInterface");
@@ -220,10 +217,10 @@ describe('Dynamic Proxy', () => {
   });
 
   test("js Error", () => {
-    const myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {
-      run: function (i) {
-        throw new Error('newError');
-      }
+    const myProxy = java.newProxy("RunInterface$InterfaceWithReturn", {
+      run: function (_i) {
+        throw new Error("newError");
+      },
     });
 
     const runInterface = java.newInstanceSync("RunInterface");
@@ -237,10 +234,10 @@ describe('Dynamic Proxy', () => {
   });
 
   test("invocationHandler", () => {
-    const myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {
-      run: function (i) {
+    const myProxy = java.newProxy("RunInterface$InterfaceWithReturn", {
+      run: (i) => {
         return i + 2;
-      }
+      },
     });
 
     const result = myProxy.invocationHandler.run(42);
@@ -249,10 +246,10 @@ describe('Dynamic Proxy', () => {
   });
 
   test("unref", () => {
-    const myProxy = java.newProxy('RunInterface$InterfaceWithReturn', {
+    const myProxy = java.newProxy("RunInterface$InterfaceWithReturn", {
       run: function (i) {
         return i + 1;
-      }
+      },
     });
 
     myProxy.unref();
