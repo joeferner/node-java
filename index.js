@@ -1,1 +1,1 @@
-module.exports = require("./lib/nodeJavaBridge");
+module.exports = require("./src-node/nodeJavaBridge");

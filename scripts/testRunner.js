@@ -10,7 +10,7 @@ const glob = require("glob");
 const path = require("node:path");
 
 const tests = glob
-  .sync(path.join("testAsyncOptions", "*.test.js"))
+  .sync("*.test.js", { cwd: path.join(__dirname, "..", "testAsyncOptions") })
   .sort((a, b) => a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase()));
 
 tests.unshift("test"); // Arrange to run the primary tests first, in a single process
@@ -19,7 +19,7 @@ function runTest(testArgs, done) {
   const vitest = path.join("node_modules", ".bin", "vitest");
   const cmd = testArgs === "test" ? `vitest --dir test` : `${vitest} ${testArgs}`;
   console.log(`running "${cmd}"...`);
-  childProcess.exec(cmd, function (error, stdout, stderr) {
+  childProcess.exec(cmd, (error, stdout, stderr) => {
     const errText = stderr.toString();
     if (errText !== "") {
       console.error(chalk.bold.red(errText));
@@ -30,7 +30,8 @@ function runTest(testArgs, done) {
   });
 }
 
-async.eachSeries(tests, runTest, function (err) {
+console.log('test to run', tests);
+async.eachSeries(tests, runTest, (err) => {
   if (err) {
     console.error(chalk.bold.red(err));
     process.exit(1);

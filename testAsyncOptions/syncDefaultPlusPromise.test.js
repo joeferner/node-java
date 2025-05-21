@@ -23,7 +23,7 @@ describe("syncDefaultPlusPromise", () => {
   });
 
   test("importClass", () => {
-    // Note: java.import executes javascript code in lib/nodeJavaBridge that makes sync calls to java classes.
+    // Note: java.import executes javascript code in src-node/nodeJavaBridge that makes sync calls to java classes.
     // This test verifies the import runs without error.
     const ArrayList = java.import("java.util.ArrayList");
     expect(ArrayList).toBeTruthy();
@@ -52,7 +52,7 @@ describe("syncDefaultPlusPromise", () => {
   });
 
   test("staticSyncCalls", () => {
-    // Note: java.import executes javascript code in lib/nodeJavaBridge that makes sync calls to java classes.
+    // Note: java.import executes javascript code in src-node/nodeJavaBridge that makes sync calls to java classes.
     // Among other things, java.import creates Sync functions for static methods.
     const String = java.import("java.lang.String");
     expect(String.format("%s--%s", "hello", "world")).toBe("hello--world");

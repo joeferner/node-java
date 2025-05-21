@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-
 set -eu
+
+SCRIPT_DIR=$(dirname "$0")
+cd "${SCRIPT_DIR}/.."
 
 error() {
   echo "error: $*" >&2
@@ -12,7 +14,7 @@ main () {
   local os=$2
 
   local java_home full_java_version java_version
-  java_home=$(node findJavaHome.js)
+  java_home=$(node ./scripts/findJavaHome.js)
   full_java_version=$(${java_home}/bin/java -version 2>&1 | grep version | sed -e 's/.*version "\(.*\)"\(.*\)/\1/; 1q')
 
   if [[ "${full_java_version}" = "1."* ]]
