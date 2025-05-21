@@ -1,4 +1,4 @@
-export const java = require("./");
+export const java = require(".");
 java.options.push("-Djava.awt.headless=true");
 //java.options.push('-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005');
 

@@ -2,6 +2,7 @@
 #ifndef _node_java_h_
 #define _node_java_h_
 
+#include "javaGlobalData.h"
 #include <jni.h>
 #include <nan.h>
 #include <node.h>
@@ -16,14 +17,14 @@
 
 class Java : public Nan::ObjectWrap {
 public:
-  static void Init(v8::Local<v8::Object> target);
+  static void Init(v8::Local<v8::Object> target, JavaGlobalData *data);
   JavaVM *getJvm() { return m_jvm; }
   JNIEnv *getJavaEnv() {
     return m_env;
   } // can only be used safely by the main thread as this is the thread it belongs to
   jobject getClassLoader() { return m_classLoader; }
+  JavaGlobalData *getData() { return m_data; }
 
-public:
   bool DoSync() const { return doSync; }
   bool DoAsync() const { return doAsync; }
   bool DoPromise() const { return doPromise; }
@@ -32,7 +33,7 @@ public:
   std::string PromiseSuffix() const { return m_PromiseSuffix; }
 
 private:
-  Java();
+  Java(JavaGlobalData *data);
   ~Java();
   v8::Local<v8::Value> createJVM(JavaVM **jvm, JNIEnv **env);
   void destroyJVM(JavaVM **jvm, JNIEnv **env);
@@ -63,12 +64,11 @@ private:
   static NAN_SETTER(AccessorProhibitsOverwritingSetter);
   v8::Local<v8::Value> ensureJvm();
 
-  static Nan::Persistent<v8::FunctionTemplate> s_ct;
+  JavaGlobalData *m_data;
   JavaVM *m_jvm;
   JNIEnv *m_env; // can only be used safely by the main thread as this is the thread it belongs to
   jobject m_classLoader;
   std::string m_classPath;
-  static std::string s_nativeBindingLocation;
   Nan::Persistent<v8::Array> m_classPathArray;
   Nan::Persistent<v8::Array> m_optionsArray;
   Nan::Persistent<v8::Object> m_asyncOptions;

@@ -34,6 +34,7 @@
         'src/javaObject.cpp',
         'src/javaScope.cpp',
         'src/methodCallBaton.cpp',
+        'src/javaGlobalData.cpp',
         'src/nodeJavaBridge.cpp',
         'src/utils.cpp'
       ],

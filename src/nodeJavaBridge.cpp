@@ -1,9 +1,17 @@
 
 #include "java.h"
+#include "javaGlobalData.h"
 #include "javaObject.h"
 
 NAN_MODULE_INIT(init) {
-  Java::Init(target);
+  v8::Isolate *isolate = v8::Isolate::GetCurrent();
+  if (isolate == nullptr) {
+    return;
+  }
+  JavaGlobalData *data = new JavaGlobalData(isolate);
+  Nan::SetIsolateData<JavaGlobalData>(isolate, data);
+
+  Java::Init(target, data);
   JavaObject::Init(target);
 }
 
