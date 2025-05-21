@@ -30,8 +30,10 @@
   "types": "./build/types/index.d.ts",
   "exports": {
     ".": {
-      "require": "./build/cjs/index.js",
-      "import": "./build/esm/index.mjs"
+      "types": "./build/types/nodeJavaBridge.d.ts",
+      "require": "./build/cjs/nodeJavaBridge.js",
+      "import": "./build/esm/nodeJavaBridge.js",
+      "default": "./build/esm/nodeJavaBridge.js"
     }
   },
   "files": [
@@ -56,9 +58,8 @@
     "when": "3.7.8"
   },
   "scripts": {
-    "build:cjs": "tsc -p tsconfig.cjs.json",
-    "build:esm": "tsc -p tsconfig.esm.json",
-    "build": "npm run build:cjs && npm run build:esm",
+    "compile": "tsc -b ./tsconfig.cjs.json ./tsconfig.esm.json ./tsconfig.types.json",
+    "build": "npm run compile && node ./scripts/fix-tsc-build.js",
     "install": "node-gyp rebuild",
     "clean": "rm -rf build",
     "test": "node ./scripts/testRunner.js",

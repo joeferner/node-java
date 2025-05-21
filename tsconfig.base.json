@@ -3,15 +3,13 @@
     "lib": [
       "esnext"
     ],
-    "declaration": true,
-    "declarationDir": "./build/types",
     "strict": true,
     "esModuleInterop": false,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
     "baseUrl": ".",
-    "rootDir": "./src"
+    "rootDir": "./src-node"
   },
   "include": [
     "src-node"
