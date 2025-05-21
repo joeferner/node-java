@@ -43,11 +43,12 @@
   },
   "scripts": {
     "install": "node-gyp rebuild",
-    "test": "node testRunner.js",
-    "postinstall": "node postInstall.js",
+    "clean": "rm -rf build",
+    "test": "node ./scripts/testRunner.js",
+    "postinstall": "node ./scripts/postInstall.js",
     "lint": "eslint --ext js,ts,tsx --report-unused-disable-directives --max-warnings 0 .",
     "format": "prettier --write .",
-    "format-cpp": "clang-format --version; find src/ -iname '*.h' -o -iname '*.cpp' | xargs clang-format -i",
+    "format-cpp": "clang-format --version; find src-cpp/ -iname '*.h' -o -iname '*.cpp' | xargs clang-format -i",
     "precommit": "npm run format-cpp && npm run format && npm run lint && npm test"
   },
   "main": "./index.js"

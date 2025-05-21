@@ -13,13 +13,13 @@
         'target_arch': 's390'
       }],
       ['OS=="win"', {
-        'javahome%': '<!(node findJavaHome.js)'
+        'javahome%': '<!(node ./scripts/findJavaHome.js)'
       }],
       ['OS=="linux" or OS=="mac" or OS=="freebsd" or OS=="openbsd" or OS=="solaris" or OS=="zos"', {
-        'javahome%': '<!(node findJavaHome.js)'
+        'javahome%': '<!(node ./scripts/findJavaHome.js)'
       }],
       ['OS=="linux" or OS=="mac" or OS=="freebsd" or OS=="openbsd" or OS=="solaris" or OS=="zos"', {
-        'javalibdir%': "<!(./find_java_libdir.sh <(target_arch) <(OS))"
+        'javalibdir%': "<!(./scripts/find_java_libdir.sh <(target_arch) <(OS))"
       }],
       ['OS=="zos"', {
         'nodever%': '<!(node -e "console.log(process.versions.node)" | cut -d"." -f1)'
@@ -30,12 +30,12 @@
     {
       'target_name': 'nodejavabridge_bindings',
       'sources': [
-        'src/java.cpp',
-        'src/javaObject.cpp',
-        'src/javaScope.cpp',
-        'src/methodCallBaton.cpp',
-        'src/nodeJavaBridge.cpp',
-        'src/utils.cpp'
+        'src-cpp/java.cpp',
+        'src-cpp/javaObject.cpp',
+        'src-cpp/javaScope.cpp',
+        'src-cpp/methodCallBaton.cpp',
+        'src-cpp/nodeJavaBridge.cpp',
+        'src-cpp/utils.cpp'
       ],
       'include_dirs': [
         '<(javahome)/include',

@@ -20,7 +20,7 @@ Notes:
 
 * node-gyp requires python 2.x not python 3.x. See https://github.com/TooTallNate/node-gyp/issues/155 for more details.
 * If you see an error such as "Call to 'node findJavaHome.js' returned exit status 1"
-      Try running `node findJavaHome.js` in the node-java directory to see the full failure message.
+      Try running `node ./scripts/findJavaHome.js` in the node-java directory to see the full failure message.
 * If you are having problems finding 'jni.h'. Make sure you have the JDK installed not just the JRE. If you are using
       OpenJDK you want the openjdk-7-jdk package, not openjdk-7-jre.  _Mavericks users see [Issue #86](https://github.com/nearinfinity/node-java/issues/86) if you run into this._
 
@@ -62,7 +62,7 @@ GYP_DEFINES="armv7=0" CCFLAGS='-march=armv6' CXXFLAGS='-march=armv6' npm install
 ## Manual compile (Using node-gyp)
 
 ```bash
-./compile-java-code.sh
+./scripts/compile-java.sh
 node-gyp configure build
 npm test
 ```
@@ -103,19 +103,6 @@ Then run
 ```bash
 node test.js
 ```
-
-### Java 1.8 support
-
-Manual compilation for Java 1.8 support requires additional steps:
-
-```bash
-./compile-java-code.sh
-./compile-java8-code.sh
-node-gyp configure build
-npm test
-```
-
-Java 1.8 language features can be used in Java classes only if a Java 1.8 JRE is available. The script compile-java8-code.sh is used only to compile java classes used in the 'test8' unit tests, but these classes are checked into the test8/ directory. Note that unit tests in the test8/ directory will pass (by design) if run against a Java 1.7 JRE, provided that a java.lang.UnsupportedClassVersionError is caught with the message 'Unsupported major.minor version 52.0' (the expected behavior when Java 1.8 language features are used in an older JRE).
 
 ## Installation node-webkit
 
@@ -898,7 +885,7 @@ var value = Test.NestedEnum.name_alt;  // OK
 
 ## Error: Cannot find module '../build/jvm_dll_path.json'
 
-Either `postInstall.js` didn't run or there was a problem detecting java. Try running `postInstall.js` manually.
+Either `./scripts/postInstall.js` didn't run or there was a problem detecting java. Try running `./scripts/postInstall.js` manually.
 
 ## Debugging
 

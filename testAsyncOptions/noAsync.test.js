@@ -58,7 +58,7 @@ describe("noAsync", () => {
   });
 
   test("importClass", () => {
-    // Note: java.import executes javascript code in lib/nodeJavaBridge that makes sync calls to java classes.
+    // Note: java.import executes javascript code in src-node/nodeJavaBridge that makes sync calls to java classes.
     const ArrayList = java.import("java.util.ArrayList");
     expect(ArrayList).toBeTruthy();
     const arrayList = new ArrayList();
@@ -86,7 +86,7 @@ describe("noAsync", () => {
   });
 
   test("sStaticSyncCalls", () => {
-    // Note: java.import executes javascript code in lib/nodeJavaBridge that makes sync calls to java classes.
+    // Note: java.import executes javascript code in src-node/nodeJavaBridge that makes sync calls to java classes.
     // Among other things, java.import creates Sync functions for static methods.
     const String = java.import("java.lang.String");
     expect(String.formatSync("%s--%s", "hello", "world")).toBe("hello--world");

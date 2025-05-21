@@ -1,1 +1,0 @@
-rule org.apache.commons.lang3.** com.nearinfinity.org.apache.commons.lang3.@1
