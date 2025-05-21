@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "lib": [
+      "esnext"
+    ],
+    "declaration": true,
+    "declarationDir": "./build/types",
+    "strict": true,
+    "esModuleInterop": false,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "rootDir": "./src"
+  },
+  "include": [
+    "src-node"
+  ],
+  "exclude": [
+    "build",
+    "node_modules"
+  ]
+}
