@@ -1,43 +1,49 @@
 // In the defacto case, the developer sets asyncOptions, but specifies the defacto standard behavior.
 
 import { beforeAll, describe, expect, test } from "vitest";
-import { java } from "../testHelpers";
+import { Java } from "../java";
+import { getJava } from "../testHelpers";
 
 describe("defacto", () => {
-  beforeAll(async () => {
-    await new Promise((resolve) => {
-      const api = Object.keys(java).filter((key) => typeof java[key] === "function");
-      expect(api.includes("isJvmCreated"), "Expected `isJvmCreated` to be present, but it is NOT.").toBeTruthy();
-      expect(java.isJvmCreated()).toBeFalsy();
+  let java!: Java;
 
-      java.asyncOptions = {
+  beforeAll(async () => {
+    java = await getJava(
+      {
         syncSuffix: "Sync",
         asyncSuffix: "",
-      };
+      },
+      {
+        beforeInit: async (java) => {
+          expect(java.isJvmCreated()).toBeFalsy();
 
-      function before() {
-        expect(java.isJvmCreated()).toBeFalsy();
+          function before(): void {
+            expect(java.isJvmCreated()).toBeFalsy();
+          }
+
+          function after(): void {
+            expect(java.isJvmCreated()).toBeTruthy();
+          }
+
+          java.registerClient(before, after);
+          java.registerClient(undefined, after);
+          java.registerClient(before, undefined);
+
+          await new Promise<void>((resolve) => {
+            java.ensureJvm(function (err) {
+              expect(err).toBeFalsy();
+              expect(java.isJvmCreated()).toBeTruthy();
+
+              // Verify that ensureJvm is idempotent
+              java.ensureJvm(function (err) {
+                expect(err).toBeFalsy();
+                resolve();
+              });
+            });
+          });
+        },
       }
-
-      function after() {
-        expect(java.isJvmCreated()).toBeTruthy();
-      }
-
-      java.registerClient(before, after);
-      java.registerClient(undefined, after);
-      java.registerClient(before, undefined);
-
-      java.ensureJvm(function (err) {
-        expect(err).toBeFalsy();
-        expect(java.isJvmCreated()).toBeTruthy();
-
-        // Verify that ensureJvm is idempotent
-        java.ensureJvm(function (err) {
-          expect(err).toBeFalsy();
-          resolve();
-        });
-      });
-    });
+    );
   });
 
   test("api", () => {
@@ -89,13 +95,13 @@ describe("defacto", () => {
   });
 
   test("asyncCalls", async () => {
-    await new Promise((resolve) => {
+    await new Promise<void>((resolve) => {
       const arrayList = java.newInstanceSync("java.util.ArrayList");
-      arrayList.add("hello", function (err) {
+      arrayList.add("hello", (err: Error | undefined) => {
         expect(err).toBeFalsy();
-        arrayList.add("world", function (err) {
+        arrayList.add("world", (err: Error | undefined) => {
           expect(err).toBeFalsy();
-          arrayList.size(function (err, size) {
+          arrayList.size((err: Error | undefined, size: number | undefined) => {
             expect(err).toBeFalsy();
             expect(size).toBe(2);
             resolve();

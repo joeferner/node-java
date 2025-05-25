@@ -9,6 +9,7 @@ Bridge API to connect with existing Java APIs.
 ### Other projects that might be helpful
 
 * [node-java-maven](https://github.com/joeferner/node-java-maven) - manages your node-java classpath by using maven dependency management.
+* [ts-java](https://github.com/RedSeal-co/ts-java) - Create TypeScript declaration files for Java packages.
 
 ## Installation
 
@@ -92,8 +93,8 @@ npm install --unsafe-perm java
 Then create a file called `test.js` with the following contents
 
 ```
-var java = require('java');
-var javaLangSystem = java.import('java.lang.System');
+const java = require('java');
+const javaLangSystem = java.import('java.lang.System');
 
 javaLangSystem.out.printlnSync('Hello World');
 ```
@@ -130,10 +131,10 @@ Then create the following module javaInit:
 
 ```javascript
 "use strict";
-var fs = require("fs");
-var java = require("java");
-var baseDir = "./target/dependency";
-var dependencies = fs.readdirSync(baseDir);
+const fs = require("fs");
+const java = require("java");
+const baseDir = "./target/dependency";
+const dependencies = fs.readdirSync(baseDir);
 
 dependencies.forEach(function(dependency){
     java.classpath.push(baseDir + "/" + dependency);
@@ -151,8 +152,8 @@ and then in the consuming class write:
 
 ```javascript
 
-var javaInit = require('./javaInit');
-var java = javaInit.getJavaInstance();
+const javaInit = require('./javaInit');
+const java = javaInit.getJavaInstance();
 
 //your code goes here
 ```
@@ -162,11 +163,11 @@ var java = javaInit.getJavaInstance();
 ## Quick Examples
 
 ```javascript
-var java = require("java");
+const java = require("java");
 java.classpath.push("commons-lang3-3.1.jar");
 java.classpath.push("commons-io.jar");
 
-var list1 = java.newInstanceSync("java.util.ArrayList");
+const list1 = java.newInstanceSync("java.util.ArrayList");
 console.log(list1.sizeSync()); // 0
 list1.addSync('item1');
 console.log(list1.sizeSync()); // 1
@@ -177,8 +178,8 @@ java.newInstance("java.util.ArrayList", function(err, list2) {
   console.log(list2.toStringSync()); // [item1, item2]
 });
 
-var ArrayList = java.import('java.util.ArrayList');
-var list3 = new ArrayList();
+const ArrayList = java.import('java.util.ArrayList');
+const list3 = new ArrayList();
 list3.addSync('item1');
 list3.equalsSync(list1); // true
 ```
@@ -186,13 +187,13 @@ list3.equalsSync(list1); // true
 ### Create a char array
 
 ```javascript
-var charArray = java.newArray("char", "hello world\n".split(''));
+const charArray = java.newArray("char", "hello world\n".split(''));
 ```
 
 ### Create a byte array
 
 ```javascript
-var byteArray = java.newArray(
+const byteArray = java.newArray(
   "byte",
   "hello world\n"
     .split('')
@@ -207,7 +208,7 @@ a property off of the result called "longValue" which contains the un-truncated 
 If you are calling a method that takes a long you must create it using [java.newInstance](#javaNewInstance).
 
 ```javascript
-var javaLong = java.newInstanceSync("java.lang.Long", 5);
+const javaLong = java.newInstanceSync("java.lang.Long", 5);
 console.log('Possibly truncated long value: ' + javaLong);
 console.log('Original long value (as a string): ' + javaLong.longValue);
 java.callStaticMethodSync("Test", "staticMethodThatTakesALong", javaLong);
@@ -236,7 +237,7 @@ As of release 0.4.5 it became possible to create async methods that return promi
 Example:
 
 ```javascript
-var java = require("java");
+const java = require("java");
 java.asyncOptions = {
   asyncSuffix: undefined,     // Don't generate node-style methods taking callbacks
   syncSuffix: "",              // Sync methods use the base name(!!)
@@ -401,13 +402,13 @@ __Arguments__
 
 __Example__
 
-    var Test = java.import('Test');
+    const Test = java.import('Test');
     Test.someStaticMethodSync(5);
     console.log(Test.someStaticField);
 
-    var value1 = Test.NestedEnum.Value1;
+    const value1 = Test.NestedEnum.Value1;
 
-    var test = new Test();
+    const test = new Test();
     list.instanceMethodSync('item1');
 
 ## newInstance
@@ -428,7 +429,7 @@ __Arguments__
 
 __Example__
 
-    var list = java.newInstanceSync("java.util.ArrayList");
+    const list = java.newInstanceSync("java.util.ArrayList");
 
     java.newInstance("java.util.ArrayList", function(err, list) {
       if(err) { console.error(err); return; }
@@ -450,7 +451,7 @@ __Arguments__
 
 __Example__
 
-    var obj = java.newInstanceSync("my.package.SubClass");
+    const obj = java.newInstanceSync("my.package.SubClass");
 
     if(java.instanceOf(obj, "my.package.SuperClass")) {
       console.log("obj is an instance of SuperClass");
@@ -464,8 +465,7 @@ __Example__
 
 **java.callStaticMethodSync(className, methodName, [args...]) : result**
 
-Calls a static method on the specified class. If you are using the sync method an exception will be throw if an error occurs,
-otherwise it will be the first argument in the callback.
+Calls a static method on the specified class. If you are using the sync method an exception will be throw if an error occurs, otherwise it will be the first argument in the callback.
 
 __Arguments__
 
@@ -475,7 +475,7 @@ __Arguments__
 
 __Example__
 
-    var result = java.callStaticMethodSync("com.nearinfinty.MyClass", "doSomething", 42, "test");
+    const result = java.callStaticMethodSync("com.nearinfinty.MyClass", "doSomething", 42, "test");
 
     java.callStaticMethod("com.nearinfinty.MyClass", "doSomething", 42, "test", function(err, results) {
       if(err) { console.error(err); return; }
@@ -501,11 +501,11 @@ __Arguments__
 
 __Example__
 
-    var instance = java.newInstanceSync("com.nearinfinty.MyClass");
+    const instance = java.newInstanceSync("com.nearinfinty.MyClass");
 
-    var result = java.callMethodSync("com.nearinfinty.MyClass", "doSomething", 42, "test");
+    const result = java.callMethodSync("com.nearinfinty.MyClass", "doSomething", 42, "test");
 
-    java.callMethodSync(instance, "doSomething", 42, "test", function(err, results) {
+    java.callMethod(instance, "doSomething", 42, "test", function(err, results) {
       if(err) { console.error(err); return; }
       // results from doSomething
     });
@@ -525,7 +525,7 @@ __Arguments__
 
 __Example__
 
-    var data = java.getStaticFieldValue("com.nearinfinty.MyClass", "data");
+    const data = java.getStaticFieldValue("com.nearinfinty.MyClass", "data");
 
 ## setStaticFieldValue
 
@@ -560,7 +560,7 @@ __Arguments__
 
 __Example__
 
-    var newArray = java.newArray("java.lang.String", ["item1", "item2", "item3"]);
+    const newArray = java.newArray("java.lang.String", ["item1", "item2", "item3"]);
 
 ## newByte
 
@@ -576,7 +576,7 @@ __Arguments__
 
 __Example__
 
-    var b = java.newByte(12);
+    const b = java.newByte(12);
 
 ## newShort
 
@@ -592,7 +592,7 @@ __Arguments__
 
 __Example__
 
-    var s = java.newShort(12);
+    const s = java.newShort(12);
 
 ## newLong
 
@@ -608,7 +608,7 @@ __Arguments__
 
 __Example__
 
-    var s = java.newLong(12);
+    const s = java.newLong(12);
 
 ## newChar
 
@@ -624,7 +624,7 @@ __Arguments__
 
 __Example__
 
-    var ch = java.newChar('a');
+    const ch = java.newChar('a');
 
 ## newDouble
 
@@ -640,7 +640,7 @@ __Arguments__
 
 __Example__
 
-    var d = java.newDouble(3.14);
+    const d = java.newDouble(3.14);
 
 ## newFloat
 
@@ -656,7 +656,7 @@ __Arguments__
 
 __Example__
 
-    var f = java.newFloat(3.14);
+    const f = java.newFloat(3.14);
 
 ## newProxy
 
@@ -676,14 +676,14 @@ __Arguments__
 
 __Example__
 
-    var myProxy = java.newProxy('java.lang.Runnable', {
+    const myProxy = java.newProxy('java.lang.Runnable', {
       run: function () {
         // This is actually run on the v8 thread and not the new java thread
         console.log("hello from thread");
       }
     });
 
-    var thread = java.newInstanceSync("java.lang.Thread", myProxy);
+    const thread = java.newInstanceSync("java.lang.Thread", myProxy);
     thread.start();
 
 ## isJvmCreated 
@@ -742,7 +742,7 @@ __Arguments__
 
 __Example__
 
-    var list = java.newInstanceSync("java.util.ArrayList");
+    const list = java.newInstanceSync("java.util.ArrayList");
     list.addSync("item1");
     list.add("item2", function(err, result) {
       if(err) { console.error(err); return; }
@@ -761,9 +761,9 @@ field values.
 
 __Example__
 
-    var list = java.newInstanceSync("com.nearinfinty.MyClass");
+    const list = java.newInstanceSync("com.nearinfinty.MyClass");
     list.data = "test";
-    var data = list.data;
+    const data = list.data;
 
 ## Getting the Full Method Signature
 
@@ -816,9 +816,9 @@ public class ShutdownHookHelper {
 Compile ShutdownHookHelper and then use it as follows.
 
 ```javascript
-var java = require('./');
+const java = require('./');
 java.classpath.push('.');
-var ShutdownHookHelper = java.import('ShutdownHookHelper');
+const ShutdownHookHelper = java.import('ShutdownHookHelper');
 
 ShutdownHookHelper.setShutdownHookSync(java.newProxy('java.lang.Runnable', {
   run: function () {
@@ -839,12 +839,12 @@ When you call a Java method through node-java, any arguments (V8/JavaScript obje
 The JavaScript object returned by `java.import(classname)` is a JavaScript constructor Function, implemented such that you can create instances of the Java class. For example:
 
 ```javascript
-var Test = java.import('Test');
-var test = new Test();
+const Test = java.import('Test');
+const test = new Test();
 
 Test.someStaticMethod(function(err, result) { ... });
 
-var value1 = Test.NestedEnum.Value1;
+const value1 = Test.NestedEnum.Value1;
 ```
 
 But JavaScript reserves a few property names of Function objects: `name`, `arguments`, and `caller`. If your class has public static members (either methods or fields) with these names, node-java is unable to create the necessary property to implement the class's API. For example, suppose your class `Test` implements a static method named `caller`, or has a `NestedEnum` with a value `name`:
@@ -860,15 +860,15 @@ public class Test {
 In JavaScript, you would expect to be able to use those static members like this:
 
 ```javascript
-var Test = java.import('Test');
+const Test = java.import('Test');
 Test.caller(function(err, result) { ... });  // ERROR
-var value = Test.NestedEnum.name;  // ERROR
+const value = Test.NestedEnum.name;  // ERROR
 ```
 
 Node-java can't create those properties, so the above code won't work. Instead, node-java appends a suffix to the name. The default suffix is simply an underscore `_`, but you can change the suffix using `asyncOptions`:
 
 ```javascript
-var java = require('java');
+const java = require('java');
 
 java.asyncOptions = {
   asyncSuffix: "",
@@ -876,9 +876,9 @@ java.asyncOptions = {
   ifReadOnlySuffix: "_alt"
 };
 
-var Test = java.import('Test');
+const Test = java.import('Test');
 Test.caller_alt(function(err, result) { ... });  // OK
-var value = Test.NestedEnum.name_alt;  // OK
+const value = Test.NestedEnum.name_alt;  // OK
 ```
 
 # Troubleshooting

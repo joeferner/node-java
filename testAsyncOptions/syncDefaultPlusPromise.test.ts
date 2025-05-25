@@ -1,16 +1,22 @@
 // Just Sync and Promise, with Sync the default (i.e. no suffix).
 // This is the configuration that RedSeal wants for use with Tinkerpop/Gremlin.
 
-import { describe, expect, test } from "vitest";
+import { beforeAll, describe, expect, test } from "vitest";
 import { getJava } from "../testHelpers";
-
-const java = getJava({
-  syncSuffix: "",
-  promiseSuffix: "P",
-  promisify: require("when/node").lift, // https://github.com/cujojs/when
-});
+import { Java } from "../java";
 
 describe("syncDefaultPlusPromise", () => {
+  let java!: Java;
+
+  beforeAll(async () => {
+    java = await getJava({
+      syncSuffix: "",
+      promiseSuffix: "P",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      promisify: ((await import("when/node")) as any).lift, // https://github.com/cujojs/when
+    });
+  });
+
   test("api", () => {
     const arrayList = java.newInstanceSync("java.util.ArrayList");
     expect(arrayList).toBeTruthy();
@@ -60,7 +66,7 @@ describe("syncDefaultPlusPromise", () => {
 
   test("promiseCalls", async () => {
     const arrayList = java.newInstanceSync("java.util.ArrayList");
-    await new Promise((resolve) => {
+    await new Promise<void>((resolve) => {
       arrayList
         .addP("hello")
         .then(() => {
@@ -69,7 +75,7 @@ describe("syncDefaultPlusPromise", () => {
         .then(() => {
           return arrayList.sizeP();
         })
-        .then((size) => {
+        .then((size: number) => {
           expect(size).toBe(2);
           resolve();
         });

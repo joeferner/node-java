@@ -1,46 +1,47 @@
 // Just Sync and Promise, both with a non-empty suffix.
 
 import { beforeAll, describe, expect, test } from "vitest";
-import when from "when";
-import { java } from "../testHelpers";
+import { Java } from "../java";
+import { getJava } from "../testHelpers";
 
 describe("noAsync", () => {
+  let java!: Java;
+
   beforeAll(async () => {
-    const api = Object.keys(java).filter((key) => typeof java[key] === "function");
-    expect(api.includes("isJvmCreated"), "Expected `isJvmCreated` to be present, but it is NOT.").toBeTruthy();
-    expect(java.isJvmCreated()).toBeFalsy();
+    java = await getJava(
+      {
+        syncSuffix: "Sync",
+        promiseSuffix: "Promise",
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        promisify: ((await import("when/node")) as any).lift,
+      },
+      {
+        beforeInit: (java) => {
+          expect(java.isJvmCreated()).toBeFalsy();
 
-    function before() {
-      const promise = when.promise(function (resolve) {
-        expect(java.isJvmCreated()).toBeFalsy();
-        resolve();
-      });
-      return promise;
-    }
+          function beforeP(): Promise<void> {
+            return new Promise((resolve) => {
+              expect(java.isJvmCreated()).toBeFalsy();
+              resolve();
+            });
+          }
 
-    function after() {
-      const promise = when.promise(function (resolve) {
-        expect(java.isJvmCreated()).toBeTruthy();
-        resolve();
-      });
-      return promise;
-    }
+          function afterP(): Promise<void> {
+            return new Promise((resolve) => {
+              expect(java.isJvmCreated()).toBeTruthy();
+              resolve();
+            });
+          }
 
-    java.asyncOptions = {
-      syncSuffix: "Sync",
-      promiseSuffix: "Promise",
-      promisify: require("when/node").lift,
-    };
-    java.registerClientP(before, after);
-    java.registerClientP(null, after);
-    java.registerClientP(before);
+          java.registerClientP(beforeP, afterP);
+          java.registerClientP(null, afterP);
+          java.registerClientP(beforeP);
+        },
+      }
+    );
 
-    await new Promise((resolve) => {
-      java.ensureJvm().done(function () {
-        expect(java.isJvmCreated()).toBeTruthy();
-        resolve();
-      });
-    });
+    await java.ensureJvm();
+    expect(java.isJvmCreated()).toBeTruthy();
   });
 
   test("api", () => {
@@ -94,7 +95,7 @@ describe("noAsync", () => {
 
   test("promiseCalls", async () => {
     const arrayList = java.newInstanceSync("java.util.ArrayList");
-    await new Promise((resolve) => {
+    await new Promise<void>((resolve) => {
       arrayList
         .addPromise("hello")
         .then(() => {
@@ -103,7 +104,7 @@ describe("noAsync", () => {
         .then(() => {
           return arrayList.sizePromise();
         })
-        .then((size) => {
+        .then((size: number) => {
           expect(size).toBe(2);
           resolve();
         });

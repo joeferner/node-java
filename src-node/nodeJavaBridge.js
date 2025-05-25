@@ -2,7 +2,6 @@
 
 process.env.PATH += require("../build/jvm_dll_path.json");
 
-const async = require("async");
 const path = require("path");
 const fs = require("fs");
 let binaryPath = null;
@@ -98,61 +97,50 @@ java.registerClientP = function (beforeP, afterP) {
   clients.push({ beforeP: beforeP, afterP: afterP });
 };
 
-function runBeforeHooks(done) {
-  function iterator(client, cb) {
-    try {
-      if (client.before) {
-        client.before(cb);
-      } else if (client.beforeP) {
-        client.beforeP().then(
-          function (_ignored) {
-            cb();
-          },
-          function (err) {
-            cb(err);
+async function runBeforeHooks() {
+  for (const client of clients) {
+    if (client.before) {
+      await new Promise((resolve, reject) => {
+        client.before((err) => {
+          if (err) {
+            return reject(err);
           }
-        );
-      } else {
-        cb();
-      }
-    } catch (err) {
-      cb(err);
+          return resolve();
+        });
+      });
+    }
+    if (client.beforeP) {
+      await client.beforeP();
     }
   }
-  async.each(clients, iterator, done);
 }
 
-function createJVMAsync(callback) {
+function createJVMAsync() {
   const _ignore = java.newLong(0); // called just for the side effect that it will create the JVM
-  callback();
 }
 
-function runAfterHooks(done) {
-  function iterator(client, cb) {
-    try {
-      if (client.after) {
-        client.after(cb);
-      } else if (client.afterP) {
-        client.afterP().then(
-          (_ignored) => {
-            cb();
-          },
-          (err) => {
-            cb(err);
+async function runAfterHooks() {
+  for (const client of clients) {
+    if (client.after) {
+      await new Promise((resolve, reject) => {
+        client.after((err) => {
+          if (err) {
+            return reject(err);
           }
-        );
-      } else {
-        cb();
-      }
-    } catch (err) {
-      cb(err);
+          return resolve();
+        });
+      });
+    }
+    if (client.afterP) {
+      await client.afterP();
     }
   }
-  async.each(clients, iterator, done);
 }
 
-function initializeAll(done) {
-  async.series([runBeforeHooks, createJVMAsync, runAfterHooks], done);
+async function initializeAll() {
+  await runBeforeHooks();
+  createJVMAsync();
+  await runAfterHooks();
 }
 
 // This function ensures that the JVM has been launched, asynchronously. The application can be notified
@@ -187,7 +175,14 @@ java.ensureJvm = function (callback) {
 
   // Finally, queue the initializeAll function.
   else {
-    return setImmediate(initializeAll, callback);
+    return setImmediate(async () => {
+      try {
+        await initializeAll();
+        callback();
+      } catch (err) {
+        callback(err);
+      }
+    });
   }
 };
 

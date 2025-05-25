@@ -1,16 +1,22 @@
 // All three variants have non-empty suffix, i.e a suffix is required for any variant.
 
+import { Java } from "../java";
 import { getJava } from "../testHelpers";
-import { describe, test, expect } from "vitest";
-
-const java = getJava({
-  syncSuffix: "Sync",
-  asyncSuffix: "Async",
-  promiseSuffix: "Promise",
-  promisify: require("when/node").lift, // https://github.com/cujojs/when
-});
+import { describe, test, expect, beforeAll } from "vitest";
 
 describe("allThreeSuffix", () => {
+  let java!: Java;
+
+  beforeAll(async () => {
+    java = await getJava({
+      syncSuffix: "Sync",
+      asyncSuffix: "Async",
+      promiseSuffix: "Promise",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      promisify: ((await import("when/node")) as any).lift, // https://github.com/cujojs/when
+    });
+  });
+
   test("api", () => {
     const arrayList = java.newInstanceSync("java.util.ArrayList");
     expect(arrayList).toBeDefined();
@@ -62,12 +68,12 @@ describe("allThreeSuffix", () => {
 
   test("asyncCalls", async () => {
     const arrayList = java.newInstanceSync("java.util.ArrayList");
-    await new Promise((resolve) => {
-      arrayList.addAsync("hello", function (err) {
+    await new Promise<void>((resolve) => {
+      arrayList.addAsync("hello", (err: Error | undefined) => {
         expect(err).toBeUndefined();
-        arrayList.addAsync("world", function (err) {
+        arrayList.addAsync("world", (err: Error | undefined) => {
           expect(err).toBeUndefined();
-          arrayList.sizeAsync(function (err, size) {
+          arrayList.sizeAsync((err: Error | undefined, size: number) => {
             expect(err).toBeUndefined();
             expect(size).toBe(2);
             resolve();
@@ -87,7 +93,7 @@ describe("allThreeSuffix", () => {
       .then(() => {
         return arrayList.sizePromise();
       })
-      .then((size) => {
+      .then((size: number) => {
         expect(size).toBe(2);
       });
   });

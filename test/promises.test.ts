@@ -1,12 +1,18 @@
-import { describe, expect, test } from "vitest";
+import { beforeAll, describe, expect, test } from "vitest";
+import { Java } from "../java";
 import { getJava } from "../testHelpers";
 
-const java = getJava();
-
 describe("Promises", () => {
+  let java!: Java;
+
+  beforeAll(async () => {
+    java = await getJava();
+  });
+
   test("create an instance of a class and call methods (getClassPromise & getNamePromise)", async () => {
     // Adapted from a test in simple-test.js
-    const list = await java.newInstancePromise("java.util.ArrayList");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const list = await (java as any).newInstancePromise("java.util.ArrayList");
     expect(list).toBeTruthy();
 
     const clazz = await list.getClassPromise();
@@ -23,7 +29,8 @@ describe("Promises", () => {
   });
 
   test("run promisified method of Java module (newInstancePromise)", async () => {
-    const list = await java.newInstancePromise("java.util.ArrayList");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const list = await (java as any).newInstancePromise("java.util.ArrayList");
     expect(list).toBeTruthy();
 
     const clazz = await list.getClassPromise();
@@ -34,7 +41,8 @@ describe("Promises", () => {
   });
 
   test("run chained promisified methods (of class java.util.ArrayList)", async () => {
-    const list = await java.newInstancePromise("java.util.ArrayList");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const list = await (java as any).newInstancePromise("java.util.ArrayList");
     expect(list).toBeTruthy();
 
     const clazz = await list.getClassPromise();
@@ -66,7 +74,7 @@ describe("Promises", () => {
 
     const more = await it.hasNextPromise();
     console.log(typeof more, more);
-    expect(more).toBeFalsy(false);
+    expect(more).toBeFalsy();
 
     await expect(async () => await it.nextPromise()).rejects.toThrowError();
   });

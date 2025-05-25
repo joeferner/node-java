@@ -1,36 +1,52 @@
 // Use "Async" for the asyncSuffix, and "" for the syncSuffix.
 
 import { beforeAll, describe, expect, test } from "vitest";
-import { java } from "../testHelpers";
+import { getJava } from "../testHelpers";
+import { Java } from "../java";
 
 describe("asyncSuffixSyncDefault", () => {
+  let java!: Java;
+
   beforeAll(async () => {
-    await new Promise((resolve) => {
-      java.asyncOptions = {
+    let beforeCalled = false;
+    let afterCalled = false;
+
+    java = await getJava(
+      {
         syncSuffix: "",
         asyncSuffix: "Async",
         ifReadOnlySuffix: "_alt",
-      };
+      },
+      {
+        beforeInit: async (java) => {
+          function before(callback: () => void): void {
+            beforeCalled = true;
+            java.classpath.push("test/");
+            expect(java.isJvmCreated()).toBeFalsy();
+            callback();
+          }
 
-      function before(callback) {
-        java.classpath.push("test/");
-        expect(java.isJvmCreated()).toBeFalsy();
-        callback();
+          function after(callback: () => void): void {
+            afterCalled = true;
+            expect(java.isJvmCreated()).toBeTruthy();
+            callback();
+          }
+
+          java.registerClient(before, after);
+
+          await new Promise<void>((resolve) => {
+            java.ensureJvm((err) => {
+              expect(err).toBeFalsy();
+              expect(java.isJvmCreated()).toBeTruthy();
+              resolve();
+            });
+          });
+        },
       }
+    );
 
-      function after(callback) {
-        expect(java.isJvmCreated()).toBeTruthy();
-        callback();
-      }
-
-      java.registerClient(before, after);
-
-      java.ensureJvm(function (err) {
-        expect(err).toBeNull();
-        expect(java.isJvmCreated()).toBeTruthy();
-        resolve();
-      });
-    });
+    expect(beforeCalled).toBeTruthy();
+    expect(afterCalled).toBeTruthy();
   });
 
   test("api", () => {
@@ -83,12 +99,12 @@ describe("asyncSuffixSyncDefault", () => {
 
   test("asyncCalls", async () => {
     const arrayList = java.newInstanceSync("java.util.ArrayList");
-    await new Promise((resolve) => {
-      arrayList.addAsync("hello", function (err) {
+    await new Promise<void>((resolve) => {
+      arrayList.addAsync("hello", (err: Error | undefined) => {
         expect(err).toBeUndefined();
-        arrayList.addAsync("world", function (err) {
+        arrayList.addAsync("world", (err: Error | undefined) => {
           expect(err).toBeUndefined();
-          arrayList.sizeAsync(function (err, size) {
+          arrayList.sizeAsync((err: Error | undefined, size: number | undefined) => {
             expect(err).toBeUndefined();
             expect(size).toBe(2);
             resolve();

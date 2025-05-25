@@ -1,9 +1,14 @@
-import { describe, expect, test } from "vitest";
-import { getJava } from "../testHelpers";
-
-const java = getJava();
+import { beforeAll, describe, expect, test } from "vitest";
+import { expectJavaError, getJava } from "../testHelpers";
+import { Java } from "../java";
 
 describe("Java8", () => {
+  let java!: Java;
+
+  beforeAll(async () => {
+    java = await getJava();
+  });
+
   test("call methods of a class that uses lambda expressions", () => {
     try {
       const TestLambda = java.import("TestLambda");
@@ -13,6 +18,7 @@ describe("Java8", () => {
       const diff = lambda.testLambdaSubtractionSync(23, 42);
       expect(diff).toBe(-19);
     } catch (err) {
+      expectJavaError(err);
       const unsupportedVersion = java.instanceOf(err.cause, "java.lang.UnsupportedClassVersionError");
       if (unsupportedVersion) {
         console.log("JRE 1.8 not available");

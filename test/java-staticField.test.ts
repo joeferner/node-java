@@ -1,9 +1,14 @@
-import { afterEach, describe, expect, test } from "vitest";
+import { afterEach, beforeAll, describe, expect, test } from "vitest";
 import { getJava } from "../testHelpers";
-
-const java = getJava();
+import { Java } from "../java";
 
 describe("Java - Static Field", () => {
+  let java!: Java;
+
+  beforeAll(async () => {
+    java = await getJava();
+  });
+
   afterEach(() => {
     java.setStaticFieldValue("Test", "staticFieldInt", 42);
   });
