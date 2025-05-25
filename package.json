@@ -26,7 +26,6 @@
     "url": "https://github.com/joeferner/node-java.git"
   },
   "dependencies": {
-    "async": "^3.2.6",
     "find-java-home": "^2.0.0",
     "glob": "^10.4.5",
     "nan": "^2.22.2",
@@ -34,22 +33,31 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.27.0",
+    "@types/find-root": "^1.1.4",
+    "@types/node": "^22.15.21",
+    "@types/when": "^2.4.41",
     "chalk": "2.4.2",
     "eslint": "^9.27.0",
+    "find-root": "^1.1.0",
     "globals": "^16.1.0",
     "prettier": "^3.5.3",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.32.1",
     "vitest": "^3.1.3",
     "when": "3.7.8"
   },
   "scripts": {
     "install": "node-gyp rebuild",
     "clean": "rm -rf build",
-    "test": "node ./scripts/testRunner.js",
+    "test": "tsc && node ./build/ts/scripts/testRunner.js",
     "postinstall": "node ./scripts/postInstall.js",
     "lint": "eslint --ext js,ts,tsx --report-unused-disable-directives --max-warnings 0 .",
     "format": "prettier --write .",
     "format-cpp": "clang-format --version; find src-cpp/ -iname '*.h' -o -iname '*.cpp' | xargs clang-format -i",
-    "precommit": "npm run format-cpp && npm run format && npm run lint && npm test"
+    "build-ts": "tsc",
+    "build-ts:watch": "tsc --watch",
+    "precommit": "npm run format-cpp && npm run format && npm run lint && npm run build-ts && npm test"
   },
-  "main": "./index.js"
+  "main": "./index.js",
+  "types": "./java.d.ts"
 }

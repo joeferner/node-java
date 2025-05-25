@@ -1,9 +1,14 @@
-import { afterEach, describe, expect, test } from "vitest";
+import { afterEach, beforeAll, describe, expect, test } from "vitest";
 import { getJava } from "../testHelpers";
-
-const java = getJava();
+import { Java } from "../java";
 
 describe("Import Class", () => {
+  let java!: Java;
+
+  beforeAll(async () => {
+    java = await getJava();
+  });
+
   afterEach(() => {
     java.setStaticFieldValue("Test", "staticFieldInt", 42);
   });
@@ -15,8 +20,8 @@ describe("Import Class", () => {
     expect(Test.staticFieldInt).toBe(200);
 
     expect(Test.staticMethodSync(99)).toBe(100);
-    await new Promise((resolve) => {
-      Test.staticMethod(99, (err, result) => {
+    await new Promise<void>((resolve) => {
+      Test.staticMethod(99, (err: Error | undefined, result: number | undefined) => {
         expect(err).toBeFalsy();
         expect(result).toBe(100);
 

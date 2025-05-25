@@ -1,12 +1,17 @@
-import { describe, expect, test } from "vitest";
+import { beforeAll, describe, expect, test } from "vitest";
+import { Java, JavaObject } from "../java";
 import { getJava } from "../testHelpers";
 
-const java = getJava();
-
 describe("Java - New Instance", () => {
+  let java!: Java;
+
+  beforeAll(async () => {
+    java = await getJava();
+  });
+
   test("newInstance", async () => {
-    await new Promise((resolve) => {
-      java.newInstance("Test", (err, result) => {
+    await new Promise<void>((resolve) => {
+      java.newInstance("Test", (err: Error | undefined, result: JavaObject | undefined) => {
         expect(err).toBeFalsy();
         expect(result).toBeTruthy();
         expect(result.getClassSync().toStringSync()).toBe("class Test");
@@ -27,8 +32,8 @@ describe("Java - New Instance", () => {
   });
 
   test("newInstance with args", async () => {
-    await new Promise((resolve) => {
-      java.newInstance("Test", 42, function (err, result) {
+    await new Promise<void>((resolve) => {
+      java.newInstance("Test", 42, (err: Error | undefined, result: JavaObject | undefined) => {
         expect(err).toBeFalsy();
         expect(result).toBeTruthy();
         expect(result.getIntSync()).toBe(42);
@@ -44,8 +49,8 @@ describe("Java - New Instance", () => {
   });
 
   test("newInstance bad class name", async () => {
-    await new Promise((resolve) => {
-      java.newInstance("BadClassName", (err, result) => {
+    await new Promise<void>((resolve) => {
+      java.newInstance("BadClassName", (err: Error | undefined, result: JavaObject | undefined) => {
         expect(err).toBeTruthy();
         expect(result).toBeFalsy();
         resolve();
@@ -60,8 +65,8 @@ describe("Java - New Instance", () => {
   });
 
   test("newInstance bad arg types", async () => {
-    await new Promise((resolve) => {
-      java.newInstance("Test", "a", function (err, result) {
+    await new Promise<void>((resolve) => {
+      java.newInstance("Test", "a", (err: Error | undefined, result: JavaObject | undefined) => {
         expect(err).toBeTruthy();
         expect(result).toBeFalsy();
         resolve();
@@ -76,8 +81,8 @@ describe("Java - New Instance", () => {
   });
 
   test("newInstance bad number of args", async () => {
-    await new Promise((resolve) => {
-      java.newInstance("Test", 42, 15, function (err, result) {
+    await new Promise<void>((resolve) => {
+      java.newInstance("Test", 42, 15, (err: Error | undefined, result: JavaObject | undefined) => {
         expect(err).toBeTruthy();
         expect(result).toBeFalsy();
         resolve();
@@ -93,10 +98,10 @@ describe("Java - New Instance", () => {
 
   test("newInstance exception thrown from constructor", async () => {
     const ex = java.newInstanceSync("java.lang.Exception", "my exception");
-    await new Promise((resolve) => {
-      java.newInstance("TestExceptions", ex, function (err, result) {
+    await new Promise<void>((resolve) => {
+      java.newInstance("TestExceptions", ex, (err: Error | undefined, result: JavaObject | undefined) => {
         expect(err).toBeTruthy();
-        expect(err.toString()).toMatch(/my exception/);
+        expect(err?.toString()).toMatch(/my exception/);
         expect(result).toBeFalsy();
         resolve();
       });

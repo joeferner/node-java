@@ -1,10 +1,21 @@
 // In the default case, the developer does not set asyncOptions.
 // We should get the defacto standard behavior.
 
-import { describe, expect, test } from "vitest";
-import { java } from "../testHelpers";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { Java } from "../java";
+import { getJava } from "../testHelpers";
 
 describe("default", () => {
+  let java!: Java;
+
+  beforeAll(async () => {
+    java = await getJava(null);
+  });
+
+  afterAll(() => {
+    java.stop();
+  });
+
   test("api", () => {
     const arrayList = java.newInstanceSync("java.util.ArrayList");
     expect(arrayList).toBeTruthy();
@@ -54,13 +65,13 @@ describe("default", () => {
   });
 
   test("asyncCalls", async () => {
-    await new Promise((resolve) => {
+    await new Promise<void>((resolve) => {
       const arrayList = java.newInstanceSync("java.util.ArrayList");
-      arrayList.add("hello", function (err) {
+      arrayList.add("hello", (err: Error | undefined) => {
         expect(err).toBeFalsy();
-        arrayList.add("world", function (err) {
+        arrayList.add("world", (err: Error | undefined) => {
           expect(err).toBeFalsy();
-          arrayList.size(function (err, size) {
+          arrayList.size((err: Error | undefined, size: number | undefined) => {
             expect(err).toBeFalsy();
             expect(size).toBe(2);
             resolve();

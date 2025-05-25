@@ -1,9 +1,14 @@
-import { describe, expect, test } from "vitest";
-import { getJava } from "../testHelpers";
-
-const java = getJava();
+import { beforeAll, describe, expect, test } from "vitest";
+import { Java, JavaObject } from "../java";
+import { expectJavaError, getJava } from "../testHelpers";
 
 describe("Dynamic Proxy", () => {
+  let java!: Java;
+
+  beforeAll(async () => {
+    java = await getJava();
+  });
+
   test("0 Arguments", () => {
     let callCount = 0;
 
@@ -23,7 +28,7 @@ describe("Dynamic Proxy", () => {
     let runData = "";
 
     const myProxy = java.newProxy("RunInterface$Interface1Arg", {
-      run: function (str) {
+      run: (str: string) => {
         runData += str;
       },
     });
@@ -36,7 +41,7 @@ describe("Dynamic Proxy", () => {
 
   test("1 Arguments with return data", () => {
     const myProxy = java.newProxy("RunInterface$InterfaceWithReturn", {
-      run: function (i) {
+      run: (i: number) => {
         return i + 1;
       },
     });
@@ -51,7 +56,7 @@ describe("Dynamic Proxy", () => {
     let runData = "";
 
     const myProxy = java.newProxy("ListenerInterface", {
-      onEvent: function (_list, _runtime) {
+      onEvent: (_list: JavaObject, _runtime: JavaObject) => {
         runData = "onEvent";
       },
     });
@@ -64,7 +69,7 @@ describe("Dynamic Proxy", () => {
   });
 
   test("thread", async () => {
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       let callCount = 0;
 
       const myProxy = java.newProxy("java.lang.Runnable", {
@@ -78,7 +83,7 @@ describe("Dynamic Proxy", () => {
 
       let timeout = 50;
 
-      function waitForThread() {
+      function waitForThread(): void {
         if (callCount === 1) {
           return resolve();
         }
@@ -94,15 +99,16 @@ describe("Dynamic Proxy", () => {
   });
 
   test("thread issue #143", async () => {
-    await new Promise((resolve) => {
+    await new Promise<void>((resolve) => {
       const myProxy = java.newProxy("RunInterface$InterfaceWithReturn", {
-        run: function (i) {
+        run: (i: number) => {
           return i - 1;
         },
       });
 
       const runInterface = java.newInstanceSync("RunInterface");
-      runInterface.runInAnotherThread(myProxy, function (err, result) {
+      runInterface.runInAnotherThread(myProxy, (err: Error | undefined, result: number) => {
+        expect(err).toBeUndefined();
         expect(result).toBe(45);
         resolve();
       });
@@ -141,7 +147,7 @@ describe("Dynamic Proxy", () => {
 
   test("js equals()", () => {
     const myProxy = java.newProxy("RunInterface$InterfaceWithReturn", {
-      equals: function (_obj) {
+      equals: (_obj: JavaObject) => {
         return true;
       },
     });
@@ -201,7 +207,8 @@ describe("Dynamic Proxy", () => {
 
   test("js string error", () => {
     const myProxy = java.newProxy("RunInterface$InterfaceWithReturn", {
-      run: (_i) => {
+      run: (_i: JavaObject) => {
+        // eslint-disable-next-line @typescript-eslint/only-throw-error
         throw "myError";
       },
     });
@@ -211,6 +218,7 @@ describe("Dynamic Proxy", () => {
       runInterface.runWithReturnSync(myProxy);
       throw new Error("Exception was not thrown");
     } catch (e) {
+      expectJavaError(e);
       expect(e.cause.getClassSync().getNameSync()).toBe("java.lang.RuntimeException");
       expect(e.message).toMatch(/Caused by: node\.NodeJsException:.*myError/);
     }
@@ -218,7 +226,7 @@ describe("Dynamic Proxy", () => {
 
   test("js Error", () => {
     const myProxy = java.newProxy("RunInterface$InterfaceWithReturn", {
-      run: function (_i) {
+      run: (_i: JavaObject) => {
         throw new Error("newError");
       },
     });
@@ -228,6 +236,7 @@ describe("Dynamic Proxy", () => {
       runInterface.runWithReturnSync(myProxy);
       throw new Error("Exception was not thrown");
     } catch (e) {
+      expectJavaError(e);
       expect(e.cause.getClassSync().getNameSync()).toBe("java.lang.RuntimeException");
       expect(e.message).toMatch(/Caused by: node\.NodeJsException:.*newError/);
     }
@@ -235,7 +244,7 @@ describe("Dynamic Proxy", () => {
 
   test("invocationHandler", () => {
     const myProxy = java.newProxy("RunInterface$InterfaceWithReturn", {
-      run: (i) => {
+      run: (i: number) => {
         return i + 2;
       },
     });
@@ -247,7 +256,7 @@ describe("Dynamic Proxy", () => {
 
   test("unref", () => {
     const myProxy = java.newProxy("RunInterface$InterfaceWithReturn", {
-      run: function (i) {
+      run: (i: number) => {
         return i + 1;
       },
     });
@@ -257,6 +266,7 @@ describe("Dynamic Proxy", () => {
     try {
       myProxy.invocationHandler.run(42);
     } catch (e) {
+      expectJavaError(e);
       expect(e.message).toBe("dynamicProxyData has been destroyed or corrupted");
     }
 

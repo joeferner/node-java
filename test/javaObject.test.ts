@@ -1,12 +1,13 @@
 import { beforeEach, describe, expect, test } from "vitest";
 import { getJava } from "../testHelpers";
-
-const java = getJava();
+import { Java, JavaObject } from "../java";
 
 describe("Java Object", () => {
-  let testObj;
+  let testObj: JavaObject;
+  let java!: Java;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    java = await getJava();
     testObj = java.newInstanceSync("Test");
   });
 

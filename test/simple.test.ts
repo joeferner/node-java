@@ -1,9 +1,14 @@
-import { describe, expect, test } from "vitest";
+import { beforeAll, describe, expect, test } from "vitest";
+import { Java, JavaObject } from "../java";
 import { getJava } from "../testHelpers";
 
-const java = getJava();
-
 describe("Simple", () => {
+  let java!: Java;
+
+  beforeAll(async () => {
+    java = await getJava();
+  });
+
   test("test classpath commons lang", () => {
     const result = java.callStaticMethodSync("org.apache.commons.lang3.ObjectUtils", "toString", "test");
     console.log("org.apache.commons.lang3.ObjectUtils.toString:", result);
@@ -53,22 +58,22 @@ describe("Simple", () => {
   });
 
   test("test method does not exists (async)", () => {
-    java.callStaticMethod("java.lang.System", "badMethod", (err) => {
+    java.callStaticMethod("java.lang.System", "badMethod", (err: Error | undefined) => {
       if (err) {
         return;
       }
-      test.done(new Error("should throw exception"));
+      new Error("should throw exception");
     });
   });
 
   test("create an instance of a class and call methods (getName) (async)", async () => {
-    await new Promise((resolve) => {
-      java.newInstance("java.util.ArrayList", (err, list) => {
+    await new Promise<void>((resolve) => {
+      java.newInstance("java.util.ArrayList", (err: Error | undefined, list: JavaObject | undefined) => {
         expect(err).toBeFalsy();
         expect(list).toBeTruthy();
-        list.getClass((err, result) => {
+        list.getClass((err: Error | undefined, result: JavaObject | undefined) => {
           expect(err).toBeFalsy();
-          result.getName((err, result) => {
+          result.getName((err: Error | undefined, result: JavaObject | undefined) => {
             expect(err).toBeFalsy();
             expect(result).toBe("java.util.ArrayList");
             resolve();
@@ -76,6 +81,35 @@ describe("Simple", () => {
         });
       });
     });
+  });
+
+  test("findClassSync", async () => {
+    const arrayListClass = java.findClassSync("java.util.ArrayList");
+    expect(arrayListClass).toBeTruthy();
+    expect(arrayListClass.getNameSync()).toBe("java.util.ArrayList");
+  });
+
+  test("findClassSync not found", async () => {
+    expect(() => {
+      java.findClassSync("java.util.MissingClass");
+    }).toThrowError(/Could not create class java.util.MissingClass/);
+  });
+
+  test("call method", async () => {
+    const list = java.newInstanceSync("java.util.ArrayList");
+    await new Promise<void>((resolve) => {
+      java.callMethod(list, "add", "test", (err: Error | undefined) => {
+        expect(err).toBeFalsy();
+        expect(list.sizeSync()).toBe(1);
+        resolve();
+      });
+    });
+  });
+
+  test("call method (sync)", async () => {
+    const list = java.newInstanceSync("java.util.ArrayList");
+    java.callMethodSync(list, "add", ["test"]);
+    expect(list.sizeSync()).toBe(1);
   });
 
   test("create an instance of a class and call methods (getName) (sync)", () => {
@@ -92,11 +126,11 @@ describe("Simple", () => {
   });
 
   test("create an instance of a class and call methods (size) (async)", async () => {
-    await new Promise((resolve) => {
-      java.newInstance("java.util.ArrayList", (err, list) => {
+    await new Promise<void>((resolve) => {
+      java.newInstance("java.util.ArrayList", (err: Error | undefined, list: JavaObject | undefined) => {
         expect(err).toBeFalsy();
         expect(list).toBeTruthy();
-        list.size((err, result) => {
+        list.size((err: Error | undefined, result: number | undefined) => {
           expect(err).toBeFalsy();
           expect(result).toBe(0);
           resolve();
@@ -169,7 +203,7 @@ describe("Simple", () => {
 
   test("method returning an array of longs sync", () => {
     let arr = java.callStaticMethodSync("Test", "getArrayOfLongs");
-    arr = arr.map(function (l) {
+    arr = arr.map((l: JavaObject) => {
       return l.toStringSync();
     });
     expect(arr.length).toBe(5);

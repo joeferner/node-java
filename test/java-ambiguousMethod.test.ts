@@ -1,9 +1,14 @@
-import { describe, expect, test } from "vitest";
+import { beforeAll, describe, expect, test } from "vitest";
+import { Java } from "../java";
 import { getJava } from "../testHelpers";
 
-const java = getJava();
-
 describe("Java - Call Ambiguous Method", () => {
+  let java!: Java;
+
+  beforeAll(async () => {
+    java = await getJava();
+  });
+
   test("staticMethodAmbiguous (sync) - int passed to double", () => {
     const result = java.callStaticMethodSync("Test", "staticMethodAmbiguous(Ljava/lang/Double;)I", 1);
     expect(result).toBe(1);
@@ -27,42 +32,63 @@ describe("Java - Call Ambiguous Method", () => {
   });
 
   test("staticMethodAmbiguous - int passed to double", async () => {
-    await new Promise((resolve) => {
-      java.callStaticMethod("Test", "staticMethodAmbiguous(Ljava/lang/Double;)I", 1, function (err, result) {
-        expect(err).toBeFalsy();
-        expect(result).toBe(1);
-        resolve();
-      });
+    await new Promise<void>((resolve) => {
+      java.callStaticMethod(
+        "Test",
+        "staticMethodAmbiguous(Ljava/lang/Double;)I",
+        1,
+        (err: Error | undefined, result: number | undefined) => {
+          expect(err).toBeFalsy();
+          expect(result).toBe(1);
+          resolve();
+        }
+      );
     });
   });
 
   test("staticMethodAmbiguous - double passed to int", async () => {
-    await new Promise((resolve) => {
-      java.callStaticMethod("Test", "staticMethodAmbiguous(Ljava/lang/Integer;)I", 1.1, function (err, result) {
-        expect(err).toBeFalsy();
-        expect(result).toBe(2);
-        resolve();
-      });
+    await new Promise<void>((resolve) => {
+      java.callStaticMethod(
+        "Test",
+        "staticMethodAmbiguous(Ljava/lang/Integer;)I",
+        1.1,
+        (err: Error | undefined, result: number | undefined) => {
+          expect(err).toBeFalsy();
+          expect(result).toBe(2);
+          resolve();
+        }
+      );
     });
   });
 
   test("staticMethodAmbiguous - method not found", async () => {
-    await new Promise((resolve) => {
-      java.callStaticMethod("Test", "staticMethodAmbiguous(Ljava/lang/String;)I", 1, function (err, result) {
-        expect(err).toBeTruthy();
-        expect(result).toBeFalsy();
-        resolve();
-      });
+    await new Promise<void>((resolve) => {
+      java.callStaticMethod(
+        "Test",
+        "staticMethodAmbiguous(Ljava/lang/String;)I",
+        1,
+        (err: Error | undefined, result: number | undefined) => {
+          expect(err).toBeTruthy();
+          expect(result).toBeFalsy();
+          resolve();
+        }
+      );
     });
   });
 
   test("staticMethodAmbiguous - method argument count mismatch", async () => {
-    await new Promise((resolve) => {
-      java.callStaticMethod("Test", "staticMethodAmbiguous(Ljava/lang/Integer;)I", 1, 2, function (err, result) {
-        expect(err).toBeTruthy();
-        expect(result).toBeFalsy();
-        resolve();
-      });
+    await new Promise<void>((resolve) => {
+      java.callStaticMethod(
+        "Test",
+        "staticMethodAmbiguous(Ljava/lang/Integer;)I",
+        1,
+        2,
+        (err: Error | undefined, result: number | undefined) => {
+          expect(err).toBeTruthy();
+          expect(result).toBeFalsy();
+          resolve();
+        }
+      );
     });
   });
 

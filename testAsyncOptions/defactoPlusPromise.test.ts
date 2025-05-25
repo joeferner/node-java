@@ -1,41 +1,44 @@
 // The defacto case but with promises also enabled.
 
 import { beforeAll, describe, expect, test } from "vitest";
-import { java } from "../testHelpers";
+import { Java } from "../java";
+import { getJava } from "../testHelpers";
 
 describe("defactoPlusPromise", () => {
-  beforeAll(async () => {
-    await new Promise((resolve) => {
-      const api = Object.keys(java).filter((key) => typeof java[key] === "function");
-      expect(api.includes("isJvmCreated"), "Expected `isJvmCreated` to be present, but it is NOT.").toBeTruthy();
-      expect(java.isJvmCreated()).toBeFalsy();
+  let java!: Java;
 
-      java.asyncOptions = {
+  beforeAll(async () => {
+    java = await getJava(
+      {
         syncSuffix: "Sync",
         asyncSuffix: "",
         promiseSuffix: "Promise",
-        promisify: require("when/node").lift, // https://github.com/cujojs/when
-      };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        promisify: ((await import("when/node")) as any).lift, // https://github.com/cujojs/when
+      },
+      {
+        beforeInit: (java) => {
+          expect(java.isJvmCreated()).toBeFalsy();
 
-      function before(callback) {
-        expect(java.isJvmCreated()).toBeFalsy();
-        callback();
+          function before(callback: () => void): void {
+            expect(java.isJvmCreated()).toBeFalsy();
+            callback();
+          }
+
+          function after(callback: () => void): void {
+            expect(java.isJvmCreated()).toBeTruthy();
+            callback();
+          }
+
+          java.registerClient(before, after);
+          java.registerClient(null, after);
+          java.registerClient(before);
+        },
       }
+    );
 
-      function after(callback) {
-        expect(java.isJvmCreated()).toBeTruthy();
-        callback();
-      }
-
-      java.registerClient(before, after);
-      java.registerClient(null, after);
-      java.registerClient(before);
-
-      java.ensureJvm().done(function () {
-        expect(java.isJvmCreated()).toBeTruthy();
-        resolve();
-      });
-    });
+    await java.ensureJvm();
+    expect(java.isJvmCreated()).toBeTruthy();
   });
 
   test("api", () => {
@@ -84,13 +87,13 @@ describe("defactoPlusPromise", () => {
   });
 
   test("asyncCalls", async () => {
-    await new Promise((resolve) => {
+    await new Promise<void>((resolve) => {
       const arrayList = java.newInstanceSync("java.util.ArrayList");
-      arrayList.add("hello", function (err) {
+      arrayList.add("hello", (err: Error | undefined) => {
         expect(err).toBeFalsy();
-        arrayList.add("world", function (err) {
+        arrayList.add("world", (err: Error | undefined) => {
           expect(err).toBeFalsy();
-          arrayList.size(function (err, size) {
+          arrayList.size((err: Error | undefined, size: number | undefined) => {
             expect(err).toBeFalsy();
             expect(size).toBe(2);
             resolve();
@@ -101,7 +104,7 @@ describe("defactoPlusPromise", () => {
   });
 
   test("promiseCalls", async () => {
-    await new Promise((resolve) => {
+    await new Promise<void>((resolve) => {
       const arrayList = java.newInstanceSync("java.util.ArrayList");
       arrayList
         .addPromise("hello")
@@ -111,7 +114,7 @@ describe("defactoPlusPromise", () => {
         .then(() => {
           return arrayList.sizePromise();
         })
-        .then((size) => {
+        .then((size: number) => {
           expect(size).toBe(2);
           resolve();
         });

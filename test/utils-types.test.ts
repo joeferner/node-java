@@ -1,9 +1,14 @@
-import { describe, expect, test } from "vitest";
+import { beforeAll, describe, expect, test } from "vitest";
+import { Java } from "../java";
 import { getJava } from "../testHelpers";
 
-const java = getJava();
-
 describe("Utils - Types", () => {
+  let java!: Java;
+
+  beforeAll(async () => {
+    java = await getJava();
+  });
+
   test("Array of Objects", () => {
     let val = java.getStaticFieldValue("Test", "staticArrayObjects");
     expect(val).toBeNull();

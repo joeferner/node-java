@@ -1,9 +1,14 @@
-import { describe, expect, test } from "vitest";
+import { beforeAll, describe, expect, test } from "vitest";
 import { getJava } from "../testHelpers";
-
-const java = getJava();
+import { Java } from "../java";
 
 describe("varargs", () => {
+  let java!: Java;
+
+  beforeAll(async () => {
+    java = await getJava();
+  });
+
   test("array signature inference", () => {
     const Test = java.import("Test");
     expect(Test.varArgsSignatureSync([])).toBe("Object...");

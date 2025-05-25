@@ -1,10 +1,15 @@
 import path from "node:path";
-import { describe, expect, test } from "vitest";
+import { beforeAll, describe, expect, test } from "vitest";
+import { Java } from "../java";
 import { getJava } from "../testHelpers";
 
-const java = getJava();
-
 describe("AWT", () => {
+  let java!: Java;
+
+  beforeAll(async () => {
+    java = await getJava();
+  });
+
   test("calling AWT method (see issue 1)", () => {
     const headlessVal = java.callStaticMethodSync("java.lang.System", "getProperty", "java.awt.headless");
     console.log("java.awt.headless =", headlessVal);

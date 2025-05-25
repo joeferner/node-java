@@ -1,9 +1,14 @@
-import { describe, expect, test } from "vitest";
+import { beforeAll, describe, expect, test } from "vitest";
 import { getJava } from "../testHelpers";
-
-const java = getJava();
+import { Java } from "../java";
 
 describe("instanceOf", () => {
+  let java!: Java;
+
+  beforeAll(async () => {
+    java = await getJava();
+  });
+
   test("working", () => {
     const subclass = java.newInstanceSync("Test$SubClass");
     if (!java.instanceOf(subclass, "Test$SuperClass")) {
