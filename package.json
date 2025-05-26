@@ -7,9 +7,9 @@
     "jvm",
     "bridge"
   ],
-  "version": "0.15.0",
+  "version": "0.16.0",
   "engines": {
-    "node": ">=7.0.0"
+    "node": ">=8.0.0"
   },
   "maintainers": [
     {
