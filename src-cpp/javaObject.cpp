@@ -28,13 +28,9 @@
 
   v8::Local<v8::Function> promisify;
   if (java->DoPromise()) {
-    v8::Local<v8::Object> asyncOptions =
-        java->handle()
-            ->Get(Nan::GetCurrentContext(), Nan::New<v8::String>("asyncOptions").ToLocalChecked())
-            .ToLocalChecked()
-            .As<v8::Object>();
     v8::Local<v8::Value> promisifyValue =
-        asyncOptions->Get(Nan::GetCurrentContext(), Nan::New<v8::String>("promisify").ToLocalChecked())
+        java->handle()
+            ->Get(Nan::GetCurrentContext(), Nan::New<v8::String>("promisify").ToLocalChecked())
             .ToLocalChecked();
     promisify = promisifyValue.As<v8::Function>();
   }
@@ -78,7 +74,7 @@
         v8::Local<v8::Value> argv[] = {methodCallTemplate->GetFunction(Nan::GetCurrentContext()).ToLocalChecked()};
         v8::Local<v8::Value> result = Nan::Call(promisify, recv, 1, argv).FromMaybe(v8::Local<v8::Value>());
         if (!result->IsFunction()) {
-          fprintf(stderr, "Promisified result is not a function -- asyncOptions.promisify must return a function.\n");
+          fprintf(stderr, "Promisified result is not a function.\n");
           assert(result->IsFunction());
         }
         v8::Local<v8::Function> promFunction = result.As<v8::Function>();

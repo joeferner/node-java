@@ -7,8 +7,6 @@ describe("clientPBeforeError", () => {
       {
         syncSuffix: "Sync",
         promiseSuffix: "Promise",
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        promisify: ((await import("when/node")) as any).lift, // https://github.com/cujojs/when
       },
       {
         beforeInit: async (java) => {
