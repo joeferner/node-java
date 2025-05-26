@@ -30,8 +30,6 @@ async function _getJava(asyncOptions?: AsyncOptions | null, options?: GetJavaOpt
       syncSuffix: "Sync",
       asyncSuffix: "",
       promiseSuffix: "Promise",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      promisify: ((await import("when/node")) as any).lift, // https://github.com/cujojs/when
     };
   }
 

@@ -16,16 +16,12 @@ declare namespace NodeJavaCore {
     (err?: JavaError, result?: T): void;
   }
 
-  interface Promisify {
-    (fn: Function, receiver?: any): Function;
-  }
-
   interface AsyncOptions {
     /**
      * Suffix for synchronous method call signatures.
      */
     syncSuffix: string;
-    
+
     /**
      * Suffix for callback-based async method call signatures.
      */
@@ -35,12 +31,6 @@ declare namespace NodeJavaCore {
      * Suffix for promise-based async method call signatures
      */
     promiseSuffix?: string | undefined;
-
-    /**
-     * Callback-to-promise transform implementation. From Node.js version 8 one can
-     * just use Node.js implementation: `promisify: require('util').promisify`.
-     */
-    promisify?: Promisify | undefined;
 
     /**
      * The JavaScript object returned by `java.import(classname)` is a JavaScript constructor
@@ -56,9 +46,9 @@ declare namespace NodeJavaCore {
   interface Java {
     /**
      * Array of paths or jars to pass to the creation of the JVM.
-     * 
+     *
      * All items must be added to the classpath before calling any other node-java methods.
-     * 
+     *
      * @example
      * java.classpath.push('commons.io.jar');
      * java.classpath.push('src');
@@ -67,9 +57,9 @@ declare namespace NodeJavaCore {
 
     /**
      * Array of options to pass to the creation of the JVM.
-     * 
+     *
      * All items must be added to the options before calling any other node-java methods.
-     * 
+     *
      * @example
      * java.options.push('-Djava.awt.headless=true');
      * java.options.push('-Xmx1024m');

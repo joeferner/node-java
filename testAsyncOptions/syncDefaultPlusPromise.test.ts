@@ -12,8 +12,6 @@ describe("syncDefaultPlusPromise", () => {
     java = await getJava({
       syncSuffix: "",
       promiseSuffix: "P",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      promisify: ((await import("when/node")) as any).lift, // https://github.com/cujojs/when
     });
   });
 

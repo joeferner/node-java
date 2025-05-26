@@ -190,13 +190,6 @@ void Java::configureAsync(v8::Local<v8::Value> &asyncOptions) {
     v8::Local<v8::String> suffix = suffixValue->ToString(Nan::GetCurrentContext()).ToLocalChecked();
     Nan::Utf8String utf8(suffix);
     m_PromiseSuffix.assign(*utf8);
-    v8::MaybeLocal<v8::Value> maybePromisify =
-        Nan::Get(asyncOptionsObj, Nan::New<v8::String>("promisify").ToLocalChecked());
-    v8::Local<v8::Value> promisify;
-    if (maybePromisify.ToLocal(&promisify) && !promisify->IsFunction()) {
-      fprintf(stderr, "asyncOptions.promisify must be a function");
-      assert(promisify->IsFunction());
-    }
     doPromise = true;
   }
 

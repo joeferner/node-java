@@ -242,7 +242,6 @@ java.asyncOptions = {
   asyncSuffix: undefined,     // Don't generate node-style methods taking callbacks
   syncSuffix: "",              // Sync methods use the base name(!!)
   promiseSuffix: "Promise",   // Generate methods returning promises, using the suffix Promise.
-  promisify: require('util').promisify // Needs Node.js version 8 or greater, see comment below
 };
 java.classpath.push("commons-lang3-3.1.jar");
 java.classpath.push("commons-io.jar");
@@ -259,15 +258,12 @@ java.newInstancePromise("java.util.ArrayList")
 
 * If you want the defacto standard behavior, simply don't set java.asyncOptions.
 * If you do provide asyncOptions, be aware that this module will not generate method variants of a given flavor if you don't provide a string value for the corresponding suffix (`asyncSuffix`, `syncSuffix`, `promiseSuffix`). In the example above, the application is configured to omit the method variants using node-style async callback functions.
-* If you provide `asyncOptions.promiseSuffix` then you must also set `asyncOptions.promisify` to a function that *promisifies* a node-style async function. I.e. the provided function must take as input a function whose last argument is a node callback function, and it must return an equivalent promise-returning function. Several Promises/A+ libraries provide such functions, but it may be necessary to provide a wrapper function. See `testHelpers.js` for an example.
-* For `promisify` implementation, if you are using Node.js version 8.0.0 or newer then `promisify: require('util').promisify` will work out of the box. If you need to support and older Node.js version then an implementation needs to be provided, for example, `promisify: require("when/node").lift`
-* If you provide `asyncOptions.promisify` then you must provide a *non-empty* string for `asyncOptions.promiseSuffix`.
 * Either (but not both) `asyncSuffix` or `syncSuffix` can be the empty string. If you want the defacto standard behavior for no suffix on async methods, you must provide an empty string for `asyncSuffix`.
 * We've tested promises with five Promises/A+ implementations. See `testHelpers.js` for more information.
 * NOTE: Due to specifics of initialization order, the methods  `java.newInstancePromise`, `java.callMethodPromise`, and `java.callStaticMethodPromise` are not available until the JVM has been created. You may need to call some other java method such as `java.import()` to finalize java initialization, or even better, the function `java.ensureJvm()`.
 
 ##### Special note about the exported module functions `newInstance`, `callMethod`, and `callStaticMethod`.
-These methods come in both async and sync variants. If you provide the `promisify` and `promiseSuffix` attributes in asyncOptions then you'll also get the Promises/A+ variant for these three functions. However, if you change the defacto conventions for the `syncSuffix` (i.e. 'Sync') and/or `asyncSuffix` (i.e. '') it will not affect the naming for these three functions. I.e. no matter what you specify in asyncOptions, the async variants are named `newInstance`, `callMethod`, and `callStaticMethod`, and the sync variants are named `newInstanceSync`, `callMethodSync`, and `callStaticMethodSync`.
+These methods come in both async and sync variants. If you provide the `promiseSuffix` attributes in asyncOptions then you'll also get the Promises/A+ variant for these three functions. However, if you change the defacto conventions for the `syncSuffix` (i.e. 'Sync') and/or `asyncSuffix` (i.e. '') it will not affect the naming for these three functions. I.e. no matter what you specify in asyncOptions, the async variants are named `newInstance`, `callMethod`, and `callStaticMethod`, and the sync variants are named `newInstanceSync`, `callMethodSync`, and `callStaticMethodSync`.
 
 ## Varargs support
 
@@ -375,7 +371,6 @@ java.asyncOptions = {
   asyncSuffix: undefined,     // Don't generate node-style methods taking callbacks
   syncSuffix: "",              // Sync methods use the base name(!!)
   promiseSuffix: "Promise",   // Generate methods returning promises, using the suffix Promise.
-  promisify: require('util').promisify // Needs Node.js version 8 or greater, see comment below
   ifReadOnlySuffix: "_alt"
 };
 ```
@@ -383,7 +378,6 @@ java.asyncOptions = {
  * `asyncSuffix` Suffix for callback-based async method call signatures.
  * `syncSuffix` Suffix for synchronous method call signatures.
  * `promiseSuffix` Suffix for promise-based async method call signatures
- * `promisify` Callback-to-promise transform implementation. From Node.js version 8 one can just use Node.js implementation: `promisify: require('util').promisify`.
  * `ifReadOnlySuffix` See [Static Member Name Conflicts](#staticMemberNameConflicts).
 
 See [Async Options](#asyncOptionsDetails) for details. 
