@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// eslint-disable-next-line no-var
-declare var NodeJavaCore: NodeJavaCore.NodeAPI;
+declare const NodeJavaCore: NodeJavaCore.Java;
 export = NodeJavaCore;
 
 declare namespace NodeJavaCore {

@@ -1,0 +1,17 @@
+{
+  "name": "java-example-lucene",
+  "private": true,
+  "scripts": {
+    "build": "tsc --build",
+    "build:watch": "tsc --build --watch",
+    "start": "node build/example.js"
+  },
+  "dependencies": {
+    "find-root": "^1.1.0",
+    "java": "file:../.."
+  },
+  "devDependencies": {
+    "@types/find-root": "^1.1.4",
+    "typescript": "^5.8.3"
+  }
+}

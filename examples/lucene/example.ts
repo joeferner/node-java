@@ -1,9 +1,14 @@
 #!/usr/bin/env node
 
-const java = require("../../");
-java.classpath.push("./lucene-lib/lucene-core-7.4.0.jar");
-java.classpath.push("./lucene-lib/lucene-analyzers-common-7.4.0.jar");
-java.classpath.push("./lucene-lib/lucene-queryparser-7.4.0.jar");
+import java, { JavaObject } from "java";
+import findRoot from "find-root";
+import path from "node:path";
+
+const root = findRoot(__dirname);
+
+java.classpath.push(path.join(root, "libs/lucene-core-7.4.0.jar"));
+java.classpath.push(path.join(root, "libs/lucene-analyzers-common-7.4.0.jar"));
+java.classpath.push(path.join(root, "libs/lucene-queryparser-7.4.0.jar"));
 
 const idx = java.newInstanceSync("org.apache.lucene.store.RAMDirectory");
 const analyzer = java.newInstanceSync("org.apache.lucene.analysis.standard.StandardAnalyzer");
@@ -15,26 +20,26 @@ writer.addDocumentSync(
   createDocument(
     "Theodore Roosevelt",
     "It behooves every man to remember that the work of the " +
-      "critic, is of altogether secondary importance, and that, " +
-      "in the end, progress is accomplished by the man who does " +
-      "things."
+    "critic, is of altogether secondary importance, and that, " +
+    "in the end, progress is accomplished by the man who does " +
+    "things."
   )
 );
 writer.addDocumentSync(
   createDocument(
     "Friedrich Hayek",
     "The case for individual freedom rests largely on the " +
-      "recognition of the inevitable and universal ignorance " +
-      "of all of us concerning a great many of the factors on " +
-      "which the achievements of our ends and welfare depend."
+    "recognition of the inevitable and universal ignorance " +
+    "of all of us concerning a great many of the factors on " +
+    "which the achievements of our ends and welfare depend."
   )
 );
 writer.addDocumentSync(
   createDocument(
     "Ayn Rand",
     "There is nothing to take a man's freedom away from " +
-      "him, save other men. To be free, a man must be free " +
-      "of his brothers."
+    "him, save other men. To be free, a man must be free " +
+    "of his brothers."
   )
 );
 writer.addDocumentSync(
@@ -51,8 +56,9 @@ const searcher = java.newInstanceSync(
 search(searcher, "freedom");
 search(searcher, "free");
 search(searcher, "progress or achievements");
+java.stop();
 
-function createDocument(title, content) {
+function createDocument(title: string, content: string): JavaObject {
   const fieldStoreYes = java.callStaticMethodSync("org.apache.lucene.document.Field$Store", "valueOf", "YES");
   const doc = java.newInstanceSync("org.apache.lucene.document.Document");
   doc.addSync(java.newInstanceSync("org.apache.lucene.document.TextField", "title", title, fieldStoreYes));
@@ -60,7 +66,7 @@ function createDocument(title, content) {
   return doc;
 }
 
-function search(searcher, queryString) {
+function search(searcher: JavaObject, queryString: string): void {
   const query = queryParser.parseSync(queryString);
   const topDocs = searcher.searchSync(query, 10);
 
