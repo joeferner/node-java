@@ -23,7 +23,7 @@ async function _getJava(asyncOptions?: AsyncOptions | null, options?: GetJavaOpt
   //java.options.push('-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005');
 
   java.classpath.push("test/");
-  java.classpath.push("test/commons-lang3-3.1.jar");
+  java.classpath.push("test/commons-lang3-3.18.0.jar");
 
   if (asyncOptions !== null) {
     java.asyncOptions = asyncOptions ?? {

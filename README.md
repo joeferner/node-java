@@ -164,7 +164,7 @@ const java = javaInit.getJavaInstance();
 
 ```javascript
 const java = require("java");
-java.classpath.push("commons-lang3-3.1.jar");
+java.classpath.push("commons-lang3-3.18.0.jar");
 java.classpath.push("commons-io.jar");
 
 const list1 = java.newInstanceSync("java.util.ArrayList");
@@ -243,7 +243,7 @@ java.asyncOptions = {
   syncSuffix: "",              // Sync methods use the base name(!!)
   promiseSuffix: "Promise",   // Generate methods returning promises, using the suffix Promise.
 };
-java.classpath.push("commons-lang3-3.1.jar");
+java.classpath.push("commons-lang3-3.18.0.jar");
 java.classpath.push("commons-io.jar");
 
 java.import("java.util.ArrayList"); // see NOTE below
