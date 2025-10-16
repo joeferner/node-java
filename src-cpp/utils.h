@@ -16,6 +16,14 @@ class Java;
 #define V8_HIDDEN_MARKER_JAVA_LONG "__isJavaLong"
 #define V8_HIDDEN_MARKER_JAVA_OBJECT "__isJavaObject"
 
+#if NODE_MAJOR_VERSION >= 23
+  #define RETURN_INTERCEPTED_YES return v8::Intercepted::kYes
+  #define RETURN_INTERCEPTED_NO  return v8::Intercepted::kNo
+#else
+  #define RETURN_INTERCEPTED_YES return
+  #define RETURN_INTERCEPTED_NO  return
+#endif
+
 typedef enum _jvalueType {
   TYPE_VOID = 1,
   TYPE_INT = 2,

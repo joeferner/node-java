@@ -325,7 +325,7 @@ NAN_INDEX_GETTER(JavaObject::indexGetter) {
   assertNoException(env);
   if ((jint)index >= arrayLength) {
     info.GetReturnValue().SetUndefined();
-    return;
+    RETURN_INTERCEPTED_YES;
   }
 
   jmethodID array_get = env->GetStaticMethodID(arrayClass, "get", "(Ljava/lang/Object;I)Ljava/lang/Object;");
@@ -333,6 +333,7 @@ NAN_INDEX_GETTER(JavaObject::indexGetter) {
   assertNoException(env);
   v8::Local<v8::Value> result = javaToV8(self->m_java, env, item);
   info.GetReturnValue().Set(result);
+  RETURN_INTERCEPTED_YES;
 }
 
 /*static*/ Nan::Persistent<v8::FunctionTemplate> JavaProxyObject::s_proxyCt;
