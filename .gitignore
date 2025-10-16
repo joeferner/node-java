@@ -11,3 +11,4 @@ node-java.cbp
 */.kdev_include_paths
 CMakeLists.txt
 cmake-build-debug/
+hs_err*

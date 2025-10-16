@@ -884,7 +884,7 @@ Either `./scripts/postInstall.js` didn't run or there was a problem detecting ja
 ## Debugging
 
         npm install
-        node-gyp build --debug
+        npx node-gyp build --debug
         gdb --args "$(which node)" ./node_modules/.bin/vitest test
 
 ## License
