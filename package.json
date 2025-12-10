@@ -39,13 +39,21 @@
     "eslint": "^9.27.0",
     "find-root": "^1.1.0",
     "globals": "^16.2.0",
+    "node-pre-gyp": "^0.17.0",
     "prettier": "^3.5.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.32.1",
     "vitest": "^3.1.4"
   },
+  "binary": {
+    "module_name": "nodejava",
+    "module_path": "./lib/binding/",
+    "host": "https://github.com/jonabread/node-java/releases/download/"
+  },
   "scripts": {
-    "install": "node-gyp rebuild",
+    "install": "node-pre-gyp install --fallback-to-build",
+    "prepublishOnly": "node-pre-gyp package publish",
+    "build": "node-pre-gyp configure build",
     "clean": "rm -rf build",
     "test": "tsc && node ./build/ts/scripts/testRunner.js",
     "postinstall": "node ./scripts/postInstall.js",

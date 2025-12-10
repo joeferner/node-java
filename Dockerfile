@@ -1,29 +1,32 @@
 FROM node:22.11.0-windowsservercore-ltsc2022
-# Install Chocolatey (Windows package manager)
+
+# Install Chocolatey and dependencies
 RUN powershell -Command \
    Set-ExecutionPolicy Bypass -Scope Process -Force; \
    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; \
    iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-# Install Java JDK 17 (adjust version as needed)
 RUN choco install openjdk -y --version=17.0.12
-# Install Windows Build Tools for node-gyp
 RUN choco install python3 -y
 RUN choco install visualstudio2022buildtools -y
 RUN choco install visualstudio2022-workload-vctools -y
-# Alternative: Use npm to install windows-build-tools (if preferred)
-# RUN npm install --global windows-build-tools
-# Set environment variables for Java
+
+# Set environment variables
 ENV JAVA_HOME="C:\Program Files\OpenJDK\openjdk-17.0.12"
 ENV PATH="${JAVA_HOME}\bin;${PATH}"
-# Set environment variables for Visual Studio Build Tools
-ENV VS140COMNTOOLS="C:\BuildTools\Common7\Tools\"
 ENV GYP_MSVS_VERSION=2022
-# Verify installations
-RUN java -version
-RUN node --version
-RUN npm --version
-RUN python --version
+
 # Create app directory
 WORKDIR C:\\app
+
+# Copy project files
+COPY . C:\\app
+
+# Install dependencies and build
+RUN npm install
+RUN npm run build
+
+# Package prebuilt binary
+RUN npx node-pre-gyp package
+
 # Default command
 CMD ["cmd"]
