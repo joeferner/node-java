@@ -41,4 +41,4 @@ async function _getJava(asyncOptions?: AsyncOptions | null, options?: GetJavaOpt
   return java;
 }
 
-export function expectJavaError(error: unknown): asserts error is JavaError {}
+export function expectJavaError(_error: unknown): asserts _error is JavaError {}

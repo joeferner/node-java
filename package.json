@@ -9,7 +9,7 @@
   ],
   "version": "0.18.0",
   "engines": {
-    "node": ">=8.0.0"
+    "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
   },
   "maintainers": [
     {
@@ -27,22 +27,22 @@
   },
   "dependencies": {
     "find-java-home": "^2.0.0",
-    "glob": "^11.0.3",
-    "nan": "^2.23.0",
-    "node-gyp": "^11.5.0"
+    "glob": "^14.0.3",
+    "nan": "^2.30.0",
+    "node-gyp": "^13.1.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.37.0",
+    "@eslint/js": "^10.0.1",
     "@types/find-root": "^1.1.4",
-    "@types/node": "^24.8.0",
+    "@types/node": "^24.19.2",
     "chalk": "^5.6.2",
-    "eslint": "^9.37.0",
+    "eslint": "^10.14.0",
     "find-root": "^1.1.0",
-    "globals": "^16.4.0",
-    "prettier": "^3.6.2",
+    "globals": "^16.5.0",
+    "prettier": "^3.9.10",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.46.1",
-    "vitest": "^3.2.4"
+    "typescript-eslint": "^8.72.1",
+    "vitest": "^5.1.0"
   },
   "scripts": {
     "install": "node-gyp rebuild",
@@ -57,5 +57,8 @@
     "precommit": "npm run format-cpp && npm run format && npm run lint && npm run build-ts && npm test"
   },
   "main": "./index.js",
-  "types": "./java.d.ts"
+  "types": "./java.d.ts",
+  "overrides": {
+    "minimatch": "^11.0.1"
+  }
 }
